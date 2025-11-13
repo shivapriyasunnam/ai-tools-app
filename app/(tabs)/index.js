@@ -9,14 +9,19 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ExpenseContext } from '@/src/context/ExpenseContext';
+import { TodoContext } from '@/src/context/TodoContext';
 import usePomodoroStats from '@/src/hooks/usePomodoroStats';
 
 function HomeScreen() {
   const { expenses, getTotal } = useContext(ExpenseContext);
   const { getTotalIncome } = useContext(require('@/src/context/IncomeContext').IncomeContext);
+  const { getTotalTodos, getCompletedCount, getPendingCount } = useContext(TodoContext);
   const total = getTotal();
   const income = getTotalIncome();
   const { totalSessions, totalFocusedHours } = usePomodoroStats();
+  const totalTodos = getTotalTodos();
+  const completedTodos = getCompletedCount();
+  const pendingTodos = getPendingCount();
   const recentExpenses = expenses.slice(0, 3);
   const handleAddExpense = () => {
     console.log('Navigate to Add Expense');
@@ -79,9 +84,14 @@ function HomeScreen() {
                 <Text style={styles.statCardIcon}>✅</Text>
               </View>
             </View>
-            <Text style={styles.statCardValue}>8/15</Text>
+            <Text style={styles.statCardValue}>{completedTodos}/{totalTodos}</Text>
             <Text style={styles.statCardLabel}>Tasks</Text>
-            <Text style={styles.statCardSubtext}>5 completed today</Text>
+            <Text style={styles.statCardSubtext}>
+              {completedTodos === 0 
+                ? 'No tasks completed yet' 
+                : `${completedTodos} completed${pendingTodos > 0 ? `, ${pendingTodos} pending` : ''}`
+              }
+            </Text>
           </View>
 
           {/* Reminders Card */}

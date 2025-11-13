@@ -131,6 +131,13 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
+          name="todo-list"
+          options={{
+            title: 'To-Do List',
+            href: null, // Hidden tab - doesn't appear in tab bar
+          }}
+        />
+        <Tabs.Screen
           name="index_old"
           options={{
             href: null,

@@ -73,20 +73,12 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
       route: null, // Will be implemented later
     },
     {
-      id: 'calculator',
-      name: 'Calculator',
-      icon: 'calculator',
-      description: 'Quick calculations',
-      color: '#10B981',
-      route: null, // Will be implemented later
-    },
-    {
       id: 'todo',
       name: 'To-Do List',
       icon: 'checkbox',
       description: 'Manage your tasks',
       color: '#8B5CF6',
-      route: null, // Will be implemented later
+      route: '/(tabs)/todo-list',
     },
     {
       id: 'reminders',
@@ -94,6 +86,14 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
       icon: 'notifications',
       description: 'Set important reminders',
       color: '#F59E0B',
+      route: null, // Will be implemented later
+    },
+    {
+      id: 'calculator',
+      name: 'Calculator',
+      icon: 'calculator',
+      description: 'Quick calculations',
+      color: '#10B981',
       route: null, // Will be implemented later
     },
   ];
