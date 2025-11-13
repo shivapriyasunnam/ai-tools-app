@@ -1,9 +1,36 @@
-import React, { createContext, useState, useCallback } from 'react';
+import React, { createContext, useState, useCallback, useEffect } from 'react';
+import { storageService } from '@/src/services/storageService';
 
 export const ExpenseContext = createContext();
 
 export const ExpenseProvider = ({ children }) => {
   const [expenses, setExpenses] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load expenses from storage on app start
+  useEffect(() => {
+    loadExpenses();
+  }, []);
+
+  // Save expenses to storage whenever they change
+  useEffect(() => {
+    if (!isLoading && expenses.length >= 0) {
+      storageService.saveExpenses(expenses);
+    }
+  }, [expenses, isLoading]);
+
+  const loadExpenses = async () => {
+    try {
+      setIsLoading(true);
+      const savedExpenses = await storageService.getExpenses();
+      setExpenses(savedExpenses);
+    } catch (error) {
+      console.error('Error loading expenses:', error);
+      setExpenses([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const addExpense = useCallback((expense) => {
     const newExpense = {
@@ -78,6 +105,7 @@ export const ExpenseProvider = ({ children }) => {
         getTotalByMonth,
         getTotal,
         clearExpenses,
+        isLoading,
       }}
     >
       {children}
