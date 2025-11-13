@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 const POMODORO_KEY = 'POMODORO_SESSIONS';
 
@@ -111,6 +111,7 @@ export function PomodoroProvider({ children }) {
         removeSession,
         resetSessions,
         timer,
+        isRunning: timer.isRunning,
         setTimer,
         startTimer,
         pauseTimer,

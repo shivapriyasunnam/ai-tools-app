@@ -1,6 +1,7 @@
-import React, { createContext, useState } from 'react';
+import { createContext, useState } from 'react';
 import { ExpenseProvider } from './ExpenseContext';
 import { IncomeProvider } from './IncomeContext';
+import { PomodoroProvider } from './PomodoroContext';
 
 export const AppContext = createContext(undefined);
 
@@ -13,10 +14,12 @@ export const AppProvider = ({ children }) => {
   };
 
   return (
-    <IncomeProvider>
-      <ExpenseProvider>
-        <AppContext.Provider value={value}>{children}</AppContext.Provider>
-      </ExpenseProvider>
-    </IncomeProvider>
+    <PomodoroProvider>
+      <IncomeProvider>
+        <ExpenseProvider>
+          <AppContext.Provider value={value}>{children}</AppContext.Provider>
+        </ExpenseProvider>
+      </IncomeProvider>
+    </PomodoroProvider>
   );
 };

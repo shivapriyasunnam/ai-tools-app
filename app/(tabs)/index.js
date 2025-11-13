@@ -1,16 +1,14 @@
-import React, { useContext } from 'react';
+import { useContext } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
   ScrollView,
+  StyleSheet,
+  Text,
   TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, spacing } from '@/src/constants';
 
 import { ExpenseContext } from '@/src/context/ExpenseContext';
-import { PomodoroProvider } from '@/src/context/PomodoroContext';
 import usePomodoroStats from '@/src/hooks/usePomodoroStats';
 
 function HomeScreen() {
@@ -32,7 +30,6 @@ function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Hello 👋</Text>
             <Text style={styles.title}>Dashboard</Text>
           </View>
           <View style={styles.profileIcon}>
@@ -70,7 +67,7 @@ function HomeScreen() {
             </View>
             <Text style={styles.statCardValue}>{totalSessions}</Text>
             <Text style={styles.statCardLabel}>Pomodoro Sessions</Text>
-            <Text style={styles.statCardSubtext}>{totalFocusedHours} hours focused time</Text>
+            <Text style={styles.statCardSubtext}>{totalFocusedHours} focused</Text>
           </View>
         </View>
 
@@ -192,13 +189,7 @@ function HomeScreen() {
   );
 }
 
-export default function HomeScreenWithPomodoroProvider(props) {
-  return (
-    <PomodoroProvider>
-      <HomeScreen {...props} />
-    </PomodoroProvider>
-  );
-}
+export default HomeScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -313,7 +304,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
-    marginTop: 12,
+    marginTop: 0,
   },
   sectionTitle: {
     fontSize: 20,
