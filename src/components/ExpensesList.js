@@ -8,7 +8,8 @@ import {
 } from 'react-native';
 import { colors, spacing } from '../constants';
 
-export const ExpensesList = ({ expenses, onDeleteExpense }) => {
+
+export const ExpensesList = ({ expenses, onDeleteExpense, onEditExpense }) => {
   const renderExpense = ({ item }) => (
     <View style={styles.expenseItem}>
       <View style={styles.expenseInfo}>
@@ -25,12 +26,22 @@ export const ExpensesList = ({ expenses, onDeleteExpense }) => {
 
       <View style={styles.expenseActions}>
         <Text style={styles.amount}>${item.amount.toFixed(2)}</Text>
-        <TouchableOpacity
-          onPress={() => onDeleteExpense(item.id)}
-          style={styles.deleteButton}
-        >
-          <Text style={styles.deleteText}>✕</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 4 }}>
+          {onEditExpense && (
+            <TouchableOpacity
+              onPress={() => onEditExpense(item)}
+              style={[styles.deleteButton, { backgroundColor: colors.accent + '20' }]}
+            >
+              <Text style={[styles.deleteText, { color: colors.accent }]}>✎</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            onPress={() => onDeleteExpense(item.id)}
+            style={styles.deleteButton}
+          >
+            <Text style={styles.deleteText}>✕</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );

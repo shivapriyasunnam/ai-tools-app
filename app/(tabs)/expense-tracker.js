@@ -5,6 +5,7 @@ import {
   ScrollView,
   SafeAreaView,
   TouchableOpacity,
+  TextInput,
   Alert,
   StyleSheet,
 } from 'react-native';
@@ -16,14 +17,25 @@ import { ManualExpenseForm } from '@/src/components/ManualExpenseForm';
 import { ExpensesList } from '@/src/components/ExpensesList';
 
 export default function ExpenseTrackerScreen() {
-  const [mode, setMode] = useState('view'); // 'view', 'manual', 'csv'
+  const [mode, setMode] = useState('view'); // 'view', 'manual', 'csv', 'edit'
   const [processingCSV, setProcessingCSV] = useState(false);
-  
-  const { expenses, addExpense, addMultipleExpenses, deleteExpense, getTotal, getTotalByCategory } = useContext(ExpenseContext);
+  const [filter, setFilter] = useState('');
+  const [editExpense, setEditExpense] = useState(null);
+
+  const { expenses, addExpense, addMultipleExpenses, deleteExpense, updateExpense, getTotal, getTotalByCategory } = useContext(ExpenseContext);
   const { parseCSV, error: parseError } = useCSVParser();
 
   const total = getTotal();
   const categoryTotals = getTotalByCategory();
+
+  // Filtering logic
+  const filteredExpenses = filter
+    ? expenses.filter(e =>
+        e.description.toLowerCase().includes(filter.toLowerCase()) ||
+        e.category.toLowerCase().includes(filter.toLowerCase()) ||
+        (e.date && e.date.includes(filter))
+      )
+    : expenses;
 
   const handleAddManualExpense = (expense) => {
     addExpense(expense);
@@ -31,23 +43,32 @@ export default function ExpenseTrackerScreen() {
     Alert.alert('Success', 'Expense added successfully!');
   };
 
+  const handleEditExpense = (expense) => {
+    setEditExpense(expense);
+    setMode('edit');
+  };
+
+  const handleUpdateExpense = (updated) => {
+    updateExpense(updated.id, updated);
+    setEditExpense(null);
+    setMode('view');
+    Alert.alert('Success', 'Expense updated!');
+  };
+
   const handleCSVImport = (csvText) => {
     setProcessingCSV(true);
     try {
       const parsedExpenses = parseCSV(csvText);
-      
       if (parseError) {
         Alert.alert('Error', parseError);
         setProcessingCSV(false);
         return;
       }
-
       if (!parsedExpenses || parsedExpenses.length === 0) {
         Alert.alert('Error', 'No valid expenses found in CSV');
         setProcessingCSV(false);
         return;
       }
-
       addMultipleExpenses(parsedExpenses);
       Alert.alert('Success', `Imported ${parsedExpenses.length} expenses!`);
       setMode('view');
@@ -102,24 +123,46 @@ export default function ExpenseTrackerScreen() {
               </View>
             )}
 
+            {/* Filter/Search Bar */}
+            <View style={{ marginBottom: spacing.md }}>
+              <TextInput
+                placeholder="Search by description, category, or date..."
+                value={filter}
+                onChangeText={setFilter}
+                style={{
+                  backgroundColor: colors.gray[100],
+                  borderRadius: 8,
+                  padding: spacing.md,
+                  fontSize: 14,
+                  color: colors.text,
+                }}
+                placeholderTextColor={colors.gray[400]}
+              />
+            </View>
+
             {/* Expenses List */}
-            {expenses.length > 0 && (
+            {filteredExpenses.length > 0 && (
               <View>
-                <Text style={styles.expensesTitle}>📝 Recent Expenses ({expenses.length})</Text>
-                <ExpensesList expenses={expenses} onDeleteExpense={deleteExpense} />
+                <Text style={styles.expensesTitle}>📝 Recent Expenses ({filteredExpenses.length})</Text>
+                <ExpensesList
+                  expenses={filteredExpenses}
+                  onDeleteExpense={deleteExpense}
+                  onEditExpense={handleEditExpense}
+                />
               </View>
             )}
 
             {/* Empty State */}
-            {expenses.length === 0 && (
+            {filteredExpenses.length === 0 && (
               <View style={styles.emptyState}>
                 <Text style={styles.emptyIcon}>💸</Text>
-                <Text style={styles.emptyText}>No expenses yet</Text>
-                <Text style={styles.emptySubtext}>Add your first expense to get started</Text>
+                <Text style={styles.emptyText}>No expenses found</Text>
+                <Text style={styles.emptySubtext}>Try a different search or add a new expense</Text>
               </View>
             )}
           </View>
         )}
+
 
         {/* Manual Entry Mode */}
         {mode === 'manual' && (
@@ -127,6 +170,17 @@ export default function ExpenseTrackerScreen() {
             onExpenseAdded={handleAddManualExpense}
             onCancel={() => setMode('view')}
             loading={false}
+          />
+        )}
+
+        {/* Edit Expense Mode */}
+        {mode === 'edit' && editExpense && (
+          <ManualExpenseForm
+            onExpenseAdded={handleUpdateExpense}
+            onCancel={() => { setEditExpense(null); setMode('view'); }}
+            loading={false}
+            initialValues={editExpense}
+            isEdit
           />
         )}
 

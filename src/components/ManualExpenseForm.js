@@ -20,12 +20,13 @@ const CATEGORIES = [
   'Other',
 ];
 
-export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading }) => {
-  const [description, setDescription] = useState('');
-  const [amount, setAmount] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Other');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [notes, setNotes] = useState('');
+
+export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading, initialValues, isEdit }) => {
+  const [description, setDescription] = useState(initialValues?.description || '');
+  const [amount, setAmount] = useState(initialValues?.amount?.toString() || '');
+  const [selectedCategory, setSelectedCategory] = useState(initialValues?.category || 'Other');
+  const [date, setDate] = useState(initialValues?.date || new Date().toISOString().split('T')[0]);
+  const [notes, setNotes] = useState(initialValues?.notes || '');
 
   const handleAddExpense = () => {
     if (!description.trim() || !amount.trim()) {
@@ -39,6 +40,7 @@ export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading }) => {
     }
 
     const expense = {
+      ...(initialValues || {}),
       description: description.trim(),
       amount: parseFloat(amount),
       category: selectedCategory,
@@ -49,17 +51,19 @@ export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading }) => {
 
     onExpenseAdded(expense);
 
-    // Reset form
-    setDescription('');
-    setAmount('');
-    setSelectedCategory('Other');
-    setDate(new Date().toISOString().split('T')[0]);
-    setNotes('');
+    if (!isEdit) {
+      // Reset form only if not editing
+      setDescription('');
+      setAmount('');
+      setSelectedCategory('Other');
+      setDate(new Date().toISOString().split('T')[0]);
+      setNotes('');
+    }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>➕ Add Expense Manually</Text>
+  <Text style={styles.title}>{isEdit ? '✎ Edit Expense' : '➕ Add Expense Manually'}</Text>
 
       {/* Date */}
       <View>
@@ -150,7 +154,7 @@ export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading }) => {
           disabled={loading}
           style={[styles.button, { backgroundColor: colors.accent, flex: 1, opacity: loading ? 0.6 : 1 }]}
         >
-          <Text style={styles.buttonText}>✓ Add Expense</Text>
+          <Text style={styles.buttonText}>{isEdit ? '✓ Save Changes' : '✓ Add Expense'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity

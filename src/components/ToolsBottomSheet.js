@@ -25,6 +25,14 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
 
   const tools = [
     {
+      id: 'income-tracker',
+      name: 'Income Tracker',
+      icon: 'cash',
+      description: 'Track and analyze income',
+      color: '#10B981',
+      route: '/(tabs)/income-tracker',
+    },
+    {
       id: 'pomodoro',
       name: 'Pomodoro Timer',
       icon: 'timer',

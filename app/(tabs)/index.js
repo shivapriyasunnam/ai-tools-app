@@ -4,14 +4,27 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing } from '@/src/constants';
 import { ExpenseContext } from '@/src/context/ExpenseContext';
 
 export default function HomeScreen() {
-  const { getTotal } = useContext(ExpenseContext);
+  const { expenses, getTotal } = useContext(ExpenseContext);
+  const { getTotalIncome } = useContext(require('@/src/context/IncomeContext').IncomeContext);
   const total = getTotal();
+  const income = getTotalIncome();
+
+  // Get the 3 most recent expenses
+  const recentExpenses = expenses.slice(0, 3);
+
+  // Handler for Add Expense (navigate or open modal)
+  const handleAddExpense = () => {
+    // TODO: Implement navigation to Expense Tracker or open add modal
+    // For now, just log
+    console.log('Navigate to Add Expense');
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -99,14 +112,14 @@ export default function HomeScreen() {
           
           <View style={styles.balanceContainer}>
             <Text style={styles.balanceLabel}>Total Balance</Text>
-            <Text style={styles.balanceAmount}>${(2450 - total).toFixed(2)}</Text>
+            <Text style={styles.balanceAmount}>${(income - total).toFixed(2)}</Text>
           </View>
 
           <View style={styles.financialStats}>
             <View style={styles.financialStatItem}>
               <View style={[styles.statDot, { backgroundColor: '#10B981' }]} />
               <Text style={styles.statItemLabel}>Income</Text>
-              <Text style={styles.statItemValue}>$2,450</Text>
+              <Text style={styles.statItemValue}>${income.toFixed(2)}</Text>
             </View>
             <View style={styles.financialStatItem}>
               <View style={[styles.statDot, { backgroundColor: '#EF4444' }]} />
@@ -121,12 +134,13 @@ export default function HomeScreen() {
           <Text style={styles.sectionTitle}>Quick Actions</Text>
         </View>
         <View style={styles.actionsRow}>
-          <View style={[styles.actionCardUnified, { backgroundColor: '#FEF3C7' }]}> 
+          <TouchableOpacity style={[styles.actionCardUnified, { backgroundColor: '#FEF3C7' }]}
+            onPress={handleAddExpense}>
             <View style={[styles.actionIconUnified, { backgroundColor: '#F59E0B' }]}> 
               <Text style={styles.actionEmojiUnified}>💰</Text>
             </View>
             <Text style={styles.actionLabelUnified}>Add Expense</Text>
-          </View>
+          </TouchableOpacity>
           <View style={[styles.actionCardUnified, { backgroundColor: '#DBEAFE' }]}> 
             <View style={[styles.actionIconUnified, { backgroundColor: '#3B82F6' }]}> 
               <Text style={styles.actionEmojiUnified}>📊</Text>
@@ -152,41 +166,30 @@ export default function HomeScreen() {
           <Text style={styles.sectionTitle}>Recent Activity</Text>
           <Text style={styles.sectionLink}>See all</Text>
         </View>
-        
-        <View style={styles.activityCard}>
-          <View style={[styles.activityIcon, { backgroundColor: '#DCFCE7' }]}>
-            <Text style={styles.activityEmoji}>💸</Text>
+        {recentExpenses.length === 0 ? (
+          <View style={styles.activityCard}>
+            <View style={[styles.activityIcon, { backgroundColor: '#F3F4F6' }]}> 
+              <Text style={styles.activityEmoji}>💸</Text>
+            </View>
+            <View style={styles.activityContent}>
+              <Text style={styles.activityTitle}>No recent expenses</Text>
+              <Text style={styles.activitySubtitle}>Add an expense to see activity</Text>
+            </View>
           </View>
-          <View style={styles.activityContent}>
-            <Text style={styles.activityTitle}>Expense Added</Text>
-            <Text style={styles.activitySubtitle}>Groceries • 2 hours ago</Text>
-          </View>
-          <Text style={styles.activityAmount}>-$52.40</Text>
-        </View>
-
-        <View style={styles.activityCard}>
-          <View style={[styles.activityIcon, { backgroundColor: '#E0E7FF' }]}>
-            <Text style={styles.activityEmoji}>📅</Text>
-          </View>
-          <View style={styles.activityContent}>
-            <Text style={styles.activityTitle}>Meeting Scheduled</Text>
-            <Text style={styles.activitySubtitle}>Team sync • Tomorrow 10 AM</Text>
-          </View>
-          <View style={styles.activityBadge}>
-            <Text style={styles.activityBadgeText}>New</Text>
-          </View>
-        </View>
-
-        <View style={styles.activityCard}>
-          <View style={[styles.activityIcon, { backgroundColor: '#FCE7F3' }]}>
-            <Text style={styles.activityEmoji}>⏱️</Text>
-          </View>
-          <View style={styles.activityContent}>
-            <Text style={styles.activityTitle}>Pomodoro Completed</Text>
-            <Text style={styles.activitySubtitle}>Focus session • 1 hour ago</Text>
-          </View>
-          <Text style={styles.activityTime}>25m</Text>
-        </View>
+        ) : (
+          recentExpenses.map(exp => (
+            <View key={exp.id} style={styles.activityCard}>
+              <View style={[styles.activityIcon, { backgroundColor: '#DCFCE7' }]}> 
+                <Text style={styles.activityEmoji}>💸</Text>
+              </View>
+              <View style={styles.activityContent}>
+                <Text style={styles.activityTitle}>{exp.description}</Text>
+                <Text style={styles.activitySubtitle}>{exp.category} • {exp.date}</Text>
+              </View>
+              <Text style={styles.activityAmount}>-${exp.amount.toFixed(2)}</Text>
+            </View>
+          ))
+        )}
       </ScrollView>
     </SafeAreaView>
   );

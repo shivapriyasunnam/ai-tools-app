@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const EXPENSES_KEY = 'expenses_data';
+const INCOMES_KEY = 'incomes_data';
 const BUDGETS_KEY = 'budgets_data';
 const MEETINGS_KEY = 'meetings_data';
 
@@ -16,12 +17,33 @@ export const storageService = {
     }
   },
 
+  // Incomes
+  saveIncomes: async (incomes) => {
+    try {
+      await AsyncStorage.setItem(INCOMES_KEY, JSON.stringify(incomes));
+      return true;
+    } catch (error) {
+      console.error('Error saving incomes:', error);
+      return false;
+    }
+  },
+
   getExpenses: async () => {
     try {
       const data = await AsyncStorage.getItem(EXPENSES_KEY);
       return data ? JSON.parse(data) : [];
     } catch (error) {
       console.error('Error retrieving expenses:', error);
+      return [];
+    }
+  },
+
+  getIncomes: async () => {
+    try {
+      const data = await AsyncStorage.getItem(INCOMES_KEY);
+      return data ? JSON.parse(data) : [];
+    } catch (error) {
+      console.error('Error retrieving incomes:', error);
       return [];
     }
   },
