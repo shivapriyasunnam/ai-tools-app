@@ -1,15 +1,21 @@
 {
   "expo": {
-    "name": "ai-tools-app",
+    "name": "AI Tools App",
     "slug": "ai-tools-app",
     "version": "1.0.0",
+    "description": "A React Native app with AI-powered tools for expense tracking, budget planning, and meeting scheduling",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "aitoolsapp",
-    "userInterfaceStyle": "automatic",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.aitools.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Camera access for AI features",
+        "NSMicrophoneUsageDescription": "Microphone access for meeting scheduling"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +25,14 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.aitools.app",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR"
+      ]
     },
     "web": {
       "output": "static",
