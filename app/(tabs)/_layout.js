@@ -115,6 +115,12 @@ export default function TabsLayout() {
             ),
           }}
         />
+        <Tabs.Screen
+          name="index_old"
+          options={{
+            href: null,
+          }}
+        />
       </Tabs>
       <ToolsBottomSheet ref={bottomSheetRef} />
     </GestureHandlerRootView>
