@@ -1,3 +1,4 @@
+  // The income-tracker tab has been removed as it was not present in the file.
 import React, { useRef } from 'react';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
