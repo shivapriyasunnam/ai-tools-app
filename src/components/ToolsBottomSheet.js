@@ -1,9 +1,9 @@
-import React, { forwardRef, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
 import { colors } from '@/src/constants';
+import { Ionicons } from '@expo/vector-icons';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
+import { useRouter } from 'expo-router';
+import { forwardRef, useCallback, useMemo } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const ToolsBottomSheet = forwardRef((props, ref) => {
   const snapPoints = useMemo(() => ['60%', '85%'], []);
@@ -30,7 +30,7 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
       icon: 'cash',
       description: 'Track and analyze income',
       color: '#10B981',
-      route: '/tools/income-tracker',
+      route: '/(tabs)/income-tracker',
     },
     {
       id: 'pomodoro',
@@ -38,7 +38,7 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
       icon: 'timer',
       description: 'Stay focused with time management',
       color: '#E91E63',
-      route: null, // Will be implemented later
+      route: '/(tabs)/pomodoro-timer',
     },
     {
       id: 'expense-tracker',

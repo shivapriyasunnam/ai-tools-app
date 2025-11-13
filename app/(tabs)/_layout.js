@@ -1,11 +1,11 @@
   // The income-tracker tab has been removed as it was not present in the file.
-import React, { useRef } from 'react';
-import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { TouchableOpacity, View, StyleSheet, Alert } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { colors } from '@/src/constants';
 import ToolsBottomSheet from '@/src/components/ToolsBottomSheet';
+import { colors } from '@/src/constants';
+import { Ionicons } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
+import { useRef } from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function TabsLayout() {
   const bottomSheetRef = useRef(null);
@@ -114,6 +114,20 @@ export default function TabsLayout() {
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="calendar" size={size} color={color} />
             ),
+          }}
+        />
+        <Tabs.Screen
+          name="pomodoro-timer"
+          options={{
+            title: 'Pomodoro Timer',
+            href: null, // Hidden tab - doesn't appear in tab bar
+          }}
+        />
+        <Tabs.Screen
+          name="income-tracker"
+          options={{
+            title: 'Income Tracker',
+            href: null, // Hidden tab - doesn't appear in tab bar
           }}
         />
         <Tabs.Screen

@@ -8,24 +8,21 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing } from '@/src/constants';
-import { ExpenseContext } from '@/src/context/ExpenseContext';
 
-export default function HomeScreen() {
+import { ExpenseContext } from '@/src/context/ExpenseContext';
+import { PomodoroProvider } from '@/src/context/PomodoroContext';
+import usePomodoroStats from '@/src/hooks/usePomodoroStats';
+
+function HomeScreen() {
   const { expenses, getTotal } = useContext(ExpenseContext);
   const { getTotalIncome } = useContext(require('@/src/context/IncomeContext').IncomeContext);
   const total = getTotal();
   const income = getTotalIncome();
-
-  // Get the 3 most recent expenses
+  const { totalSessions, totalFocusedHours } = usePomodoroStats();
   const recentExpenses = expenses.slice(0, 3);
-
-  // Handler for Add Expense (navigate or open modal)
   const handleAddExpense = () => {
-    // TODO: Implement navigation to Expense Tracker or open add modal
-    // For now, just log
     console.log('Navigate to Add Expense');
   };
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView 
@@ -71,9 +68,9 @@ export default function HomeScreen() {
                 <Text style={[styles.statBadgeText, { color: '#92400E' }]}>Active</Text>
               </View>
             </View>
-            <Text style={styles.statCardValue}>12</Text>
+            <Text style={styles.statCardValue}>{totalSessions}</Text>
             <Text style={styles.statCardLabel}>Pomodoro Sessions</Text>
-            <Text style={styles.statCardSubtext}>6 hours focused time</Text>
+            <Text style={styles.statCardSubtext}>{totalFocusedHours} hours focused time</Text>
           </View>
         </View>
 
@@ -192,6 +189,14 @@ export default function HomeScreen() {
         )}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+export default function HomeScreenWithPomodoroProvider(props) {
+  return (
+    <PomodoroProvider>
+      <HomeScreen {...props} />
+    </PomodoroProvider>
   );
 }
 
