@@ -65,17 +65,37 @@ function HomeScreen() {
       iconColor: '#10B981',
       iconBg: '#D1FAE5',
     })),
-    ...todos.filter(todo => todo.completed).map(todo => ({
-      id: `todo-${todo.id}`,
-      type: 'todo',
-      title: todo.text,
-      subtitle: 'Task completed',
-      amount: null,
-      date: todo.completedAt ? new Date(todo.completedAt) : new Date(),
-      icon: 'checkmark-circle',
-      iconColor: '#8B5CF6',
-      iconBg: '#EDE9FE',
-    })),
+    // Show both added and completed todos as activities, always display the task title
+    ...todos.flatMap(todo => {
+      const activities = [];
+      if (todo.createdAt) {
+        activities.push({
+          id: `todo-added-${todo.id}`,
+          type: 'todo-added',
+          title: todo.title || todo.text || '(No Title)',
+          subtitle: 'Task added',
+          amount: null,
+          date: new Date(todo.createdAt),
+          icon: 'add-circle',
+          iconColor: '#3B82F6',
+          iconBg: '#DBEAFE',
+        });
+      }
+      if (todo.completed && todo.completedAt) {
+        activities.push({
+          id: `todo-completed-${todo.id}`,
+          type: 'todo-completed',
+          title: todo.title || todo.text || '(No Title)',
+          subtitle: 'Task completed',
+          amount: null,
+          date: new Date(todo.completedAt),
+          icon: 'checkmark-circle',
+          iconColor: '#8B5CF6',
+          iconBg: '#EDE9FE',
+        });
+      }
+      return activities;
+    }),
     ...budgets.map(budget => ({
       id: `budget-${budget.id}`,
       type: 'budget',
@@ -393,25 +413,55 @@ function HomeScreen() {
             </View>
           </View>
         ) : (
-          allActivities.map(activity => (
-            <View key={activity.id} style={styles.activityCard}>
-              <View style={[styles.activityIcon, { backgroundColor: activity.iconBg }]}> 
-                <Ionicons name={activity.icon} size={24} color={activity.iconColor} />
-              </View>
-              <View style={styles.activityContent}>
-                <Text style={styles.activityTitle}>{activity.title}</Text>
-                <Text style={styles.activitySubtitle}>{activity.subtitle}</Text>
-              </View>
-              {activity.amount !== null && (
-                <Text style={[
-                  styles.activityAmount,
-                  { color: activity.amount < 0 ? '#EF4444' : '#10B981' }
-                ]}>
-                  {activity.amount < 0 ? '-' : '+'}${Math.abs(activity.amount).toFixed(2)}
-                </Text>
-              )}
-            </View>
-          ))
+          allActivities.map(activity => {
+            // Navigation handler based on activity type
+            let onPress = undefined;
+            switch (activity.type) {
+              case 'expense':
+                onPress = () => router.push('/(tabs)/expense-tracker');
+                break;
+              case 'income':
+                onPress = () => router.push('/(tabs)/income-tracker');
+                break;
+              case 'todo-added':
+              case 'todo-completed':
+                onPress = () => router.push('/(tabs)/todo-list');
+                break;
+              case 'budget':
+                onPress = () => router.push('/(tabs)/budget-planner');
+                break;
+              case 'pomodoro':
+                onPress = () => router.push('/(tabs)/pomodoro-timer');
+                break;
+              default:
+                onPress = undefined;
+            }
+            return (
+              <TouchableOpacity
+                key={activity.id}
+                style={styles.activityCard}
+                onPress={onPress}
+                activeOpacity={onPress ? 0.7 : 1}
+                disabled={!onPress}
+              >
+                <View style={[styles.activityIcon, { backgroundColor: activity.iconBg }]}> 
+                  <Ionicons name={activity.icon} size={24} color={activity.iconColor} />
+                </View>
+                <View style={styles.activityContent}>
+                  <Text style={styles.activityTitle}>{activity.title}</Text>
+                  <Text style={styles.activitySubtitle}>{activity.subtitle}</Text>
+                </View>
+                {activity.amount !== null && (
+                  <Text style={[
+                    styles.activityAmount,
+                    { color: activity.amount < 0 ? '#EF4444' : '#10B981' }
+                  ]}>
+                    {activity.amount < 0 ? '-' : '+'}${Math.abs(activity.amount).toFixed(2)}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            );
+          })
         )}
       </ScrollView>
     </SafeAreaView>

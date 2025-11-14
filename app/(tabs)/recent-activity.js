@@ -1,9 +1,11 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useContext } from 'react';
 import {
     ScrollView,
     StyleSheet,
     Text,
+    TouchableOpacity,
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -14,6 +16,7 @@ import { IncomeContext } from '@/src/context/IncomeContext';
 import { TodoContext } from '@/src/context/TodoContext';
 
 function RecentActivityScreen() {
+  const router = useRouter();
   const { expenses } = useContext(ExpenseContext);
   const { incomes } = useContext(IncomeContext);
   const { todos } = useContext(TodoContext);
@@ -184,27 +187,57 @@ function RecentActivityScreen() {
             return (
               <View key={groupKey} style={styles.section}>
                 <Text style={styles.sectionTitle}>{groupKey}</Text>
-                {activities.map(activity => (
-                  <View key={activity.id} style={styles.activityCard}>
-                    <View style={[styles.activityIcon, { backgroundColor: activity.iconBg }]}>
-                      <Ionicons name={activity.icon} size={24} color={activity.iconColor} />
-                    </View>
-                    <View style={styles.activityContent}>
-                      <Text style={styles.activityTitle}>{activity.title}</Text>
-                      <Text style={styles.activitySubtitle}>
-                        {activity.subtitle} • {formatDate(activity.date)}
-                      </Text>
-                    </View>
-                    {activity.amount !== null && (
-                      <Text style={[
-                        styles.activityAmount,
-                        { color: activity.amount < 0 ? '#EF4444' : '#10B981' }
-                      ]}>
-                        {activity.amount < 0 ? '-' : '+'}${Math.abs(activity.amount).toFixed(2)}
-                      </Text>
-                    )}
-                  </View>
-                ))}
+                {activities.map(activity => {
+                  // Navigation handler based on activity type
+                  let onPress = undefined;
+                  switch (activity.type) {
+                    case 'expense':
+                      onPress = () => router.push('/(tabs)/expense-tracker');
+                      break;
+                    case 'income':
+                      onPress = () => router.push('/(tabs)/income-tracker');
+                      break;
+                    case 'todo-added':
+                    case 'todo-completed':
+                      onPress = () => router.push('/(tabs)/todo-list');
+                      break;
+                    case 'budget':
+                      onPress = () => router.push('/(tabs)/budget-planner');
+                      break;
+                    case 'pomodoro':
+                      onPress = () => router.push('/(tabs)/pomodoro-timer');
+                      break;
+                    default:
+                      onPress = undefined;
+                  }
+                  return (
+                    <TouchableOpacity
+                      key={activity.id}
+                      style={styles.activityCard}
+                      onPress={onPress}
+                      activeOpacity={onPress ? 0.7 : 1}
+                      disabled={!onPress}
+                    >
+                      <View style={[styles.activityIcon, { backgroundColor: activity.iconBg }]}> 
+                        <Ionicons name={activity.icon} size={24} color={activity.iconColor} />
+                      </View>
+                      <View style={styles.activityContent}>
+                        <Text style={styles.activityTitle}>{activity.title}</Text>
+                        <Text style={styles.activitySubtitle}>
+                          {activity.subtitle} • {formatDate(activity.date)}
+                        </Text>
+                      </View>
+                      {activity.amount !== null && (
+                        <Text style={[
+                          styles.activityAmount,
+                          { color: activity.amount < 0 ? '#EF4444' : '#10B981' }
+                        ]}>
+                          {activity.amount < 0 ? '-' : '+'}${Math.abs(activity.amount).toFixed(2)}
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             );
           })
