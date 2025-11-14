@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 12,
     elevation: 8,
-    flex: 1,
+    // Removed flex: 1 to allow scroll view to expand
     overflow: 'hidden',
   },
   handleIndicator: {
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingBottom: 40,
+    paddingBottom: 150, // Increased to ensure last tool is visible
   },
   title: {
     fontSize: 24,
