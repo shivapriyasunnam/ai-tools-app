@@ -1,45 +1,62 @@
 
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Card } from '../../src/components/ui';
 import { colors, spacing } from '../../src/constants';
+import { apiService } from '../../src/services/api';
+
+
 
 export default function HubScreen() {
-  // Mock data for top 3 US stocks and market stats
-  const topStocks = [
-    {
-      symbol: 'NVDA',
-      name: 'NVIDIA Corp.',
-      price: 650.12,
-      change: '+3.2%',
-      color: colors.accent,
-    },
-    {
-      symbol: 'AAPL',
-      name: 'Apple Inc.',
-      price: 195.34,
-      change: '+2.1%',
-      color: colors.primary,
-    },
-    {
-      symbol: 'MSFT',
-      name: 'Microsoft Corp.',
-      price: 410.56,
-      change: '+1.8%',
-      color: colors.secondary,
-    },
-  ];
+  // State for stocks and indices
+  const [marketStats, setMarketStats] = useState(null);
+  const [topStocks, setTopStocks] = useState(null);
+  const [loadingStocks, setLoadingStocks] = useState(true);
+  const [errorStocks, setErrorStocks] = useState(null);
 
-  const marketStats = {
-    nasdaq: { value: 15800.45, change: '+1.2%' },
-    sp500: { value: 4700.23, change: '+1.0%' },
-  };
+  // State for crypto
+  const [topCryptos, setTopCryptos] = useState(null);
+  const [loadingCryptos, setLoadingCryptos] = useState(true);
+  const [errorCryptos, setErrorCryptos] = useState(null);
 
-
-  // Mock data for top 2 cryptocurrencies
-  const cryptoStats = {
-    btc: { name: 'Bitcoin', symbol: 'BTC', value: 37000.12, change: '+2.5%', color: colors.accent },
-    eth: { name: 'Ethereum', symbol: 'ETH', value: 2100.45, change: '+1.8%', color: colors.secondary },
-  };
+  useEffect(() => {
+    async function fetchData() {
+      setLoadingStocks(true);
+      setErrorStocks(null);
+      try {
+        const [indices, stocks] = await Promise.all([
+          apiService.fetchUSIndices(),
+          apiService.fetchTopUSStocks(),
+        ]);
+        // Indices: Alpha Vantage returns SPY (S&P 500) and QQQ (NASDAQ)
+        const stats = {};
+        indices.forEach(idx => {
+          if (idx.symbol === 'QQQ') stats.nasdaq = idx;
+          if (idx.symbol === 'SPY') stats.sp500 = idx;
+        });
+        setMarketStats(stats);
+        setTopStocks(stocks);
+      } catch (e) {
+        setErrorStocks('Failed to load stock data');
+      } finally {
+        setLoadingStocks(false);
+      }
+    }
+    async function fetchCryptos() {
+      setLoadingCryptos(true);
+      setErrorCryptos(null);
+      try {
+        const cryptos = await apiService.fetchTopCryptos();
+        setTopCryptos(cryptos);
+      } catch (e) {
+        setErrorCryptos('Failed to load crypto data');
+      } finally {
+        setLoadingCryptos(false);
+      }
+    }
+    fetchData();
+    fetchCryptos();
+  }, []);
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -48,92 +65,93 @@ export default function HubScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>US Stock Market Overview</Text>
-        <View style={styles.statsRow}>
-          <View style={styles.statsCol}>
-            <Card
-              title={<Text style={styles.cardTitle}>NASDAQ</Text>}
-              description={
-                <View>
-                  <Text style={styles.cardValue}>{marketStats.nasdaq.value.toLocaleString()}</Text>
-                  <Text style={styles.cardChange}>{marketStats.nasdaq.change}</Text>
-                </View>
-              }
-              color={colors.secondary}
-            />
+        {loadingStocks ? (
+          <ActivityIndicator size="large" color={colors.primary} style={{ marginVertical: spacing.lg }} />
+        ) : errorStocks ? (
+          <Text style={{ color: colors.error, textAlign: 'center' }}>{errorStocks}</Text>
+        ) : marketStats && (marketStats.nasdaq || marketStats.sp500) ? (
+          <View style={styles.statsRow}>
+            <View style={styles.statsCol}>
+              <Card
+                title={<Text style={styles.cardTitle}>NASDAQ</Text>}
+                description={
+                  <View>
+                    <Text style={styles.cardValue}>
+                      {marketStats.nasdaq?.price?.toLocaleString?.() ?? 'Data unavailable'}
+                    </Text>
+                    <Text style={styles.cardChange}>
+                      {marketStats.nasdaq?.changesPercentage !== undefined
+                        ? `${marketStats.nasdaq.changesPercentage.toFixed(2)}%`
+                        : 'Data unavailable'}
+                    </Text>
+                  </View>
+                }
+                color={colors.secondary}
+              />
+            </View>
+            <View style={styles.statsCol}>
+              <Card
+                title={<Text style={styles.cardTitle}>S&amp;P 500</Text>}
+                description={
+                  <View>
+                    <Text style={styles.cardValue}>
+                      {marketStats.sp500?.price?.toLocaleString?.() ?? 'Data unavailable'}
+                    </Text>
+                    <Text style={styles.cardChange}>
+                      {marketStats.sp500?.changesPercentage !== undefined
+                        ? `${marketStats.sp500.changesPercentage.toFixed(2)}%`
+                        : 'Data unavailable'}
+                    </Text>
+                  </View>
+                }
+                color={colors.accent}
+              />
+            </View>
           </View>
-          <View style={styles.statsCol}>
-            <Card
-              title={<Text style={styles.cardTitle}>S&amp;P 500</Text>}
-              description={
-                <View>
-                  <Text style={styles.cardValue}>{marketStats.sp500.value.toLocaleString()}</Text>
-                  <Text style={styles.cardChange}>{marketStats.sp500.change}</Text>
-                </View>
-              }
-              color={colors.accent}
-            />
-          </View>
-        </View>
+        ) : (
+          <Text style={{ color: colors.error, textAlign: 'center', marginVertical: spacing.md }}>
+            US index data is currently unavailable. Please try again later.
+          </Text>
+        )}
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Crypto Market Overview</Text>
-        <View style={styles.statsRow}>
-          <View style={styles.statsCol}>
-            <Card
-              title={<Text style={styles.cardTitle}>BTC - Bitcoin</Text>}
-              description={
-                <View>
-                  <Text style={styles.cardValue}>${cryptoStats.btc.value.toLocaleString()}</Text>
-                  <Text style={styles.cardChange}>{cryptoStats.btc.change}</Text>
-                </View>
-              }
-              color={cryptoStats.btc.color}
-            />
-          </View>
-          <View style={styles.statsCol}>
-            <Card
-              title={<Text style={styles.cardTitle}>ETH - Ethereum</Text>}
-              description={
-                <View>
-                  <Text style={styles.cardValue}>${cryptoStats.eth.value.toLocaleString()}</Text>
-                  <Text style={styles.cardChange}>{cryptoStats.eth.change}</Text>
-                </View>
-              }
-              color={cryptoStats.eth.color}
-            />
-          </View>
-        </View>
-      </View>
+      {/* Crypto Market Overview will be implemented with live data next */}
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Top 3 Performing US Stocks</Text>
-        {topStocks.map((stock) => (
-          <Card
-            key={stock.symbol}
-            title={`${stock.symbol} - ${stock.name}`}
-            description={`$${stock.price.toFixed(2)}  (${stock.change})`}
-            color={stock.color}
-          />
-        ))}
+        {loadingStocks ? (
+          <ActivityIndicator size="large" color={colors.primary} style={{ marginVertical: spacing.lg }} />
+        ) : errorStocks ? (
+          <Text style={{ color: colors.error, textAlign: 'center' }}>{errorStocks}</Text>
+        ) : topStocks && topStocks.length > 0 ? (
+          topStocks.map((stock) => (
+            <Card
+              key={stock.symbol}
+              title={`${stock.symbol} - ${stock.name}`}
+              description={`$${stock.price?.toLocaleString?.() ?? '--'}  (${stock.changesPercentage ? stock.changesPercentage.toFixed(2) + '%' : '--'})`}
+              color={colors.primary}
+            />
+          ))
+        ) : null}
       </View>
 
       {/* Top 3 Performing Crypto */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Top 3 Performing Crypto</Text>
-        {/* Mock data for top 3 cryptos */}
-        {[
-          { symbol: 'BTC', name: 'Bitcoin', price: 37000.12, change: '+2.5%', color: colors.accent },
-          { symbol: 'ETH', name: 'Ethereum', price: 2100.45, change: '+1.8%', color: colors.secondary },
-          { symbol: 'SOL', name: 'Solana', price: 58.23, change: '+4.1%', color: colors.primary },
-        ].map((crypto) => (
-          <Card
-            key={crypto.symbol}
-            title={`${crypto.symbol} - ${crypto.name}`}
-            description={`$${crypto.price.toLocaleString()}  (${crypto.change})`}
-            color={crypto.color}
-          />
-        ))}
+        {loadingCryptos ? (
+          <ActivityIndicator size="large" color={colors.primary} style={{ marginVertical: spacing.lg }} />
+        ) : errorCryptos ? (
+          <Text style={{ color: colors.error, textAlign: 'center' }}>{errorCryptos}</Text>
+        ) : topCryptos && topCryptos.length > 0 ? (
+          topCryptos.map((crypto) => (
+            <Card
+              key={crypto.id}
+              title={`${crypto.symbol.toUpperCase()} - ${crypto.name}`}
+              description={`$${crypto.current_price?.toLocaleString?.() ?? '--'}  (${crypto.price_change_percentage_24h !== undefined ? crypto.price_change_percentage_24h.toFixed(2) + '%' : '--'})`}
+              color={colors.accent}
+            />
+          ))
+        ) : null}
       </View>
     </ScrollView>
   );
