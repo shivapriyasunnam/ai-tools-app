@@ -13,10 +13,17 @@ import {
 } from 'react-native';
 
 // Simple form for adding/editing income
+
 function IncomeForm({ onSubmit, onCancel, initialValues = {}, loading, isEdit }) {
   const [description, setDescription] = useState(initialValues.description || '');
   const [amount, setAmount] = useState(initialValues.amount ? initialValues.amount.toString() : '');
-  const [date, setDate] = useState(initialValues.date || new Date().toISOString().split('T')[0]);
+  const now = new Date();
+  const pad = n => n.toString().padStart(2, '0');
+  const initialDateObj = initialValues.date ? new Date(initialValues.date) : now;
+  const localYear = initialDateObj.getFullYear();
+  const localMonth = pad(initialDateObj.getMonth() + 1);
+  const localDay = pad(initialDateObj.getDate());
+  const [date, setDate] = useState(`${localYear}-${localMonth}-${localDay}`);
   const [notes, setNotes] = useState(initialValues.notes || '');
 
   const handleSubmit = () => {
@@ -28,17 +35,19 @@ function IncomeForm({ onSubmit, onCancel, initialValues = {}, loading, isEdit })
       Alert.alert('Error', 'Please enter a valid amount');
       return;
     }
+    // Always use current local date and time for activity entry
+    const isoDate = new Date().toISOString();
     onSubmit({
       ...initialValues,
       description: description.trim(),
       amount: parseFloat(amount),
-      date,
+      date: isoDate,
       notes,
     });
     if (!isEdit) {
       setDescription('');
       setAmount('');
-      setDate(new Date().toISOString().split('T')[0]);
+      setDate(`${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`);
       setNotes('');
     }
   };
@@ -67,6 +76,7 @@ function IncomeForm({ onSubmit, onCancel, initialValues = {}, loading, isEdit })
         onChangeText={setDate}
         style={formStyles.input}
         placeholderTextColor="#aaa"
+        editable={true}
       />
       <TextInput
         placeholder="Notes (optional)"

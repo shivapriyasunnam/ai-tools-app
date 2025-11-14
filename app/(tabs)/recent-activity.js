@@ -48,7 +48,7 @@ function RecentActivityScreen() {
     ...incomes.map(inc => ({
       id: `inc-${inc.id}`,
       type: 'income',
-      title: inc.source,
+      title: inc.description || inc.source || 'Income',
       subtitle: inc.category || 'Income',
       amount: inc.amount,
       date: new Date(inc.date),

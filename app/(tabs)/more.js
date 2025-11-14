@@ -6,7 +6,7 @@ import { colors } from '@/src/constants';
 export default function MoreScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>More Tools</Text>
+      <Text style={styles.text}>Tools</Text>
     </View>
   );
 }

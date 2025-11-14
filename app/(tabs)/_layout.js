@@ -64,19 +64,19 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
-          name="expense-tracker"
+          name="hub"
           options={{
-            title: 'Expense Tracker',
-            tabBarLabel: 'Expenses',
+            title: 'Hub',
+            tabBarLabel: 'Hub',
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="wallet" size={size} color={color} />
+              <Ionicons name="grid" size={size} color={color} />
             ),
           }}
         />
         <Tabs.Screen
           name="more"
           options={{
-            title: 'More Tools',
+            title: 'Tools',
             headerShown: false,
             tabBarLabel: '',
             tabBarIcon: () => null,
@@ -121,6 +121,17 @@ export default function TabsLayout() {
           options={{
             title: 'Budget Planner',
             href: null, // Hidden tab - only accessible via bottom sheet
+          }}
+        />
+         <Tabs.Screen
+          name="expense-tracker"
+          options={{
+            title: 'Expense Tracker',
+            // tabBarLabel: 'Expenses',
+            // tabBarIcon: ({ color, size }) => (
+            //   <Ionicons name="wallet" size={size} color={color} />
+            // ),
+            href: null, // Hidden tab - doesn't appear in tab bar
           }}
         />
         <Tabs.Screen

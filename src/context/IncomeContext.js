@@ -1,5 +1,5 @@
-import React, { createContext, useState, useCallback, useEffect } from 'react';
 import { storageService } from '@/src/services/storageService';
+import { createContext, useCallback, useEffect, useState } from 'react';
 
 export const IncomeContext = createContext();
 
@@ -34,7 +34,7 @@ export const IncomeProvider = ({ children }) => {
     const newIncome = {
       id: Date.now() + Math.random(),
       createdAt: new Date().toISOString(),
-      date: income.date || new Date().toISOString().split('T')[0],
+  date: income.date || new Date().toISOString(),
       description: income.description,
       amount: parseFloat(income.amount),
       notes: income.notes || '',

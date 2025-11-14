@@ -1,6 +1,7 @@
 import { colors } from '@/src/constants';
 import { Ionicons } from '@expo/vector-icons';
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
+//
 import { useRouter } from 'expo-router';
 import { forwardRef, useCallback, useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -21,14 +22,6 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
       route: '/(tabs)/income-tracker',
     },
     {
-      id: 'pomodoro',
-      name: 'Pomodoro Timer',
-      icon: 'timer',
-      description: 'Stay focused with time management',
-      color: '#E91E63',
-      route: '/(tabs)/pomodoro-timer',
-    },
-    {
       id: 'expense-tracker',
       name: 'Expense Tracker',
       icon: 'wallet',
@@ -45,12 +38,12 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
       route: '/(tabs)/budget-planner',
     },
     {
-      id: 'meetings',
-      name: 'Meetings Scheduler',
-      icon: 'calendar',
-      description: 'Schedule and organize meetings',
-      color: '#6366F1',
-      route: '/(tabs)/meetings-scheduler',
+      id: 'pomodoro',
+      name: 'Pomodoro Timer',
+      icon: 'timer',
+      description: 'Stay focused with time management',
+      color: '#E91E63',
+      route: '/(tabs)/pomodoro-timer',
     },
     {
       id: 'notes',
@@ -67,6 +60,14 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
       description: 'Manage your tasks',
       color: '#8B5CF6',
       route: '/(tabs)/todo-list',
+    },
+    {
+      id: 'meetings',
+      name: 'Meetings Scheduler',
+      icon: 'calendar',
+      description: 'Schedule and organize meetings',
+      color: '#6366F1',
+      route: '/(tabs)/meetings-scheduler',
     },
     {
       id: 'reminders',
@@ -112,37 +113,38 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
       snapPoints={snapPoints}
       enablePanDownToClose
       backdropComponent={null}
-      backgroundStyle={styles.bottomSheetBackground}
+      backgroundStyle={{ backgroundColor: 'transparent', borderTopLeftRadius: 24, borderTopRightRadius: 24 }}
       handleIndicatorStyle={styles.handleIndicator}
       onChange={handleSheetChanges}
       enableDynamicSizing={false}
     >
-      <View style={styles.headerContainer}>
-        <Text style={styles.title}>More Tools</Text>
-        <Text style={styles.subtitle}>Boost your productivity</Text>
-      </View>
-      
-      <BottomSheetScrollView 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.toolsGrid}>
-          {tools.map((tool) => (
-            <TouchableOpacity
-              key={tool.id}
-              style={styles.toolCard}
-              onPress={() => handleToolPress(tool)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.iconContainer, { backgroundColor: tool.color + '20' }]}>
-                <Ionicons name={tool.icon} size={32} color={tool.color} />
-              </View>
-              <Text style={styles.toolName}>{tool.name}</Text>
-              <Text style={styles.toolDescription}>{tool.description}</Text>
-            </TouchableOpacity>
-          ))}
+      <View style={styles.bottomSheetBackground}>
+        <View style={styles.headerContainer}>
+          <Text style={styles.title}>Tools</Text>
+          <Text style={styles.subtitle}>Boost your productivity</Text>
         </View>
-      </BottomSheetScrollView>
+        <BottomSheetScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.toolsGrid}>
+            {tools.map((tool) => (
+              <TouchableOpacity
+                key={tool.id}
+                style={styles.toolCard}
+                onPress={() => handleToolPress(tool)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.iconContainer, { backgroundColor: tool.color + '20' }]}> 
+                  <Ionicons name={tool.icon} size={32} color={tool.color} />
+                </View>
+                <Text style={styles.toolName}>{tool.name}</Text>
+                <Text style={styles.toolDescription}>{tool.description}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </BottomSheetScrollView>
+      </View>
     </BottomSheet>
   );
 });
@@ -152,6 +154,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 8,
+    flex: 1,
+    overflow: 'hidden',
   },
   handleIndicator: {
     backgroundColor: colors.gray[300],

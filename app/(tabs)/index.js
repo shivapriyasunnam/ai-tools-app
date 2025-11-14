@@ -17,6 +17,23 @@ import { useQuickNotes } from '@/src/context/QuickNotesContext';
 import { TodoContext } from '@/src/context/TodoContext';
 import usePomodoroStats from '@/src/hooks/usePomodoroStats';
 
+function formatDate(date) {
+  // Always use local time
+  const now = new Date();
+  const d = new Date(date);
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const activityDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  if (activityDate.getTime() === today.getTime()) {
+    return `Today, ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+  } else if (activityDate.getTime() === yesterday.getTime()) {
+    return `Yesterday, ${d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+  } else {
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
+}
+
 function HomeScreen() {
   const router = useRouter();
   const { expenses, getTotal } = useContext(ExpenseContext);
@@ -59,7 +76,7 @@ function HomeScreen() {
     ...incomes.map(inc => ({
       id: `inc-${inc.id}`,
       type: 'income',
-      title: inc.source,
+      title: inc.description || inc.source || 'Income',
       subtitle: inc.category || 'Income',
       amount: inc.amount,
       date: new Date(inc.date),
@@ -461,7 +478,9 @@ function HomeScreen() {
                 </View>
                 <View style={styles.activityContent}>
                   <Text style={styles.activityTitle}>{activity.title}</Text>
-                  <Text style={styles.activitySubtitle}>{activity.subtitle}</Text>
+                  <Text style={styles.activitySubtitle}>
+                    {activity.subtitle} • {formatDate(activity.date)}
+                  </Text>
                 </View>
                 {activity.amount !== null && (
                   <Text style={[

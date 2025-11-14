@@ -1,5 +1,5 @@
-import React, { createContext, useState, useCallback, useEffect } from 'react';
 import { storageService } from '@/src/services/storageService';
+import { createContext, useCallback, useEffect, useState } from 'react';
 
 export const ExpenseContext = createContext();
 
@@ -36,7 +36,7 @@ export const ExpenseProvider = ({ children }) => {
     const newExpense = {
       id: Date.now() + Math.random(),
       createdAt: new Date().toISOString(),
-      date: expense.date || new Date().toISOString().split('T')[0],
+  date: expense.date || new Date().toISOString(),
       description: expense.description,
       amount: parseFloat(expense.amount),
       category: expense.category || 'Uncategorized',
@@ -51,7 +51,7 @@ export const ExpenseProvider = ({ children }) => {
     const newExpenses = expensesList.map(expense => ({
       id: Date.now() + Math.random(),
       createdAt: new Date().toISOString(),
-      date: expense.date || new Date().toISOString().split('T')[0],
+  date: expense.date || new Date().toISOString(),
       description: expense.description,
       amount: parseFloat(expense.amount),
       category: expense.category || 'Uncategorized',

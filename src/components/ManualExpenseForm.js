@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
-  Alert,
-  StyleSheet,
+    Alert,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { colors, spacing } from '../constants';
 
@@ -25,7 +25,14 @@ export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading, initialVa
   const [description, setDescription] = useState(initialValues?.description || '');
   const [amount, setAmount] = useState(initialValues?.amount?.toString() || '');
   const [selectedCategory, setSelectedCategory] = useState(initialValues?.category || 'Other');
-  const [date, setDate] = useState(initialValues?.date || new Date().toISOString().split('T')[0]);
+  // Use user's local date for default
+  const now = new Date();
+  const initialDateObj = initialValues?.date ? new Date(initialValues.date) : now;
+  const pad = n => n.toString().padStart(2, '0');
+  const localYear = initialDateObj.getFullYear();
+  const localMonth = pad(initialDateObj.getMonth() + 1);
+  const localDay = pad(initialDateObj.getDate());
+  const [date, setDate] = useState(`${localYear}-${localMonth}-${localDay}`);
   const [notes, setNotes] = useState(initialValues?.notes || '');
 
   const handleAddExpense = () => {
@@ -39,12 +46,17 @@ export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading, initialVa
       return;
     }
 
+
+
+    // Always use current local date and time for activity entry
+    const isoDate = new Date().toISOString();
+
     const expense = {
       ...(initialValues || {}),
       description: description.trim(),
       amount: parseFloat(amount),
       category: selectedCategory,
-      date,
+      date: isoDate,
       notes,
       method: 'manual',
     };
@@ -56,7 +68,8 @@ export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading, initialVa
       setDescription('');
       setAmount('');
       setSelectedCategory('Other');
-      setDate(new Date().toISOString().split('T')[0]);
+  const now = new Date();
+  setDate(now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()));
       setNotes('');
     }
   };
@@ -64,6 +77,7 @@ export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading, initialVa
   return (
     <View style={styles.container}>
   <Text style={styles.title}>{isEdit ? '✎ Edit Expense' : '➕ Add Expense Manually'}</Text>
+
 
       {/* Date */}
       <View>
