@@ -2,7 +2,9 @@ import { createContext, useState } from 'react';
 import { BudgetProvider } from './BudgetContext';
 import { ExpenseProvider } from './ExpenseContext';
 import { IncomeProvider } from './IncomeContext';
+
 import { PomodoroProvider } from './PomodoroContext';
+import { QuickNotesProvider } from './QuickNotesContext';
 import { TodoProvider } from './TodoContext';
 
 export const AppContext = createContext(undefined);
@@ -21,7 +23,9 @@ export const AppProvider = ({ children }) => {
         <IncomeProvider>
           <ExpenseProvider>
             <BudgetProvider>
-              <AppContext.Provider value={value}>{children}</AppContext.Provider>
+              <QuickNotesProvider>
+                <AppContext.Provider value={value}>{children}</AppContext.Provider>
+              </QuickNotesProvider>
             </BudgetProvider>
           </ExpenseProvider>
         </IncomeProvider>

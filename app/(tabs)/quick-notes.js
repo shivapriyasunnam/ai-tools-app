@@ -1,44 +1,19 @@
 
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
+
+import { useQuickNotes } from '@/src/context/QuickNotesContext';
+import { useState } from 'react';
 import { Alert, FlatList, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-const NOTES_KEY = 'quick_notes_data';
 
 export default function QuickNotesScreen() {
-  const [notes, setNotes] = useState([]);
+  const { notes, addNote, editNote, deleteNote } = useQuickNotes();
   const [input, setInput] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editingText, setEditingText] = useState('');
 
-  useEffect(() => {
-    loadNotes();
-  }, []);
-
-  useEffect(() => {
-    saveNotes();
-  }, [notes]);
-
-  const loadNotes = async () => {
-    try {
-      const data = await AsyncStorage.getItem(NOTES_KEY);
-      if (data) setNotes(JSON.parse(data));
-    } catch (e) {
-      console.error('Failed to load notes', e);
-    }
-  };
-
-  const saveNotes = async () => {
-    try {
-      await AsyncStorage.setItem(NOTES_KEY, JSON.stringify(notes));
-    } catch (e) {
-      console.error('Failed to save notes', e);
-    }
-  };
-
-  const addNote = () => {
+  const handleAddNote = () => {
     if (!input.trim()) return;
-    setNotes([{ id: Date.now().toString(), text: input.trim() }, ...notes]);
+    addNote(input);
     setInput('');
   };
 
@@ -47,16 +22,18 @@ export default function QuickNotesScreen() {
     setEditingText(text);
   };
 
-  const saveEdit = () => {
-    setNotes(notes.map(note => note.id === editingId ? { ...note, text: editingText } : note));
+  const handleSaveEdit = () => {
+    if (editingId && editingText.trim()) {
+      editNote(editingId, editingText.trim());
+    }
     setEditingId(null);
     setEditingText('');
   };
 
-  const deleteNote = (id) => {
+  const handleDeleteNote = (id) => {
     Alert.alert('Delete Note', 'Are you sure you want to delete this note?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => setNotes(notes.filter(note => note.id !== id)) },
+      { text: 'Delete', style: 'destructive', onPress: () => deleteNote(id) },
     ]);
   };
 
@@ -69,10 +46,10 @@ export default function QuickNotesScreen() {
             value={editingText}
             onChangeText={setEditingText}
             autoFocus
-            onSubmitEditing={saveEdit}
+            onSubmitEditing={handleSaveEdit}
             returnKeyType="done"
           />
-          <TouchableOpacity style={styles.saveBtn} onPress={saveEdit}>
+          <TouchableOpacity style={styles.saveBtn} onPress={handleSaveEdit}>
             <Text style={styles.saveBtnText}>Save</Text>
           </TouchableOpacity>
         </>
@@ -83,7 +60,7 @@ export default function QuickNotesScreen() {
             <TouchableOpacity onPress={() => startEdit(item.id, item.text)}>
               <Text style={styles.editBtn}>Edit</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => deleteNote(item.id)}>
+            <TouchableOpacity onPress={() => handleDeleteNote(item.id)}>
               <Text style={styles.deleteBtn}>Delete</Text>
             </TouchableOpacity>
           </View>
@@ -102,10 +79,10 @@ export default function QuickNotesScreen() {
             placeholder="Type a note..."
             value={input}
             onChangeText={setInput}
-            onSubmitEditing={addNote}
+            onSubmitEditing={handleAddNote}
             returnKeyType="done"
           />
-          <TouchableOpacity style={styles.addBtn} onPress={addNote}>
+          <TouchableOpacity style={styles.addBtn} onPress={handleAddNote}>
             <Text style={styles.addBtnText}>Add</Text>
           </TouchableOpacity>
         </View>

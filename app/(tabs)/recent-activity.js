@@ -2,17 +2,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useContext } from 'react';
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BudgetContext } from '@/src/context/BudgetContext';
 import { ExpenseContext } from '@/src/context/ExpenseContext';
 import { IncomeContext } from '@/src/context/IncomeContext';
+import { useQuickNotes } from '@/src/context/QuickNotesContext';
 import { TodoContext } from '@/src/context/TodoContext';
 
 function RecentActivityScreen() {
@@ -21,6 +22,7 @@ function RecentActivityScreen() {
   const { incomes } = useContext(IncomeContext);
   const { todos } = useContext(TodoContext);
   const { budgets } = useContext(BudgetContext);
+  const { notes } = useQuickNotes();
   let sessions = [];
   try {
     const PomodoroContext = require('@/src/context/PomodoroContext').default || require('@/src/context/PomodoroContext');
@@ -107,8 +109,18 @@ function RecentActivityScreen() {
       iconColor: '#E91E63',
       iconBg: '#FCE7F3',
     })) : []),
-    // Placeholder for Quick Notes
-    // ...quickNotes.map(note => ({ ... }))
+    // Quick Notes as activities
+    ...notes.map(note => ({
+      id: `note-${note.id}`,
+      type: 'quick-note',
+      title: note.text,
+      subtitle: 'Quick Note added',
+      amount: null,
+      date: note.id ? new Date(Number(note.id)) : new Date(),
+      icon: 'document-text',
+      iconColor: '#6366F1',
+      iconBg: '#E0E7FF',
+    })),
   ].sort((a, b) => b.date - a.date);
 
   const formatDate = (date) => {
