@@ -1,13 +1,14 @@
 import { useContext } from 'react';
 import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BudgetContext } from '@/src/context/BudgetContext';
 import { ExpenseContext } from '@/src/context/ExpenseContext';
 import { TodoContext } from '@/src/context/TodoContext';
 import usePomodoroStats from '@/src/hooks/usePomodoroStats';
@@ -16,6 +17,7 @@ function HomeScreen() {
   const { expenses, getTotal } = useContext(ExpenseContext);
   const { getTotalIncome } = useContext(require('@/src/context/IncomeContext').IncomeContext);
   const { getTotalTodos, getCompletedCount, getPendingCount } = useContext(TodoContext);
+  const { getTotalBudget, getTotalSpent, getTotalRemaining, getBudgetStatus } = useContext(BudgetContext);
   const total = getTotal();
   const income = getTotalIncome();
   const { totalSessions, totalFocusedHours } = usePomodoroStats();
@@ -23,6 +25,13 @@ function HomeScreen() {
   const completedTodos = getCompletedCount();
   const pendingTodos = getPendingCount();
   const recentExpenses = expenses.slice(0, 3);
+  
+  // Budget data
+  const totalBudget = getTotalBudget();
+  const totalBudgetSpent = getTotalSpent();
+  const totalBudgetRemaining = getTotalRemaining();
+  const budgetStatus = getBudgetStatus();
+  const budgetUtilization = totalBudget > 0 ? (totalBudgetSpent / totalBudget) * 100 : 0;
   
   // Get time-based greeting
   const getGreeting = () => {
@@ -117,13 +126,14 @@ function HomeScreen() {
           </View>
         </View>
 
+        {/* Financial Overview Section Header */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Financial Overview</Text>
+          <Text style={styles.financialSubtitleOutside}>This month</Text>
+        </View>
+        
         {/* Financial Overview Card */}
         <View style={styles.financialCard}>
-          <View style={styles.financialHeader}>
-            <Text style={styles.financialTitle}>Financial Overview</Text>
-            <Text style={styles.financialSubtitle}>This month</Text>
-          </View>
-          
           <View style={styles.balanceContainer}>
             <Text style={styles.balanceLabel}>Total Balance</Text>
             <Text style={styles.balanceAmount}>${(income - total).toFixed(2)}</Text>
@@ -141,6 +151,90 @@ function HomeScreen() {
               <Text style={styles.statItemValue}>${total.toFixed(2)}</Text>
             </View>
           </View>
+
+          {/* Budget Analysis Section */}
+          {totalBudget > 0 && (
+            <>
+              <View style={styles.divider} />
+              
+              <View style={styles.budgetAnalysisHeader}>
+                <Text style={styles.budgetAnalysisTitle}>Budget Analysis</Text>
+                <View style={[
+                  styles.budgetStatusBadge,
+                  { backgroundColor: budgetUtilization >= 100 ? '#FEE2E2' : budgetUtilization >= 80 ? '#FEF3C7' : '#D1FAE5' }
+                ]}>
+                  <Text style={[
+                    styles.budgetStatusText,
+                    { color: budgetUtilization >= 100 ? '#991B1B' : budgetUtilization >= 80 ? '#92400E' : '#065F46' }
+                  ]}>
+                    {budgetUtilization >= 100 ? 'Over Budget' : budgetUtilization >= 80 ? 'Warning' : 'On Track'}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.budgetProgressContainer}>
+                <View style={styles.budgetProgressBar}>
+                  <View 
+                    style={[
+                      styles.budgetProgressFill,
+                      { 
+                        width: `${Math.min(budgetUtilization, 100)}%`,
+                        backgroundColor: budgetUtilization >= 100 ? '#EF4444' : budgetUtilization >= 80 ? '#F59E0B' : '#10B981'
+                      }
+                    ]} 
+                  />
+                </View>
+                <Text style={styles.budgetProgressText}>
+                  {budgetUtilization.toFixed(0)}% of budget used
+                </Text>
+              </View>
+
+              <View style={styles.budgetStatsRow}>
+                <View style={styles.budgetStatItem}>
+                  <Text style={styles.budgetStatLabel}>Budget</Text>
+                  <Text style={styles.budgetStatValue}>${totalBudget.toFixed(2)}</Text>
+                </View>
+                <View style={styles.budgetStatItem}>
+                  <Text style={styles.budgetStatLabel}>Spent</Text>
+                  <Text style={[styles.budgetStatValue, { color: '#EF4444' }]}>
+                    ${totalBudgetSpent.toFixed(2)}
+                  </Text>
+                </View>
+                <View style={styles.budgetStatItem}>
+                  <Text style={styles.budgetStatLabel}>Remaining</Text>
+                  <Text style={[
+                    styles.budgetStatValue,
+                    { color: totalBudgetRemaining < 0 ? '#EF4444' : '#10B981' }
+                  ]}>
+                    ${totalBudgetRemaining.toFixed(2)}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Top Budget Categories */}
+              {budgetStatus.length > 0 && (
+                <View style={styles.topCategoriesContainer}>
+                  <Text style={styles.topCategoriesTitle}>Top Categories</Text>
+                  {budgetStatus.slice(0, 3).map((budget) => (
+                    <View key={budget.id} style={styles.categoryBudgetRow}>
+                      <View style={styles.categoryBudgetInfo}>
+                        <View style={[styles.categoryColorDot, { backgroundColor: budget.color }]} />
+                        <Text style={styles.categoryBudgetName}>{budget.category}</Text>
+                      </View>
+                      <View style={styles.categoryBudgetProgress}>
+                        <Text style={[
+                          styles.categoryBudgetPercentage,
+                          { color: budget.status === 'exceeded' ? '#EF4444' : budget.status === 'warning' ? '#F59E0B' : '#6B7280' }
+                        ]}>
+                          {budget.percentage.toFixed(0)}%
+                        </Text>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </>
+          )}
         </View>
 
         {/* Quick Actions Grid */}
@@ -277,6 +371,10 @@ const styles = StyleSheet.create({
   financialSubtitle: {
   fontSize: 14,
   color: '#888',
+  },
+  financialSubtitleOutside: {
+    fontSize: 14,
+    color: '#9CA3AF',
   },
   balanceContainer: {
     marginBottom: 20,
@@ -535,5 +633,114 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#059669',
+  },
+  
+  // Budget Analysis Styles
+  divider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginVertical: 20,
+  },
+  budgetAnalysisHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  budgetAnalysisTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  budgetStatusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  budgetStatusText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  budgetProgressContainer: {
+    marginBottom: 20,
+  },
+  budgetProgressBar: {
+    height: 8,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  budgetProgressFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  budgetProgressText: {
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  budgetStatsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  budgetStatItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  budgetStatLabel: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 4,
+  },
+  budgetStatValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  topCategoriesContainer: {
+    marginTop: 8,
+  },
+  topCategoriesTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 12,
+  },
+  categoryBudgetRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  categoryBudgetInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flex: 1,
+  },
+  categoryColorDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  categoryBudgetName: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+  },
+  categoryBudgetProgress: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  categoryBudgetPercentage: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
