@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import { useContext } from 'react';
 import {
     ScrollView,
@@ -14,6 +15,7 @@ import { TodoContext } from '@/src/context/TodoContext';
 import usePomodoroStats from '@/src/hooks/usePomodoroStats';
 
 function HomeScreen() {
+  const router = useRouter();
   const { expenses, getTotal } = useContext(ExpenseContext);
   const { getTotalIncome } = useContext(require('@/src/context/IncomeContext').IncomeContext);
   const { getTotalTodos, getCompletedCount, getPendingCount } = useContext(TodoContext);
@@ -43,7 +45,19 @@ function HomeScreen() {
   };
   
   const handleAddExpense = () => {
-    console.log('Navigate to Add Expense');
+    router.push('/(tabs)/expense-tracker');
+  };
+  
+  const handleBudgetPlan = () => {
+    router.push('/(tabs)/budget-planner');
+  };
+  
+  const handleSchedule = () => {
+    router.push('/(tabs)/meetings-scheduler');
+  };
+  
+  const handlePomodoro = () => {
+    router.push('/(tabs)/pomodoro-timer');
   };
   return (
     <SafeAreaView style={styles.container}>
@@ -242,31 +256,49 @@ function HomeScreen() {
           <Text style={styles.sectionTitle}>Quick Actions</Text>
         </View>
         <View style={styles.actionsRow}>
-          <TouchableOpacity style={[styles.actionCardUnified, { backgroundColor: '#FEF3C7' }]}
-            onPress={handleAddExpense}>
+          <TouchableOpacity 
+            style={[styles.actionCardUnified, { backgroundColor: '#FEF3C7' }]}
+            onPress={handleAddExpense}
+            activeOpacity={0.7}
+          >
             <View style={[styles.actionIconUnified, { backgroundColor: '#F59E0B' }]}> 
               <Text style={styles.actionEmojiUnified}>💰</Text>
             </View>
             <Text style={styles.actionLabelUnified}>Add Expense</Text>
           </TouchableOpacity>
-          <View style={[styles.actionCardUnified, { backgroundColor: '#DBEAFE' }]}> 
+          
+          <TouchableOpacity 
+            style={[styles.actionCardUnified, { backgroundColor: '#DBEAFE' }]}
+            onPress={handleBudgetPlan}
+            activeOpacity={0.7}
+          > 
             <View style={[styles.actionIconUnified, { backgroundColor: '#3B82F6' }]}> 
               <Text style={styles.actionEmojiUnified}>📊</Text>
             </View>
             <Text style={styles.actionLabelUnified}>Budget Plan</Text>
-          </View>
-          <View style={[styles.actionCardUnified, { backgroundColor: '#E0E7FF' }]}> 
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.actionCardUnified, { backgroundColor: '#E0E7FF' }]}
+            onPress={handleSchedule}
+            activeOpacity={0.7}
+          > 
             <View style={[styles.actionIconUnified, { backgroundColor: '#6366F1' }]}> 
               <Text style={styles.actionEmojiUnified}>📅</Text>
             </View>
             <Text style={styles.actionLabelUnified}>Schedule</Text>
-          </View>
-          <View style={[styles.actionCardUnified, { backgroundColor: '#FCE7F3' }]}> 
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.actionCardUnified, { backgroundColor: '#FCE7F3' }]}
+            onPress={handlePomodoro}
+            activeOpacity={0.7}
+          > 
             <View style={[styles.actionIconUnified, { backgroundColor: '#EC4899' }]}> 
               <Text style={styles.actionEmojiUnified}>⏱️</Text>
             </View>
             <Text style={styles.actionLabelUnified}>Pomodoro</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Recent Activity */}

@@ -1,28 +1,15 @@
 import { colors } from '@/src/constants';
 import { Ionicons } from '@expo/vector-icons';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useRouter } from 'expo-router';
 import { forwardRef, useCallback, useMemo } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const ToolsBottomSheet = forwardRef((props, ref) => {
-  const snapPoints = useMemo(() => ['60%', '85%'], []);
+  const snapPoints = useMemo(() => ['60%', '90%'], []);
   const router = useRouter();
 
   console.log('ToolsBottomSheet rendered');
-
-  const renderBackdrop = useCallback(
-    (props) => (
-      <BottomSheetBackdrop
-        {...props}
-        disappearsOnIndex={-1}
-        appearsOnIndex={0}
-        opacity={0.5}
-        pressBehavior="close"
-      />
-    ),
-    []
-  );
 
   const tools = [
     {
@@ -124,38 +111,38 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
       index={-1}
       snapPoints={snapPoints}
       enablePanDownToClose
-      backdropComponent={renderBackdrop}
+      backdropComponent={null}
       backgroundStyle={styles.bottomSheetBackground}
       handleIndicatorStyle={styles.handleIndicator}
       onChange={handleSheetChanges}
       enableDynamicSizing={false}
     >
-      <BottomSheetView style={styles.contentContainer}>
+      <View style={styles.headerContainer}>
         <Text style={styles.title}>More Tools</Text>
         <Text style={styles.subtitle}>Boost your productivity</Text>
-        
-        <ScrollView 
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-        >
-          <View style={styles.toolsGrid}>
-            {tools.map((tool) => (
-              <TouchableOpacity
-                key={tool.id}
-                style={styles.toolCard}
-                onPress={() => handleToolPress(tool)}
-                activeOpacity={0.7}
-              >
-                <View style={[styles.iconContainer, { backgroundColor: tool.color + '20' }]}>
-                  <Ionicons name={tool.icon} size={32} color={tool.color} />
-                </View>
-                <Text style={styles.toolName}>{tool.name}</Text>
-                <Text style={styles.toolDescription}>{tool.description}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
-      </BottomSheetView>
+      </View>
+      
+      <BottomSheetScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.toolsGrid}>
+          {tools.map((tool) => (
+            <TouchableOpacity
+              key={tool.id}
+              style={styles.toolCard}
+              onPress={() => handleToolPress(tool)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.iconContainer, { backgroundColor: tool.color + '20' }]}>
+                <Ionicons name={tool.icon} size={32} color={tool.color} />
+              </View>
+              <Text style={styles.toolName}>{tool.name}</Text>
+              <Text style={styles.toolDescription}>{tool.description}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </BottomSheetScrollView>
     </BottomSheet>
   );
 });
@@ -171,12 +158,15 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
   },
-  contentContainer: {
-    flex: 1,
-    padding: 24,
+  headerContainer: {
+    paddingHorizontal: 24,
+    paddingTop: 20,
+    paddingBottom: 8,
+    backgroundColor: colors.white,
   },
   scrollContent: {
-    paddingBottom: 20,
+    paddingHorizontal: 24,
+    paddingBottom: 40,
   },
   title: {
     fontSize: 24,
@@ -187,7 +177,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     color: colors.gray[500],
-    marginBottom: 24,
+    marginBottom: 16,
   },
   toolsGrid: {
     flexDirection: 'row',
