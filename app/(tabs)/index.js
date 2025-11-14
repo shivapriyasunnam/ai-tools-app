@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useContext } from 'react';
 import {
@@ -11,14 +12,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BudgetContext } from '@/src/context/BudgetContext';
 import { ExpenseContext } from '@/src/context/ExpenseContext';
+import { IncomeContext } from '@/src/context/IncomeContext';
 import { TodoContext } from '@/src/context/TodoContext';
 import usePomodoroStats from '@/src/hooks/usePomodoroStats';
 
 function HomeScreen() {
   const router = useRouter();
   const { expenses, getTotal } = useContext(ExpenseContext);
-  const { getTotalIncome } = useContext(require('@/src/context/IncomeContext').IncomeContext);
-  const { getTotalTodos, getCompletedCount, getPendingCount } = useContext(TodoContext);
+  const { incomes, getTotalIncome } = useContext(IncomeContext);
+  const { todos, getTotalTodos, getCompletedCount, getPendingCount } = useContext(TodoContext);
   const { getTotalBudget, getTotalSpent, getTotalRemaining, getBudgetStatus } = useContext(BudgetContext);
   const total = getTotal();
   const income = getTotalIncome();
@@ -26,7 +28,79 @@ function HomeScreen() {
   const totalTodos = getTotalTodos();
   const completedTodos = getCompletedCount();
   const pendingTodos = getPendingCount();
-  const recentExpenses = expenses.slice(0, 3);
+  
+  // Combine all activities and get last 3
+  // Budgeting activities: creation, edit, delete (using createdAt for now)
+  const { budgets } = useContext(BudgetContext);
+  let sessions = [];
+  try {
+    // Import PomodoroContext directly
+    const PomodoroContext = require('@/src/context/PomodoroContext').default || require('@/src/context/PomodoroContext');
+    const pomodoroValue = useContext(PomodoroContext);
+    sessions = pomodoroValue && pomodoroValue.sessions ? pomodoroValue.sessions : [];
+  } catch (e) {
+    sessions = [];
+  }
+
+  const allActivities = [
+    ...expenses.map(exp => ({
+      id: `exp-${exp.id}`,
+      type: 'expense',
+      title: exp.description,
+      subtitle: exp.category,
+      amount: -exp.amount,
+      date: new Date(exp.date),
+      icon: 'wallet',
+      iconColor: '#EF4444',
+      iconBg: '#FEE2E2',
+    })),
+    ...incomes.map(inc => ({
+      id: `inc-${inc.id}`,
+      type: 'income',
+      title: inc.source,
+      subtitle: inc.category || 'Income',
+      amount: inc.amount,
+      date: new Date(inc.date),
+      icon: 'cash',
+      iconColor: '#10B981',
+      iconBg: '#D1FAE5',
+    })),
+    ...todos.filter(todo => todo.completed).map(todo => ({
+      id: `todo-${todo.id}`,
+      type: 'todo',
+      title: todo.text,
+      subtitle: 'Task completed',
+      amount: null,
+      date: todo.completedAt ? new Date(todo.completedAt) : new Date(),
+      icon: 'checkmark-circle',
+      iconColor: '#8B5CF6',
+      iconBg: '#EDE9FE',
+    })),
+    ...budgets.map(budget => ({
+      id: `budget-${budget.id}`,
+      type: 'budget',
+      title: `Budgeted: ${budget.category}`,
+      subtitle: `Limit $${budget.limit} (${budget.period})`,
+      amount: null,
+      date: budget.createdAt ? new Date(budget.createdAt) : new Date(),
+      icon: 'pie-chart',
+      iconColor: '#4ECDC4',
+      iconBg: '#E0FCF9',
+    })),
+    ...(Array.isArray(sessions) ? sessions.filter(s => s.completed).map(session => ({
+      id: `pomodoro-${session.id}`,
+      type: 'pomodoro',
+      title: 'Pomodoro Session',
+      subtitle: session.type ? `${session.type.charAt(0).toUpperCase() + session.type.slice(1)} session` : 'Session',
+      amount: null,
+      date: session.end ? new Date(session.end) : new Date(),
+      icon: 'timer',
+      iconColor: '#E91E63',
+      iconBg: '#FCE7F3',
+    })) : []),
+    // Placeholder for Quick Notes
+    // ...quickNotes.map(note => ({ ... }))
+  ].sort((a, b) => b.date - a.date).slice(0, 3);
   
   // Budget data
   const totalBudget = getTotalBudget();
@@ -304,29 +378,38 @@ function HomeScreen() {
         {/* Recent Activity */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Recent Activity</Text>
-          <Text style={styles.sectionLink}>See all</Text>
+          <TouchableOpacity onPress={() => router.push('/(tabs)/recent-activity')}>
+            <Text style={styles.sectionLink}>See all</Text>
+          </TouchableOpacity>
         </View>
-        {recentExpenses.length === 0 ? (
+        {allActivities.length === 0 ? (
           <View style={styles.activityCard}>
             <View style={[styles.activityIcon, { backgroundColor: '#F3F4F6' }]}> 
-              <Text style={styles.activityEmoji}>💸</Text>
+              <Ionicons name="time-outline" size={24} color="#9CA3AF" />
             </View>
             <View style={styles.activityContent}>
-              <Text style={styles.activityTitle}>No recent expenses</Text>
-              <Text style={styles.activitySubtitle}>Add an expense to see activity</Text>
+              <Text style={styles.activityTitle}>No recent activity</Text>
+              <Text style={styles.activitySubtitle}>Your activities will appear here</Text>
             </View>
           </View>
         ) : (
-          recentExpenses.map(exp => (
-            <View key={exp.id} style={styles.activityCard}>
-              <View style={[styles.activityIcon, { backgroundColor: '#DCFCE7' }]}> 
-                <Text style={styles.activityEmoji}>💸</Text>
+          allActivities.map(activity => (
+            <View key={activity.id} style={styles.activityCard}>
+              <View style={[styles.activityIcon, { backgroundColor: activity.iconBg }]}> 
+                <Ionicons name={activity.icon} size={24} color={activity.iconColor} />
               </View>
               <View style={styles.activityContent}>
-                <Text style={styles.activityTitle}>{exp.description}</Text>
-                <Text style={styles.activitySubtitle}>{exp.category} • {exp.date}</Text>
+                <Text style={styles.activityTitle}>{activity.title}</Text>
+                <Text style={styles.activitySubtitle}>{activity.subtitle}</Text>
               </View>
-              <Text style={styles.activityAmount}>-${exp.amount.toFixed(2)}</Text>
+              {activity.amount !== null && (
+                <Text style={[
+                  styles.activityAmount,
+                  { color: activity.amount < 0 ? '#EF4444' : '#10B981' }
+                ]}>
+                  {activity.amount < 0 ? '-' : '+'}${Math.abs(activity.amount).toFixed(2)}
+                </Text>
+              )}
             </View>
           ))
         )}

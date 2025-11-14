@@ -97,12 +97,12 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
-          name="budget-planner"
+          name="recent-activity"
           options={{
-            title: 'Budget Planner',
-            tabBarLabel: 'Budget',
+            title: 'Recent Activity',
+            tabBarLabel: 'Activity',
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="pie-chart" size={size} color={color} />
+              <Ionicons name="time" size={size} color={color} />
             ),
           }}
         />
@@ -114,6 +114,13 @@ export default function TabsLayout() {
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="calendar" size={size} color={color} />
             ),
+          }}
+        />
+        <Tabs.Screen
+          name="budget-planner"
+          options={{
+            title: 'Budget Planner',
+            href: null, // Hidden tab - only accessible via bottom sheet
           }}
         />
         <Tabs.Screen

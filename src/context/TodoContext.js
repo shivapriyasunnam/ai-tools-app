@@ -64,9 +64,19 @@ export const TodoProvider = ({ children }) => {
   };
 
   const toggleComplete = (id) => {
-    setTodos(todos.map(todo =>
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
-    ));
+    setTodos(todos.map(todo => {
+      if (todo.id === id) {
+        if (!todo.completed) {
+          // Mark as completed and set completedAt
+          return { ...todo, completed: true, completedAt: new Date().toISOString() };
+        } else {
+          // Mark as not completed and clear completedAt
+          const { completedAt, ...rest } = todo;
+          return { ...rest, completed: false };
+        }
+      }
+      return todo;
+    }));
   };
 
   const getTotalTodos = () => todos.length;
