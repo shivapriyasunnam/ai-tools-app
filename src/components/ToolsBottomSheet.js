@@ -18,6 +18,7 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
         disappearsOnIndex={-1}
         appearsOnIndex={0}
         opacity={0.5}
+        pressBehavior="close"
       />
     ),
     []
@@ -127,6 +128,7 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
       backgroundStyle={styles.bottomSheetBackground}
       handleIndicatorStyle={styles.handleIndicator}
       onChange={handleSheetChanges}
+      enableDynamicSizing={false}
     >
       <BottomSheetView style={styles.contentContainer}>
         <Text style={styles.title}>More Tools</Text>

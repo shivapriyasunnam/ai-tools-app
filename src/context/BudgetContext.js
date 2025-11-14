@@ -9,6 +9,9 @@ export const BudgetContext = createContext();
 export const BudgetProvider = ({ children }) => {
   const [budgets, setBudgets] = useState([]);
   const { expenses } = useContext(ExpenseContext);
+  // Derived categories (from expenses + existing budgets) for UI selection
+  const [availableCategories, setAvailableCategories] = useState([]);
+  const [unbudgetedCategories, setUnbudgetedCategories] = useState([]);
 
   // Load budgets from storage on mount
   useEffect(() => {
@@ -21,6 +24,37 @@ export const BudgetProvider = ({ children }) => {
       saveBudgets();
     }
   }, [budgets]);
+
+  // Recompute available categories whenever expenses or budgets change
+  useEffect(() => {
+    const expenseCategories = expenses
+      .map(e => e.category?.trim())
+      .filter(Boolean);
+    const budgetCategories = budgets.map(b => b.category?.trim()).filter(Boolean);
+    const merged = [...expenseCategories, ...budgetCategories]
+      .map(c => c.trim())
+      .filter(c => c.length > 0);
+    // normalize casing by keeping original but dedup case-insensitive
+    const dedupMap = new Map();
+    merged.forEach(cat => {
+      const key = cat.toLowerCase();
+      if (!dedupMap.has(key)) dedupMap.set(key, cat);
+    });
+    const finalList = Array.from(dedupMap.values()).sort((a, b) => a.localeCompare(b));
+    setAvailableCategories(finalList);
+
+    // Categories with expenses but no budget yet
+    const budgetCategoryLower = new Set(budgetCategories.map(c => c.toLowerCase()));
+    const unbudgeted = expenseCategories
+      .filter(c => !budgetCategoryLower.has(c.toLowerCase()))
+      .reduce((acc, c) => { // dedup again
+        const key = c.toLowerCase();
+        if (!acc.some(x => x.toLowerCase() === key)) acc.push(c);
+        return acc;
+      }, [])
+      .sort((a, b) => a.localeCompare(b));
+    setUnbudgetedCategories(unbudgeted);
+  }, [expenses, budgets]);
 
   const loadBudgets = async () => {
     try {
@@ -131,6 +165,8 @@ export const BudgetProvider = ({ children }) => {
     <BudgetContext.Provider
       value={{
         budgets,
+        availableCategories,
+  unbudgetedCategories,
         addBudget,
         updateBudget,
         deleteBudget,

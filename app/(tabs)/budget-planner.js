@@ -18,6 +18,8 @@ function BudgetForm({ onSubmit, onCancel, initialValues = {}, isEdit }) {
   const [limit, setLimit] = useState(initialValues.limit ? initialValues.limit.toString() : '');
   const [period, setPeriod] = useState(initialValues.period || 'monthly');
   const [selectedColor, setSelectedColor] = useState(initialValues.color || '#6366F1');
+  const { availableCategories } = useContext(BudgetContext);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const colorOptions = [
     '#6366F1', // Indigo
@@ -60,13 +62,39 @@ function BudgetForm({ onSubmit, onCancel, initialValues = {}, isEdit }) {
     <View style={formStyles.formContainer}>
       <Text style={formStyles.formTitle}>{isEdit ? '✎ Edit Budget' : '➕ Add New Budget'}</Text>
       
-      <TextInput
-        placeholder="Category (e.g., Food, Transport) *"
-        value={category}
-        onChangeText={setCategory}
-        style={formStyles.input}
-        placeholderTextColor={colors.gray[400]}
-      />
+      <View style={{ marginBottom: spacing.md }}>
+        <TextInput
+          placeholder="Category (e.g., Food, Transport) *"
+          value={category}
+          onChangeText={(text) => { setCategory(text); setShowSuggestions(true); }}
+          onFocus={() => setShowSuggestions(true)}
+          style={formStyles.input}
+          placeholderTextColor={colors.gray[400]}
+          autoCorrect={false}
+        />
+        {showSuggestions && category.length >= 0 && availableCategories.length > 0 && (
+          <View style={formStyles.suggestionsContainer}>
+            {availableCategories
+              .filter(c => c.toLowerCase().includes(category.toLowerCase()) && c.toLowerCase() !== category.toLowerCase())
+              .slice(0, 6)
+              .map(c => (
+                <TouchableOpacity
+                  key={c}
+                  style={formStyles.suggestionItem}
+                  onPress={() => { setCategory(c); setShowSuggestions(false); }}
+                >
+                  <Text style={formStyles.suggestionText}>{c}</Text>
+                </TouchableOpacity>
+              ))}
+            {availableCategories.length === 0 && (
+              <Text style={formStyles.noSuggestionsText}>No categories yet</Text>
+            )}
+            <TouchableOpacity onPress={() => setShowSuggestions(false)} style={formStyles.dismissSuggestionsButton}>
+              <Text style={formStyles.dismissSuggestionsText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
 
       <TextInput
         placeholder="Budget Limit ($) *"
@@ -224,6 +252,48 @@ const formStyles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 14,
   },
+  suggestionsContainer: {
+    position: 'absolute',
+    top: 54,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.gray[200],
+    borderRadius: 8,
+    zIndex: 20,
+    paddingVertical: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  suggestionItem: {
+    paddingVertical: 8,
+    paddingHorizontal: spacing.md,
+  },
+  suggestionText: {
+    fontSize: 14,
+    color: colors.gray[800],
+  },
+  noSuggestionsText: {
+    fontSize: 12,
+    color: colors.gray[500],
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+  },
+  dismissSuggestionsButton: {
+    paddingVertical: 6,
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: colors.gray[100],
+    marginTop: 4,
+  },
+  dismissSuggestionsText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.primary,
+  },
 });
 
 export default function BudgetPlannerScreen() {
@@ -239,6 +309,8 @@ export default function BudgetPlannerScreen() {
     getTotalBudget,
     getTotalSpent,
     getTotalRemaining,
+    unbudgetedCategories,
+    getCategorySpending,
   } = useContext(BudgetContext);
 
   const budgetStatus = getBudgetStatus();
@@ -250,6 +322,13 @@ export default function BudgetPlannerScreen() {
     addBudget(budget);
     setMode('view');
     Alert.alert('Success', 'Budget added successfully!');
+  };
+
+  const [prefillCategory, setPrefillCategory] = useState(null);
+
+  const startAddForCategory = (cat) => {
+    setPrefillCategory(cat);
+    setMode('add');
   };
 
   const handleEditBudget = (budget) => {
@@ -319,6 +398,33 @@ export default function BudgetPlannerScreen() {
               <Text style={styles.addButtonText}>➕ Add Budget Category</Text>
             </TouchableOpacity>
 
+            {/* Unbudgeted Categories */}
+            {unbudgetedCategories.length > 0 && (
+              <View style={styles.unbudgetedContainer}>
+                <Text style={styles.unbudgetedTitle}>🟡 Categories With Expenses But No Budget</Text>
+                {unbudgetedCategories.map(cat => {
+                  const spent = getCategorySpending(cat, 'monthly');
+                  return (
+                    <View key={cat} style={styles.unbudgetedItem}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.unbudgetedCategory}>{cat}</Text>
+                        <Text style={styles.unbudgetedMessage}>Expenses present for the category but budget not set.</Text>
+                      </View>
+                      <View style={styles.unbudgetedRight}>
+                        <Text style={styles.unbudgetedSpent}>${spent.toFixed(2)}</Text>
+                        <TouchableOpacity
+                          style={styles.setBudgetButton}
+                          onPress={() => startAddForCategory(cat)}
+                        >
+                          <Text style={styles.setBudgetButtonText}>Set Budget</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+
             {/* Budget List */}
             {budgetStatus.length > 0 ? (
               <View>
@@ -386,7 +492,8 @@ export default function BudgetPlannerScreen() {
         {mode === 'add' && (
           <BudgetForm
             onSubmit={handleAddBudget}
-            onCancel={() => setMode('view')}
+            onCancel={() => { setMode('view'); setPrefillCategory(null); }}
+            initialValues={prefillCategory ? { category: prefillCategory } : {}}
           />
         )}
 
@@ -582,5 +689,56 @@ const styles = StyleSheet.create({
     color: colors.gray[500],
     textAlign: 'center',
     paddingHorizontal: spacing.lg,
+  },
+  unbudgetedContainer: {
+    backgroundColor: colors.white,
+    padding: spacing.md,
+    borderRadius: 8,
+    marginBottom: spacing.lg,
+  },
+  unbudgetedTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.gray[900],
+    marginBottom: spacing.sm,
+  },
+  unbudgetedItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    borderTopWidth: 1,
+    borderTopColor: colors.gray[100],
+    paddingVertical: spacing.sm,
+    gap: spacing.md,
+  },
+  unbudgetedCategory: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.gray[800],
+    marginBottom: 4,
+  },
+  unbudgetedMessage: {
+    fontSize: 12,
+    color: colors.gray[500],
+  },
+  unbudgetedRight: {
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+  },
+  unbudgetedSpent: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.gray[700],
+    marginBottom: 6,
+  },
+  setBudgetButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 6,
+    paddingHorizontal: spacing.md,
+    borderRadius: 6,
+  },
+  setBudgetButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.white,
   },
 });

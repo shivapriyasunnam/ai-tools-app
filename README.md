@@ -48,3 +48,15 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## Budget Planner Categories
+
+The Budget Planner now auto-suggests categories based on your existing expense data and previously created budgets. When adding or editing a budget:
+
+- The category input shows a dropdown of up to 6 matching existing categories as you type.
+- Suggestions are built by merging distinct expense categories and current budget categories (case-insensitive deduplication).
+- You can still enter a brand new category not in the suggestions; it will then appear in future suggestions after you create its first budget or record an expense with that category.
+
+Implementation details:
+`src/context/BudgetContext.js` computes `availableCategories` from `ExpenseContext.expenses` and `budgets`. The UI in `app/(tabs)/budget-planner.js` filters these suggestions as you type.
+
