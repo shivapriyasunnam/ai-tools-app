@@ -58,7 +58,7 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
       icon: 'document-text',
       description: 'Jot down your thoughts',
       color: '#5B7FFF',
-      route: null, // Will be implemented later
+      route: '/(tabs)/quick-notes',
     },
     {
       id: 'todo',

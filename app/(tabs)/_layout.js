@@ -145,6 +145,13 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
+          name="quick-notes"
+          options={{
+            title: 'Quick Notes',
+            href: null, // Hidden tab - doesn't appear in tab bar
+          }}
+        />
+        <Tabs.Screen
           name="index_old"
           options={{
             href: null,
