@@ -23,6 +23,16 @@ function HomeScreen() {
   const completedTodos = getCompletedCount();
   const pendingTodos = getPendingCount();
   const recentExpenses = expenses.slice(0, 3);
+  
+  // Get time-based greeting
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning';
+    if (hour < 17) return 'Good Afternoon';
+    if (hour < 21) return 'Good Evening';
+    return 'Good Night';
+  };
+  
   const handleAddExpense = () => {
     console.log('Navigate to Add Expense');
   };
@@ -35,10 +45,10 @@ function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>Dashboard</Text>
+            <Text style={styles.title}>{getGreeting()}!</Text>
           </View>
           <View style={styles.profileIcon}>
-            <Text style={styles.profileText}>PA</Text>
+            <Text style={styles.profileText}>P</Text>
           </View>
         </View>
 
