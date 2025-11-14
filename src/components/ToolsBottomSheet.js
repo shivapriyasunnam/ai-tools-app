@@ -1,10 +1,12 @@
 import { colors } from '@/src/constants';
 import { Ionicons } from '@expo/vector-icons';
-import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 //
+import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import { forwardRef, useCallback, useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Animated, { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 
 const ToolsBottomSheet = forwardRef((props, ref) => {
   const snapPoints = useMemo(() => ['60%', '90%'], []);
@@ -106,13 +108,42 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
     console.log('Bottom sheet index changed to:', index);
   }, []);
 
+  // Custom backdrop composed of a blurred layer + the library backdrop that handles press/visibility
+  const CustomBackdrop = (props) => {
+    const { animatedIndex, style } = props;
+    const animatedStyle = useAnimatedStyle(() => {
+      const opacity = interpolate(animatedIndex.value ?? -1, [-1, 0], [0, 1], Extrapolation.CLAMP);
+      return { opacity };
+    });
+
+    return (
+      <>
+        {/* Blurred layer (no pointer events) */}
+        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, animatedStyle]}>
+          <BlurView intensity={40} tint="light" style={StyleSheet.absoluteFill} />
+        </Animated.View>
+
+        {/* Touchable tinted backdrop managed by BottomSheet (handles press-to-close & mount/unmount) */}
+        <BottomSheetBackdrop
+          {...props}
+          appearsOnIndex={0}
+          disappearsOnIndex={-1}
+          pressBehavior="close"
+          enableTouchThrough={false}
+          style={[StyleSheet.absoluteFill, style, { backgroundColor: 'rgba(25, 25, 26, 0.14)' }]}
+          opacity={0.9}
+        />
+      </>
+    );
+  };
+
   return (
     <BottomSheet
       ref={ref}
       index={-1}
       snapPoints={snapPoints}
       enablePanDownToClose
-      backdropComponent={null}
+      backdropComponent={CustomBackdrop}
       backgroundStyle={{ backgroundColor: 'transparent', borderTopLeftRadius: 24, borderTopRightRadius: 24 }}
       handleIndicatorStyle={styles.handleIndicator}
       onChange={handleSheetChanges}
