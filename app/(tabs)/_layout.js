@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { useRef } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function TabsLayout() {
   const bottomSheetRef = useRef(null);
@@ -29,6 +29,20 @@ export default function TabsLayout() {
       console.error('❌ Bottom sheet ref is null!');
     }
   };
+
+  // Pan gesture for swipe up to open bottom sheet
+  const swipeUpGesture = Gesture.Pan()
+    .activeOffsetY(-10) // Start recognizing after 10px vertical movement
+    .failOffsetY(10) // Fail if moving down
+    .failOffsetX([-20, 20]) // Fail if moving too much horizontally
+    .onEnd((event) => {
+      // Check if swipe is upward and has sufficient velocity
+      if (event.translationY < -50 && event.velocityY < -500) {
+        console.log('👆 Swipe up detected! Opening bottom sheet...');
+        handleOpenBottomSheet();
+      }
+    })
+    .runOnJS(true);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -196,12 +210,37 @@ export default function TabsLayout() {
           }}
         />
       </Tabs>
+      
+      {/* Swipe-up gesture zones at the bottom (left and right of button) */}
+      <GestureDetector gesture={swipeUpGesture}>
+        <View style={styles.swipeZoneLeft} />
+      </GestureDetector>
+      <GestureDetector gesture={swipeUpGesture}>
+        <View style={styles.swipeZoneRight} />
+      </GestureDetector>
+      
       <ToolsBottomSheet ref={bottomSheetRef} />
     </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
+  swipeZoneLeft: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: '40%', // Left 40% of screen
+    height: 100,
+    backgroundColor: 'transparent',
+  },
+  swipeZoneRight: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: '40%', // Right 40% of screen
+    height: 100,
+    backgroundColor: 'transparent',
+  },
   floatingButton: {
     flex: 1,
     justifyContent: 'center',
