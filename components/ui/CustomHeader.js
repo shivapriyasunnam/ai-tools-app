@@ -1,11 +1,14 @@
 import { colors } from '@/src/constants';
 import { Ionicons } from '@expo/vector-icons';
+// removed duplicate import
 import { usePathname, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { FlatList, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const TOOLS = [
-  { name: 'Meetings Scheduler', route: '/(tabs)/meetings-scheduler', icon: 'calendar' },
+  { name: 'Hub', route: '/(tabs)/hub', icon: 'grid' },
+  { name: 'Activity', route: '/(tabs)/recent-activity', icon: 'time' },
+  { name: 'Profile', route: '/(tabs)/profile', icon: 'person' },
   { name: 'Budget Planner', route: '/(tabs)/budget-planner', icon: 'pie-chart' },
   { name: 'Expense Tracker', route: '/(tabs)/expense-tracker', icon: 'wallet' },
   { name: 'Pomodoro Timer', route: '/(tabs)/pomodoro-timer', icon: 'timer' },
@@ -14,14 +17,35 @@ const TOOLS = [
   { name: 'Quick Notes', route: '/(tabs)/quick-notes', icon: 'document-text' },
   { name: 'Reminders', route: '/(tabs)/reminders', icon: 'notifications' },
   { name: 'Calculator', route: '/(tabs)/calculator', icon: 'calculator' },
+  { name: 'Meetings Scheduler', route: '/(tabs)/meetings-scheduler', icon: 'calendar' },
 ];
+
+const PAGE_TITLES = {
+  '/(tabs)/hub': 'Hub',
+  '/(tabs)/recent-activity': 'Activity',
+  '/(tabs)/profile': 'Profile',
+  '/(tabs)/index': 'Home',
+};
+
+function getPageTitle(pathname) {
+  if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname];
+  // Fallback: use last segment, capitalize
+  const segments = pathname.split('/').filter(Boolean);
+  if (segments.length > 0) {
+    const last = segments[segments.length - 1].replace(/-/g, ' ');
+    return last.charAt(0).toUpperCase() + last.slice(1);
+  }
+  return '';
+}
 
 export default function CustomHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const [modalVisible, setModalVisible] = useState(false);
 
-  const currentTool = TOOLS.find(tool => pathname.endsWith(tool.route.replace('/(tabs)', '')) || pathname === tool.route) || TOOLS[0];
+  // Find the tool in the dropdown list
+  const currentTool = TOOLS.find(tool => pathname.endsWith(tool.route.replace('/(tabs)', '')) || pathname === tool.route);
+  const currentTitle = currentTool ? currentTool.name : getPageTitle(pathname);
 
   const handleSelectTool = (route) => {
     setModalVisible(false);
@@ -31,7 +55,6 @@ export default function CustomHeader() {
   };
 
   const goToSettings = () => {
-    // Implement your settings navigation here
     router.push('/settings');
   };
 
@@ -39,9 +62,13 @@ export default function CustomHeader() {
   return (
     <SafeAreaView style={{ backgroundColor: '#fff' }}>
       <View style={[styles.header, { paddingTop: statusBarHeight }]}>  
-        <TouchableOpacity style={styles.dropdown} onPress={() => setModalVisible(true)}>
-          <Text style={styles.dropdownText}>{currentTool.name}</Text>
-          <Ionicons name="chevron-down" size={18} color="#fff" />
+        <TouchableOpacity
+          style={styles.dropdown}
+          onPress={() => currentTool && setModalVisible(true)}
+          disabled={!currentTool}
+        >
+          <Text style={styles.dropdownText}>{currentTitle}</Text>
+          {currentTool && <Ionicons name="chevron-down" size={18} color="#fff" />}
         </TouchableOpacity>
         <View style={{ flex: 1 }} />
         <TouchableOpacity onPress={goToSettings} style={styles.settingsBtn}>
@@ -67,7 +94,8 @@ export default function CustomHeader() {
                     onPress={() => handleSelectTool(item.route)}
                   >
                     <View style={{ flexDirection: 'row',
-                        paddingLeft: 12,
+                        paddingLeft: 15,
+                        padding: 8,
                          alignItems: 'center', flex: 1 }}>
                       <Ionicons
                         name={item.icon}
@@ -131,7 +159,7 @@ const styles = StyleSheet.create({
     maxWidth: 450,
     marginHorizontal: 32,
     borderRadius: 16,
-    paddingVertical: 8,
+    paddingVertical: 0,
     elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -143,7 +171,7 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 13,
+    paddingVertical: 20,
     paddingHorizontal: 18,
     borderRadius: 10,
     backgroundColor: 'transparent',
@@ -157,7 +185,7 @@ const styles = StyleSheet.create({
     marginLeft: 2,
   },
   menuItemText: {
-    fontSize: 18,
+    fontSize: 20,
     color: colors.gray[600],
     fontWeight: '400',
     letterSpacing: 0.1,
