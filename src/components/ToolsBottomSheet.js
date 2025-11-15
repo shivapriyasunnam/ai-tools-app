@@ -79,7 +79,7 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
       icon: 'notifications',
       description: 'Set important reminders',
       color: '#F59E0B',
-      route: null, // Will be implemented later
+      route: '/(tabs)/reminders',
     },
     {
       id: 'calculator',
@@ -130,7 +130,12 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
   const CustomBackdrop = (props) => {
     const { animatedIndex, style } = props;
     const animatedStyle = useAnimatedStyle(() => {
-      const opacity = interpolate(animatedIndex.value ?? -1, [-1, 0], [0, 1], Extrapolation.CLAMP);
+      const opacity = interpolate(
+        animatedIndex.value, 
+        [-1, 0], 
+        [0, 1], 
+        Extrapolation.CLAMP
+      );
       return { opacity };
     });
 
@@ -166,6 +171,7 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
       handleIndicatorStyle={styles.handleIndicator}
       onChange={handleSheetChanges}
       enableDynamicSizing={false}
+      animateOnMount={false}
     >
       <View style={styles.bottomSheetBackground}>
         <View style={styles.headerContainer}>

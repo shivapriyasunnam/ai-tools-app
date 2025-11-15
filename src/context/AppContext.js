@@ -3,8 +3,10 @@ import { BudgetProvider } from './BudgetContext';
 import { ExpenseProvider } from './ExpenseContext';
 import { IncomeProvider } from './IncomeContext';
 
+import { MeetingsProvider } from './MeetingsContext';
 import { PomodoroProvider } from './PomodoroContext';
 import { QuickNotesProvider } from './QuickNotesContext';
+import { RemindersProvider } from './RemindersContext';
 import { TodoProvider } from './TodoContext';
 import { UserProvider } from './UserContext';
 
@@ -20,19 +22,23 @@ export const AppProvider = ({ children }) => {
 
   return (
     <UserProvider>
-      <TodoProvider>
-        <PomodoroProvider>
-          <IncomeProvider>
-            <ExpenseProvider>
-              <BudgetProvider>
-                <QuickNotesProvider>
-                  <AppContext.Provider value={value}>{children}</AppContext.Provider>
-                </QuickNotesProvider>
-              </BudgetProvider>
-            </ExpenseProvider>
-          </IncomeProvider>
-        </PomodoroProvider>
-      </TodoProvider>
+      <MeetingsProvider>
+        <RemindersProvider>
+          <TodoProvider>
+            <PomodoroProvider>
+              <IncomeProvider>
+                <ExpenseProvider>
+                  <BudgetProvider>
+                    <QuickNotesProvider>
+                      <AppContext.Provider value={value}>{children}</AppContext.Provider>
+                    </QuickNotesProvider>
+                  </BudgetProvider>
+                </ExpenseProvider>
+              </IncomeProvider>
+            </PomodoroProvider>
+          </TodoProvider>
+        </RemindersProvider>
+      </MeetingsProvider>
     </UserProvider>
   );
 };

@@ -5,6 +5,7 @@ const INCOMES_KEY = 'incomes_data';
 const BUDGETS_KEY = 'budgets_data';
 const MEETINGS_KEY = 'meetings_data';
 const USER_PROFILE_KEY = 'user_profile';
+const REMINDERS_KEY = 'reminders_data';
 
 export const storageService = {
   // Expenses
@@ -110,6 +111,48 @@ export const storageService = {
     } catch (error) {
       console.error('Error retrieving user profile:', error);
       return { name: '' };
+    }
+  },
+
+  // Meetings
+  saveMeetings: async (meetings) => {
+    try {
+      await AsyncStorage.setItem(MEETINGS_KEY, JSON.stringify(meetings));
+      return true;
+    } catch (error) {
+      console.error('Error saving meetings:', error);
+      return false;
+    }
+  },
+
+  getMeetings: async () => {
+    try {
+      const data = await AsyncStorage.getItem(MEETINGS_KEY);
+      return data ? JSON.parse(data) : [];
+    } catch (error) {
+      console.error('Error retrieving meetings:', error);
+      return [];
+    }
+  },
+
+  // Reminders
+  saveReminders: async (reminders) => {
+    try {
+      await AsyncStorage.setItem(REMINDERS_KEY, JSON.stringify(reminders));
+      return true;
+    } catch (error) {
+      console.error('Error saving reminders:', error);
+      return false;
+    }
+  },
+
+  getReminders: async () => {
+    try {
+      const data = await AsyncStorage.getItem(REMINDERS_KEY);
+      return data ? JSON.parse(data) : [];
+    } catch (error) {
+      console.error('Error retrieving reminders:', error);
+      return [];
     }
   },
 };

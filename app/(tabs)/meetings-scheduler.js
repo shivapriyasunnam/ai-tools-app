@@ -1,118 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { colors, spacing } from '@/src/constants';
-import { connectGoogleCalendar, connectOutlookCalendar, disconnectCalendar, getStoredToken } from '@/src/services/calendarAuth';
+import { Alert, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function MeetingsSchedulerScreen() {
-  const [connectedCalendars, setConnectedCalendars] = useState({
-    googleMeet: false,
-    outlookCalendar: false,
-  });
-  const [loading, setLoading] = useState({
-    googleMeet: false,
-    outlookCalendar: false,
-  });
-
-  useEffect(() => {
-    checkStoredTokens();
-  }, []);
-
-  const checkStoredTokens = async () => {
-    try {
-      const googleToken = await getStoredToken('google');
-      const outlookToken = await getStoredToken('microsoft');
-      
-      setConnectedCalendars({
-        googleMeet: !!googleToken,
-        outlookCalendar: !!outlookToken,
-      });
-    } catch (error) {
-      console.error('Error checking tokens:', error);
-    }
-  };
-
   const handleGoogleMeetConnect = async () => {
-    if (connectedCalendars.googleMeet) {
-      Alert.alert(
-        'Disconnect Google Meet',
-        'Are you sure you want to disconnect your Google Meet calendar?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Disconnect',
-            style: 'destructive',
-            onPress: async () => {
-              setLoading({ ...loading, googleMeet: true });
-              const success = await disconnectCalendar('google');
-              setLoading({ ...loading, googleMeet: false });
-              if (success) {
-                setConnectedCalendars({ ...connectedCalendars, googleMeet: false });
-                Alert.alert('Success', 'Google Meet calendar disconnected');
-              }
-            },
-          },
-        ]
-      );
-      return;
-    }
-
-    setLoading({ ...loading, googleMeet: true });
-    try {
-      const result = await connectGoogleCalendar();
-      setLoading({ ...loading, googleMeet: false });
-      
-      if (result.success) {
-        setConnectedCalendars({ ...connectedCalendars, googleMeet: true });
-        Alert.alert('Success', `Connected! Found ${result.meetings.length} upcoming meetings`);
-      } else {
-        Alert.alert('Error', result.error || 'Failed to connect Google Meet calendar');
-      }
-    } catch (error) {
-      setLoading({ ...loading, googleMeet: false });
-      Alert.alert('Error', error.message || 'Failed to connect Google Meet calendar');
-    }
+    Alert.alert('Coming Soon', 'Google Meet calendar integration will be available soon!');
   };
 
   const handleOutlookConnect = async () => {
-    if (connectedCalendars.outlookCalendar) {
-      Alert.alert(
-        'Disconnect Outlook Calendar',
-        'Are you sure you want to disconnect your Outlook calendar?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Disconnect',
-            style: 'destructive',
-            onPress: async () => {
-              setLoading({ ...loading, outlookCalendar: true });
-              const success = await disconnectCalendar('microsoft');
-              setLoading({ ...loading, outlookCalendar: false });
-              if (success) {
-                setConnectedCalendars({ ...connectedCalendars, outlookCalendar: false });
-                Alert.alert('Success', 'Outlook calendar disconnected');
-              }
-            },
-          },
-        ]
-      );
-      return;
-    }
-
-    setLoading({ ...loading, outlookCalendar: true });
-    try {
-      const result = await connectOutlookCalendar();
-      setLoading({ ...loading, outlookCalendar: false });
-      
-      if (result.success) {
-        setConnectedCalendars({ ...connectedCalendars, outlookCalendar: true });
-        Alert.alert('Success', `Connected! Found ${result.meetings.length} upcoming meetings`);
-      } else {
-        Alert.alert('Error', result.error || 'Failed to connect Outlook calendar');
-      }
-    } catch (error) {
-      setLoading({ ...loading, outlookCalendar: false });
-      Alert.alert('Error', error.message || 'Failed to connect Outlook calendar');
-    }
+    Alert.alert('Coming Soon', 'Outlook calendar integration will be available soon!');
   };
 
   return (
@@ -122,14 +17,7 @@ export default function MeetingsSchedulerScreen() {
         <Text style={styles.subtitle}>Choose a calendar provider to sync your meetings</Text>
 
         {/* Google Meet Card */}
-        <TouchableOpacity
-          onPress={handleGoogleMeetConnect}
-          disabled={connectedCalendars.googleMeet}
-          style={[
-            styles.calendarCard,
-            connectedCalendars.googleMeet && styles.cardConnected,
-          ]}
-        >
+        <View style={styles.calendarCard}>
           <View style={styles.cardHeader}>
             <Text style={styles.calendarIcon}>🔵</Text>
             <View style={styles.cardTitleContainer}>
@@ -138,32 +26,15 @@ export default function MeetingsSchedulerScreen() {
             </View>
           </View>
           <TouchableOpacity
-            style={[
-              styles.connectButton,
-              {
-                backgroundColor: connectedCalendars.googleMeet ? colors.accent : colors.primary,
-              },
-            ]}
+            style={[styles.connectButton, { backgroundColor: colors.primary }]}
+            onPress={handleGoogleMeetConnect}
           >
-            {loading.googleMeet ? (
-              <ActivityIndicator color={colors.white} />
-            ) : (
-              <Text style={styles.connectButtonText}>
-                {connectedCalendars.googleMeet ? '✓ Connected' : 'Connect'}
-              </Text>
-            )}
+            <Text style={styles.connectButtonText}>Connect</Text>
           </TouchableOpacity>
-        </TouchableOpacity>
+        </View>
 
         {/* Outlook Card */}
-        <TouchableOpacity
-          onPress={handleOutlookConnect}
-          disabled={connectedCalendars.outlookCalendar}
-          style={[
-            styles.calendarCard,
-            connectedCalendars.outlookCalendar && styles.cardConnected,
-          ]}
-        >
+        <View style={styles.calendarCard}>
           <View style={styles.cardHeader}>
             <Text style={styles.calendarIcon}>🟦</Text>
             <View style={styles.cardTitleContainer}>
@@ -172,22 +43,12 @@ export default function MeetingsSchedulerScreen() {
             </View>
           </View>
           <TouchableOpacity
-            style={[
-              styles.connectButton,
-              {
-                backgroundColor: connectedCalendars.outlookCalendar ? colors.accent : colors.primary,
-              },
-            ]}
+            style={[styles.connectButton, { backgroundColor: colors.primary }]}
+            onPress={handleOutlookConnect}
           >
-            {loading.outlookCalendar ? (
-              <ActivityIndicator color={colors.white} />
-            ) : (
-              <Text style={styles.connectButtonText}>
-                {connectedCalendars.outlookCalendar ? '✓ Connected' : 'Connect'}
-              </Text>
-            )}
+            <Text style={styles.connectButtonText}>Connect</Text>
           </TouchableOpacity>
-        </TouchableOpacity>
+        </View>
 
         {/* Info */}
         <View style={styles.infoBox}>

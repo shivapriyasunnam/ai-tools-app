@@ -132,7 +132,11 @@ export default function HubScreen() {
               color={colors.primary}
             />
           ))
-        ) : null}
+        ) : (
+          <Text style={{ color: colors.error, textAlign: 'center', marginVertical: spacing.md }}>
+            Stock data is currently unavailable. Please try again later.
+          </Text>
+        )}
       </View>
 
       {/* Top 3 Performing Crypto */}
@@ -151,7 +155,11 @@ export default function HubScreen() {
               color={colors.accent}
             />
           ))
-        ) : null}
+        ) : (
+          <Text style={{ color: colors.error, textAlign: 'center', marginVertical: spacing.md }}>
+            Crypto data is currently unavailable. Please try again later.
+          </Text>
+        )}
       </View>
     </ScrollView>
   );

@@ -13,7 +13,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BudgetContext } from '@/src/context/BudgetContext';
 import { ExpenseContext } from '@/src/context/ExpenseContext';
 import { IncomeContext } from '@/src/context/IncomeContext';
+import { useMeetings } from '@/src/context/MeetingsContext';
 import { useQuickNotes } from '@/src/context/QuickNotesContext';
+import { useReminders } from '@/src/context/RemindersContext';
 import { TodoContext } from '@/src/context/TodoContext';
 import { useUser } from '@/src/context/UserContext';
 import usePomodoroStats from '@/src/hooks/usePomodoroStats';
@@ -43,12 +45,24 @@ function HomeScreen() {
   const { getTotalBudget, getTotalSpent, getTotalRemaining, getBudgetStatus } = useContext(BudgetContext);
   const { notes } = useQuickNotes();
   const { userName } = useUser();
+  const { getTodayMeetings, getWeekMeetings } = useMeetings();
+  const { getActiveReminders } = useReminders();
   const total = getTotal();
   const income = getTotalIncome();
   const { totalSessions, totalFocusedHours } = usePomodoroStats();
   const totalTodos = getTotalTodos();
   const completedTodos = getCompletedCount();
   const pendingTodos = getPendingCount();
+  
+  // Get meetings data
+  const todayMeetings = getTodayMeetings();
+  const weekMeetings = getWeekMeetings();
+  const todayMeetingsCount = todayMeetings.length;
+  const remainingWeekMeetings = weekMeetings.length - todayMeetingsCount;
+  
+  // Get reminders data
+  const activeReminders = getActiveReminders();
+  const totalReminders = activeReminders.length;
   
   // Combine all activities and get last 3
   // Budgeting activities: creation, edit, delete (using createdAt for now)
@@ -216,9 +230,11 @@ function HomeScreen() {
                 <Text style={styles.statBadgeText}>Today</Text>
               </View>
             </View>
-            <Text style={styles.statCardValue}>2</Text>
+            <Text style={styles.statCardValue}>{todayMeetingsCount}</Text>
             <Text style={styles.statCardLabel}>Meetings Scheduled</Text>
-            <Text style={styles.statCardSubtext}>5 more this week</Text>
+            <Text style={styles.statCardSubtext}>
+              {remainingWeekMeetings > 0 ? `${remainingWeekMeetings} more this week` : 'No more meetings this week'}
+            </Text>
           </View>
 
           <View style={styles.statCardLarge}>
@@ -261,9 +277,11 @@ function HomeScreen() {
                 <Text style={styles.statCardIcon}>⏰</Text>
               </View>
             </View>
-            <Text style={styles.statCardValue}>3</Text>
+            <Text style={styles.statCardValue}>{totalReminders}</Text>
             <Text style={styles.statCardLabel}>Reminders</Text>
-            <Text style={styles.statCardSubtext}>Don't forget!</Text>
+            <Text style={styles.statCardSubtext}>
+              {totalReminders === 0 ? 'No active reminders' : 'Don\'t forget!'}
+            </Text>
           </View>
         </View>
 

@@ -183,6 +183,13 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
+          name="reminders"
+          options={{
+            title: 'Reminders',
+            href: null, // Hidden tab - doesn't appear in tab bar
+          }}
+        />
+        <Tabs.Screen
           name="index_old"
           options={{
             href: null,
