@@ -4,6 +4,7 @@ const EXPENSES_KEY = 'expenses_data';
 const INCOMES_KEY = 'incomes_data';
 const BUDGETS_KEY = 'budgets_data';
 const MEETINGS_KEY = 'meetings_data';
+const USER_PROFILE_KEY = 'user_profile';
 
 export const storageService = {
   // Expenses
@@ -88,6 +89,27 @@ export const storageService = {
     } catch (error) {
       console.error('Error deleting expense:', error);
       return false;
+    }
+  },
+
+  // User Profile
+  saveUserProfile: async (profile) => {
+    try {
+      await AsyncStorage.setItem(USER_PROFILE_KEY, JSON.stringify(profile));
+      return true;
+    } catch (error) {
+      console.error('Error saving user profile:', error);
+      return false;
+    }
+  },
+
+  getUserProfile: async () => {
+    try {
+      const data = await AsyncStorage.getItem(USER_PROFILE_KEY);
+      return data ? JSON.parse(data) : { name: '' };
+    } catch (error) {
+      console.error('Error retrieving user profile:', error);
+      return { name: '' };
     }
   },
 };

@@ -1,3 +1,10 @@
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: 'Profile',
+            href: null, // Hidden tab - doesn't appear in tab bar
+          }}
+        />
   // The income-tracker tab has been removed as it was not present in the file.
 import ToolsBottomSheet from '@/src/components/ToolsBottomSheet';
 import { colors } from '@/src/constants';
@@ -15,6 +22,8 @@ export default function TabsLayout() {
     console.log('Bottom sheet ref:', bottomSheetRef.current);
     if (bottomSheetRef.current) {
       console.log('✅ Ref exists, calling snapToIndex');
+      // Reset scroll to top before opening so user always starts at beginning
+      bottomSheetRef.current.resetScroll?.();
       bottomSheetRef.current.snapToIndex(0);
     } else {
       console.error('❌ Bottom sheet ref is null!');
@@ -107,13 +116,24 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
+          name="profile"
+          options={{
+            title: 'Profile',
+            tabBarLabel: 'Profile',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="person" size={size} color={color} />
+            ),
+          }}
+        />
+        <Tabs.Screen
           name="meetings-scheduler"
           options={{
             title: 'Meetings Scheduler',
-            tabBarLabel: 'Meetings',
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="calendar" size={size} color={color} />
-            ),
+            href: null, // Hidden tab - only accessible via bottom sheet
+            // tabBarLabel: 'Meetings',
+            // tabBarIcon: ({ color, size }) => (
+            //   <Ionicons name="calendar" size={size} color={color} />
+            // ),
           }}
         />
         <Tabs.Screen

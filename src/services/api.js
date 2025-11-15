@@ -62,7 +62,7 @@ export const apiService = {
         console.warn('[Yahoo Finance] Unexpected response structure:', data);
       }
     } catch (e) {
-      console.error('[Yahoo Finance] Error fetching indices:', e);
+      console.warn('[Yahoo Finance] Error fetching indices:', e);
     }
     // Only log as warning, do not throw or propagate error to UI
     console.warn('US indices data could not be fetched from any source.');
@@ -101,7 +101,7 @@ export const apiService = {
       // Each item: { id, symbol, name, current_price, price_change_percentage_24h }
       return data;
     } catch (e) {
-      console.error('[CoinGecko] Error fetching top cryptos:', e);
+      console.warn('[CoinGecko] Error fetching top cryptos:', e);
       return [];
     }
   },

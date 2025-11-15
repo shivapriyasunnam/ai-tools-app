@@ -15,6 +15,7 @@ import { ExpenseContext } from '@/src/context/ExpenseContext';
 import { IncomeContext } from '@/src/context/IncomeContext';
 import { useQuickNotes } from '@/src/context/QuickNotesContext';
 import { TodoContext } from '@/src/context/TodoContext';
+import { useUser } from '@/src/context/UserContext';
 import usePomodoroStats from '@/src/hooks/usePomodoroStats';
 
 function formatDate(date) {
@@ -41,6 +42,7 @@ function HomeScreen() {
   const { todos, getTotalTodos, getCompletedCount, getPendingCount } = useContext(TodoContext);
   const { getTotalBudget, getTotalSpent, getTotalRemaining, getBudgetStatus } = useContext(BudgetContext);
   const { notes } = useQuickNotes();
+  const { userName } = useUser();
   const total = getTotal();
   const income = getTotalIncome();
   const { totalSessions, totalFocusedHours } = usePomodoroStats();
@@ -191,11 +193,13 @@ function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>{getGreeting()}!</Text>
+            <Text style={styles.title}>
+              {getGreeting()}{userName ? `, ${userName}` : ''}!
+            </Text>
           </View>
-          <View style={styles.profileIcon}>
-            <Text style={styles.profileText}>P</Text>
-          </View>
+          <TouchableOpacity style={styles.profileIcon} onPress={() => router.push('/(tabs)/profile')}>
+            <Text style={styles.profileText}>{userName ? userName.charAt(0).toUpperCase() : 'P'}</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Stats Overview */}

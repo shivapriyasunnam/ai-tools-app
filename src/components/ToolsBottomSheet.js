@@ -4,13 +4,15 @@ import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom
 //
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
-import { forwardRef, useCallback, useMemo } from 'react';
+import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Animated, { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 
 const ToolsBottomSheet = forwardRef((props, ref) => {
   const snapPoints = useMemo(() => ['60%', '90%'], []);
   const router = useRouter();
+  const sheetRef = useRef(null);
+  const scrollRef = useRef(null);
 
   console.log('ToolsBottomSheet rendered');
 
@@ -91,9 +93,8 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
 
   const handleToolPress = (tool) => {
     console.log('Tool pressed:', tool.id);
-    
-    // Close the bottom sheet
-    ref?.current?.close();
+    // Close the bottom sheet via internal ref
+    sheetRef.current?.close();
     
     // Navigate to the route if available
     if (tool.route) {
@@ -106,7 +107,24 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
 
   const handleSheetChanges = useCallback((index) => {
     console.log('Bottom sheet index changed to:', index);
+    // If closed (-1) ensure scroll resets so next open starts at top
+    if (index === -1) {
+      resetScroll(false);
+    }
   }, []);
+
+  // Expose imperative methods to parent
+  useImperativeHandle(ref, () => ({
+    snapToIndex: (i) => sheetRef.current?.snapToIndex(i),
+    close: () => sheetRef.current?.close(),
+    resetScroll: () => resetScroll(false),
+  }));
+
+  const resetScroll = (animated = false) => {
+    // Support both ScrollView (scrollTo) and FlatList (scrollToOffset)
+    scrollRef.current?.scrollTo?.({ y: 0, animated });
+    scrollRef.current?.scrollToOffset?.({ offset: 0, animated });
+  };
 
   // Custom backdrop composed of a blurred layer + the library backdrop that handles press/visibility
   const CustomBackdrop = (props) => {
@@ -139,7 +157,7 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
 
   return (
     <BottomSheet
-      ref={ref}
+      ref={sheetRef}
       index={-1}
       snapPoints={snapPoints}
       enablePanDownToClose
@@ -155,6 +173,7 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
           <Text style={styles.subtitle}>Boost your productivity</Text>
         </View>
         <BottomSheetScrollView 
+          ref={scrollRef}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
