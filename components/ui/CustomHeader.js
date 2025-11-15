@@ -2,7 +2,7 @@ import { colors } from '@/src/constants';
 import { Ionicons } from '@expo/vector-icons';
 // removed duplicate import
 import { usePathname, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FlatList, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const TOOLS = [
@@ -43,6 +43,11 @@ export default function CustomHeader() {
   const pathname = usePathname();
   const [modalVisible, setModalVisible] = useState(false);
 
+  // Close modal when route changes
+  useEffect(() => {
+    setModalVisible(false);
+  }, [pathname]);
+
   // Find the tool in the dropdown list
   const currentTool = TOOLS.find(tool => pathname.endsWith(tool.route.replace('/(tabs)', '')) || pathname === tool.route);
   const currentTitle = currentTool ? currentTool.name : getPageTitle(pathname);
@@ -68,7 +73,7 @@ export default function CustomHeader() {
           disabled={!currentTool}
         >
           <Text style={styles.dropdownText}>{currentTitle}</Text>
-          {currentTool && <Ionicons name="chevron-down" size={18} color="#fff" />}
+          {currentTool && <Ionicons name="chevron-down" size={15} color="#fff" />}
         </TouchableOpacity>
         <View style={{ flex: 1 }} />
         <TouchableOpacity onPress={goToSettings} style={styles.settingsBtn}>

@@ -1,12 +1,9 @@
 import { colors } from '@/src/constants';
 import { Ionicons } from '@expo/vector-icons';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
-//
-import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Animated, { Extrapolation, interpolate, useAnimatedStyle } from 'react-native-reanimated';
 
 const ToolsBottomSheet = forwardRef((props, ref) => {
   const snapPoints = useMemo(() => ['60%', '90%'], []);
@@ -127,38 +124,17 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
   };
 
   // Custom backdrop composed of a blurred layer + the library backdrop that handles press/visibility
-  const CustomBackdrop = (props) => {
-    const { animatedIndex, style } = props;
-    const animatedStyle = useAnimatedStyle(() => {
-      const opacity = interpolate(
-        animatedIndex.value, 
-        [-1, 0], 
-        [0, 1], 
-        Extrapolation.CLAMP
-      );
-      return { opacity };
-    });
-
+  const CustomBackdrop = useCallback((props) => {
     return (
-      <>
-        {/* Blurred layer (no pointer events) */}
-        <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, animatedStyle]}>
-          <BlurView intensity={40} tint="light" style={StyleSheet.absoluteFill} />
-        </Animated.View>
-
-        {/* Touchable tinted backdrop managed by BottomSheet (handles press-to-close & mount/unmount) */}
-        <BottomSheetBackdrop
-          {...props}
-          appearsOnIndex={0}
-          disappearsOnIndex={-1}
-          pressBehavior="close"
-          enableTouchThrough={false}
-          style={[StyleSheet.absoluteFill, style, { backgroundColor: 'rgba(25, 25, 26, 0.14)' }]}
-          opacity={0.9}
-        />
-      </>
+      <BottomSheetBackdrop
+        {...props}
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+        pressBehavior="close"
+        opacity={0.5}
+      />
     );
-  };
+  }, []);
 
   return (
     <BottomSheet
@@ -171,7 +147,7 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
       handleIndicatorStyle={styles.handleIndicator}
       onChange={handleSheetChanges}
       enableDynamicSizing={false}
-      animateOnMount={false}
+      animateOnMount={true}
     >
       <View style={styles.bottomSheetBackground}>
         <View style={styles.headerContainer}>
