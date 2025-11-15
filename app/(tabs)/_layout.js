@@ -211,12 +211,9 @@ export default function TabsLayout() {
         />
       </Tabs>
       
-      {/* Swipe-up gesture zones at the bottom (left and right of button) */}
+      {/* Swipe-up gesture zone just above the tab bar */}
       <GestureDetector gesture={swipeUpGesture}>
-        <View style={styles.swipeZoneLeft} />
-      </GestureDetector>
-      <GestureDetector gesture={swipeUpGesture}>
-        <View style={styles.swipeZoneRight} />
+        <View style={styles.swipeZone} />
       </GestureDetector>
       
       <ToolsBottomSheet ref={bottomSheetRef} />
@@ -225,21 +222,14 @@ export default function TabsLayout() {
 }
 
 const styles = StyleSheet.create({
-  swipeZoneLeft: {
+  swipeZone: {
     position: 'absolute',
-    bottom: 0,
+    bottom: 70, // Position just above the 70px tab bar
     left: 0,
-    width: '40%', // Left 40% of screen
-    height: 100,
-    backgroundColor: 'transparent',
-  },
-  swipeZoneRight: {
-    position: 'absolute',
-    bottom: 0,
     right: 0,
-    width: '40%', // Right 40% of screen
-    height: 100,
+    height: 80, // Larger swipe zone for easier detection
     backgroundColor: 'transparent',
+    pointerEvents: 'box-only', // Only this view receives touch events, not its children
   },
   floatingButton: {
     flex: 1,
