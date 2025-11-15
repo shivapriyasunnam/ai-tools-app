@@ -294,7 +294,7 @@ export default function TodoListScreen() {
         {/* Header */}
         {mode === 'view' && (
           <View>
-            <Text style={styles.title}>✅ To-Do List</Text>
+            {/* <Text style={styles.title}>✅ To-Do List</Text> */}
 
             {/* Summary Card */}
             <View style={styles.summaryCard}>

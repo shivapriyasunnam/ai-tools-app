@@ -60,7 +60,7 @@ export default function HubScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Hub</Text>
+      {/* <Text style={styles.title}>Hub</Text> */}
       {/* <Text style={styles.subtitle}>Your central dashboard for quick insights.</Text> */}
 
       <View style={styles.section}>

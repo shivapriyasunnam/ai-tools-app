@@ -6,12 +6,13 @@
           }}
         />
   // The income-tracker tab has been removed as it was not present in the file.
+import CustomHeader from '@/components/ui/CustomHeader';
 import ToolsBottomSheet from '@/src/components/ToolsBottomSheet';
 import { colors } from '@/src/constants';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { useRef } from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function TabsLayout() {
@@ -62,17 +63,7 @@ export default function TabsLayout() {
             fontSize: 12,
             fontWeight: '500',
           },
-          headerShown: true,
-          headerStyle: {
-            backgroundColor: colors.primary,
-            borderBottomColor: colors.primaryDark,
-            borderBottomWidth: 1,
-          },
-          headerTintColor: colors.white,
-          headerTitleStyle: {
-            fontWeight: '600',
-            fontSize: 18,
-          },
+          header: () => <CustomHeader />,
         }}
       >
         <Tabs.Screen
@@ -229,6 +220,10 @@ export default function TabsLayout() {
 }
 
 const styles = StyleSheet.create({
+  // Global font for all text
+  text: {
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'Roboto',
+  },
   swipeZone: {
     position: 'absolute',
     bottom: 70, // Position just above the 70px tab bar
@@ -242,12 +237,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    top: -10,
+    top: 1, // Reduced offset for better alignment
   },
   floatingButtonInner: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 52, // Slightly smaller for better fit
+    height: 52,
+    borderRadius: 26,
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',

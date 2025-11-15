@@ -72,7 +72,7 @@ export default function QuickNotesScreen() {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={styles.container}>
-        <Text style={styles.title}>Quick Notes</Text>
+
         <View style={styles.inputRow}>
           <TextInput
             style={styles.input}

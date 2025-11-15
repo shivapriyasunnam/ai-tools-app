@@ -113,7 +113,7 @@ export default function PomodoroTimerScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Title */}
-        <Text style={styles.title}>⏱️ Pomodoro Timer</Text>
+        {/* <Text style={styles.title}>⏱️ Pomodoro Timer</Text> */}
 
         {/* Timer Display Card */}
         <View style={styles.summaryCard}>

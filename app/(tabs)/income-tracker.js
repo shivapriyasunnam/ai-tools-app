@@ -186,7 +186,7 @@ export default function IncomeTrackerScreen() {
         {/* Header */}
         {mode === 'view' && (
           <View>
-            <Text style={styles.title}>💵 Income Tracker</Text>
+
 
             {/* Summary Card */}
             <View style={styles.summaryCard}>

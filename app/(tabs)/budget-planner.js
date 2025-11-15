@@ -369,7 +369,7 @@ export default function BudgetPlannerScreen() {
         {/* Header */}
         {mode === 'view' && (
           <View>
-            <Text style={styles.title}>📊 Budget Planner</Text>
+
 
             {/* Summary Card */}
             <View style={styles.summaryCard}>

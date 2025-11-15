@@ -41,7 +41,7 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Your Profile</Text>
+
       
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Name</Text>

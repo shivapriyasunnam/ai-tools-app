@@ -181,7 +181,7 @@ export default function RemindersScreen() {
         {/* Header */}
         {mode === 'view' && (
           <View>
-            <Text style={styles.title}>🔔 Reminders</Text>
+            {/* <Text style={styles.title}>🔔 Reminders</Text> */}
 
             {/* Summary Cards */}
             <View style={styles.summaryRow}>
