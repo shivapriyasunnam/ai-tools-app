@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 15,
     borderBottomWidth: 1,
     borderBottomColor: colors.gray[200],
     elevation: 0,
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     borderRadius: 8,
     paddingHorizontal: 14,
-    paddingVertical: 6,
+    paddingVertical: 10,
   },
   dropdownText: {
     color: '#fff',
