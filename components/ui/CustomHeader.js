@@ -25,6 +25,7 @@ const PAGE_TITLES = {
   '/(tabs)/recent-activity': 'Activity',
   '/(tabs)/profile': 'Profile',
   '/(tabs)/index': 'Home',
+  '/(tabs)/settings': 'Settings',
 };
 
 function getPageTitle(pathname) {
@@ -60,7 +61,7 @@ export default function CustomHeader() {
   };
 
   const goToSettings = () => {
-    router.push('/settings');
+    router.push('/(tabs)/settings');
   };
 
   const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;

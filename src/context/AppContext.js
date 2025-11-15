@@ -7,6 +7,7 @@ import { MeetingsProvider } from './MeetingsContext';
 import { PomodoroProvider } from './PomodoroContext';
 import { QuickNotesProvider } from './QuickNotesContext';
 import { RemindersProvider } from './RemindersContext';
+import { ThemeProvider } from './ThemeContext';
 import { TodoProvider } from './TodoContext';
 import { UserProvider } from './UserContext';
 
@@ -21,24 +22,26 @@ export const AppProvider = ({ children }) => {
   };
 
   return (
-    <UserProvider>
-      <MeetingsProvider>
-        <RemindersProvider>
-          <TodoProvider>
-            <PomodoroProvider>
-              <IncomeProvider>
-                <ExpenseProvider>
-                  <BudgetProvider>
-                    <QuickNotesProvider>
-                      <AppContext.Provider value={value}>{children}</AppContext.Provider>
-                    </QuickNotesProvider>
-                  </BudgetProvider>
-                </ExpenseProvider>
-              </IncomeProvider>
-            </PomodoroProvider>
-          </TodoProvider>
-        </RemindersProvider>
-      </MeetingsProvider>
-    </UserProvider>
+    <ThemeProvider>
+      <UserProvider>
+        <MeetingsProvider>
+          <RemindersProvider>
+            <TodoProvider>
+              <PomodoroProvider>
+                <IncomeProvider>
+                  <ExpenseProvider>
+                    <BudgetProvider>
+                      <QuickNotesProvider>
+                        <AppContext.Provider value={value}>{children}</AppContext.Provider>
+                      </QuickNotesProvider>
+                    </BudgetProvider>
+                  </ExpenseProvider>
+                </IncomeProvider>
+              </PomodoroProvider>
+            </TodoProvider>
+          </RemindersProvider>
+        </MeetingsProvider>
+      </UserProvider>
+    </ThemeProvider>
   );
 };
