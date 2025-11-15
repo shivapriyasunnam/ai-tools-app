@@ -87,7 +87,7 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
       icon: 'calculator',
       description: 'Quick calculations',
       color: '#10B981',
-      route: null, // Will be implemented later
+      route: '/(tabs)/calculator',
     },
   ];
 
