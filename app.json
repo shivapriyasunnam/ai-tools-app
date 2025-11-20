@@ -1,17 +1,17 @@
 {
   "expo": {
-    "name": "d.AI.ly",
-    "slug": "ai-tools-app",
+    "name": "d.ai.ly",
+    "slug": "daily-ai-app",
     "version": "1.0.0",
-    "description": "A React Native app with AI-powered tools for expense tracking, budget planning, and meeting scheduling",
+    "description": "d.ai.ly - Your daily AI-powered productivity companion for tasks, finances, and time management",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "aitoolsapp",
+    "scheme": "daily",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.aitools.app",
+      "bundleIdentifier": "com.daily.ai",
       "infoPlist": {
         "NSCameraUsageDescription": "Camera access for AI features",
         "NSMicrophoneUsageDescription": "Microphone access for meeting scheduling"
@@ -26,7 +26,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.aitools.app",
+      "package": "com.daily.ai",
+      "versionCode": 1,
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",
@@ -56,6 +57,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "6eb97e95-86cc-407b-96ab-eb37e279b722"
+      }
+    },
+    "owner": "priyasunnam"
   }
 }

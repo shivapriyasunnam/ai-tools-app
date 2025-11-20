@@ -59,7 +59,7 @@ export default function SettingsScreen() {
   const handleAbout = () => {
     Alert.alert(
       'About',
-      'AI Tools App v1.0.0\n\nA productivity suite to help you manage your daily tasks, finances, and time.',
+      'd.ai.ly v1.0.0\n\nA productivity suite to help you manage your daily tasks, finances, and time.',
       [{ text: 'OK' }]
     );
   };
@@ -214,7 +214,7 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.footer}>
-          <Text style={[styles.footerText, { color: theme.colors.textSecondary }]}>AI Tools App v1.0.0</Text>
+          <Text style={[styles.footerText, { color: theme.colors.textSecondary }]}>d.ai.ly v1.0.0</Text>
           <Text style={[styles.footerSubtext, { color: theme.colors.textSecondary }]}>Made with ❤️ for productivity</Text>
         </View>
       </ScrollView>

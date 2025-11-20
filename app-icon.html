@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>d.ai.ly App Icon</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f0f0f0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            flex-direction: column;
+            gap: 30px;
+        }
+        
+        .app-icon {
+            width: 512px;
+            height: 512px;
+            background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%);
+            border-radius: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Decorative elements */
+        .app-icon::before {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: rgba(96, 165, 250, 0.3);
+            top: -100px;
+            right: -100px;
+        }
+        
+        .app-icon::after {
+            content: '';
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(96, 165, 250, 0.2);
+            bottom: -60px;
+            left: -60px;
+        }
+        
+        .icon-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+        
+        .icon-text {
+            font-size: 110px;
+            font-weight: 900;
+            color: #FFFFFF;
+            line-height: 1;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            letter-spacing: -3px;
+        }
+        
+        .instructions {
+            padding: 25px;
+            background: white;
+            border-radius: 12px;
+            max-width: 512px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .instructions h2 {
+            color: #1E3A8A;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+            line-height: 2;
+            color: #374151;
+        }
+        
+        .instructions code {
+            background: #f3f4f6;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #1E3A8A;
+            font-weight: 600;
+        }
+        
+        .note {
+            margin-top: 15px;
+            padding: 12px;
+            background: #EFF6FF;
+            border-left: 4px solid #3B82F6;
+            border-radius: 4px;
+            color: #1E40AF;
+            font-size: 14px;
+        }
+        
+        .download-btn {
+            margin-top: 20px;
+            padding: 15px 30px;
+            background: #3B82F6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .download-btn:hover {
+            background: #2563EB;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-icon" id="appIcon">
+        <div class="icon-content">
+            <div class="icon-text">d.ai.ly</div>
+        </div>
+    </div>
+    
+    <div class="instructions">
+        <h2>� Download Your App Icon:</h2>
+        <button class="download-btn" onclick="downloadIcon()">⬇️ Download as PNG (512x512px)</button>
+        
+        <div class="note" style="margin-top: 20px;">
+            <strong>✨ Easy!</strong> Just click the button above to download your app icon. The image will be exactly 512x512px and ready to upload to Google Play Console!
+        </div>
+        
+        <div class="note" style="margin-top: 10px; background: #F0FDF4; border-left-color: #10B981; color: #065F46;">
+            <strong>📤 Upload to:</strong> Play Console → Store presence → Main store listing → App icon → Add assets
+        </div>
+    </div>
+    
+    <script>
+        function downloadIcon() {
+            // Get the icon element
+            const icon = document.getElementById('appIcon');
+            
+            // Use html2canvas library
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+            script.onload = function() {
+                html2canvas(icon, {
+                    backgroundColor: null,
+                    scale: 2,
+                    width: 512,
+                    height: 512
+                }).then(canvas => {
+                    // Convert to blob and download
+                    canvas.toBlob(function(blob) {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'daily-app-icon-512x512.png';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        
+                        alert('✅ Icon downloaded successfully! Check your Downloads folder.');
+                    }, 'image/png');
+                });
+            };
+            document.head.appendChild(script);
+        }
+    </script>
+</body>
+</html>
