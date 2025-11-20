@@ -14,9 +14,11 @@ import { Tabs } from 'expo-router';
 import { useRef } from 'react';
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabsLayout() {
   const bottomSheetRef = useRef(null);
+  const insets = useSafeAreaInsets();
 
   const handleOpenBottomSheet = () => {
     console.log('🔵 Button pressed! Opening bottom sheet...');
@@ -55,8 +57,8 @@ export default function TabsLayout() {
             backgroundColor: colors.white,
             borderTopColor: colors.gray[200],
             borderTopWidth: 1,
-            height: 70,
-            paddingBottom: 10,
+            height: 70 + insets.bottom,
+            paddingBottom: insets.bottom + 10,
             paddingTop: 5,
           },
           tabBarLabelStyle: {
