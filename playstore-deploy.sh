@@ -48,37 +48,45 @@ git push origin master
 echo -e "${GREEN}✅ Pushed to GitHub!${NC}"
 echo ""
 
-# Step 3: Increment version and versionCode
-echo -e "${BLUE}📊 Step 3: Checking version and versionCode...${NC}"
+# Step 3: Update version and versionCode
+echo -e "${BLUE}📊 Step 3: Updating version and versionCode...${NC}"
 current_version=$(grep -o '"version": "[^"]*"' app.json | sed 's/"version": "\(.*\)"/\1/')
 current_version_code=$(grep -o '"versionCode": [0-9]*' app.json | sed 's/"versionCode": \(.*\)/\1/')
 echo -e "${CYAN}Current version: ${YELLOW}$current_version${NC}"
 echo -e "${CYAN}Current versionCode: ${YELLOW}$current_version_code${NC}"
 echo ""
 
-# Always increment versionCode for Google Play
-new_version_code=$((current_version_code + 1))
-echo -e "${GREEN}→ Auto-incrementing versionCode to: ${YELLOW}$new_version_code${NC}"
-
-read -p "Keep version $current_version? (y/n) " -n 1 -r
-echo ""
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    read -p "Enter new version (e.g., 1.0.2): " new_version
-    # Update version in app.json
-    sed -i '' "s/\"version\": \"$current_version\"/\"version\": \"$new_version\"/" app.json
-    echo -e "${GREEN}✅ Version updated to $new_version${NC}"
-    current_version=$new_version
+# Ask for new version
+read -p "Enter new version (or press Enter to keep $current_version): " new_version
+if [[ -z "$new_version" ]]; then
+    new_version=$current_version
+    echo -e "${GREEN}✅ Keeping version: $new_version${NC}"
 else
-    echo -e "${GREEN}✅ Keeping version $current_version${NC}"
+    echo -e "${GREEN}✅ New version: $new_version${NC}"
 fi
 
-# Update versionCode
+# Ask for new versionCode
+echo ""
+read -p "Enter new versionCode (current is $current_version_code): " new_version_code
+if [[ -z "$new_version_code" ]]; then
+    echo -e "${RED}❌ versionCode is required! Using auto-incremented value.${NC}"
+    new_version_code=$((current_version_code + 1))
+fi
+echo -e "${GREEN}✅ New versionCode: $new_version_code${NC}"
+echo ""
+
+# Update both version and versionCode in app.json
+sed -i '' "s/\"version\": \"$current_version\"/\"version\": \"$new_version\"/" app.json
 sed -i '' "s/\"versionCode\": $current_version_code/\"versionCode\": $new_version_code/" app.json
-echo -e "${GREEN}✅ versionCode updated to $new_version_code${NC}"
+echo -e "${GREEN}✅ Updated app.json${NC}"
 
 git add app.json
-git commit -m "Bump version to $current_version (versionCode: $new_version_code)"
+git commit -m "Bump version to $new_version (versionCode: $new_version_code)"
 git push origin master
+echo -e "${GREEN}✅ Pushed to GitHub!${NC}"
+echo ""
+echo -e "${YELLOW}⏳ Waiting 10 seconds for GitHub to sync before building...${NC}"
+sleep 10
 echo ""
 
 # Step 4: Build with EAS
