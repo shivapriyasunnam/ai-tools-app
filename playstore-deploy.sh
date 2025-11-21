@@ -48,12 +48,11 @@ git push origin master
 echo -e "${GREEN}✅ Pushed to GitHub!${NC}"
 echo ""
 
-# Step 3: Update version and versionCode
-echo -e "${BLUE}📊 Step 3: Updating version and versionCode...${NC}"
+# Step 3: Update version
+echo -e "${BLUE}📊 Step 3: Updating version...${NC}"
 current_version=$(grep -o '"version": "[^"]*"' app.json | sed 's/"version": "\(.*\)"/\1/')
-current_version_code=$(grep -o '"versionCode": [0-9]*' app.json | sed 's/"versionCode": \(.*\)/\1/')
 echo -e "${CYAN}Current version: ${YELLOW}$current_version${NC}"
-echo -e "${CYAN}Current versionCode: ${YELLOW}$current_version_code${NC}"
+echo -e "${CYAN}Note: ${YELLOW}versionCode will auto-increment via EAS${NC}"
 echo ""
 
 # Ask for new version
@@ -64,24 +63,14 @@ if [[ -z "$new_version" ]]; then
 else
     echo -e "${GREEN}✅ New version: $new_version${NC}"
 fi
-
-# Ask for new versionCode
-echo ""
-read -p "Enter new versionCode (current is $current_version_code): " new_version_code
-if [[ -z "$new_version_code" ]]; then
-    echo -e "${RED}❌ versionCode is required! Using auto-incremented value.${NC}"
-    new_version_code=$((current_version_code + 1))
-fi
-echo -e "${GREEN}✅ New versionCode: $new_version_code${NC}"
 echo ""
 
-# Update both version and versionCode in app.json
+# Update version in app.json (versionCode will auto-increment via EAS)
 sed -i '' "s/\"version\": \"$current_version\"/\"version\": \"$new_version\"/" app.json
-sed -i '' "s/\"versionCode\": $current_version_code/\"versionCode\": $new_version_code/" app.json
 echo -e "${GREEN}✅ Updated app.json${NC}"
 
 git add app.json
-git commit -m "Bump version to $new_version (versionCode: $new_version_code)"
+git commit -m "Bump version to $new_version"
 git push origin master
 echo -e "${GREEN}✅ Pushed to GitHub!${NC}"
 echo ""
@@ -92,6 +81,7 @@ echo ""
 # Step 4: Build with EAS
 echo -e "${BLUE}🏗️  Step 4: Building production APK/AAB with EAS...${NC}"
 echo -e "${YELLOW}This will take 10-20 minutes...${NC}"
+echo -e "${CYAN}📝 EAS will automatically increment versionCode${NC}"
 echo ""
 npx eas-cli build --platform android --profile production --non-interactive
 echo ""
@@ -125,7 +115,7 @@ echo -e "   ${CYAN}→ Submit for review${NC}"
 echo ""
 echo -e "${BLUE}3. Release Notes Template:${NC}"
 echo -e "   ${YELLOW}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "   ${GREEN}🎉 Version $current_version${NC}"
+echo -e "   ${GREEN}🎉 Version $new_version${NC}"
 echo -e "   ${NC}"
 echo -e "   ${NC}• Bug fixes and improvements${NC}"
 echo -e "   ${NC}• Enhanced bottom navigation for better usability${NC}"
