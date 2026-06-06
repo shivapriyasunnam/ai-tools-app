@@ -2,6 +2,10 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
+import { initExecutorch } from 'react-native-executorch';
+import { ExpoResourceFetcher } from 'react-native-executorch-expo-resource-fetcher';
+
+initExecutorch({ resourceFetcher: ExpoResourceFetcher });
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { AppProvider } from '@/src/context/AppContext';

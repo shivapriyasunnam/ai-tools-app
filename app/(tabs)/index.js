@@ -39,6 +39,7 @@ function formatDate(date) {
 
 function HomeScreen() {
   const router = useRouter();
+
   const { expenses, getTotal } = useContext(ExpenseContext);
   const { incomes, getTotalIncome } = useContext(IncomeContext);
   const { todos, getTotalTodos, getCompletedCount, getPendingCount } = useContext(TodoContext);
@@ -204,6 +205,7 @@ function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+
         {/* Header */}
         <View style={styles.header}>
           <View>

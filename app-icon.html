@@ -153,35 +153,68 @@
     
     <script>
         function downloadIcon() {
-            // Get the icon element
-            const icon = document.getElementById('appIcon');
-            
-            // Use html2canvas library
-            const script = document.createElement('script');
-            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-            script.onload = function() {
-                html2canvas(icon, {
-                    backgroundColor: null,
-                    scale: 2,
-                    width: 512,
-                    height: 512
-                }).then(canvas => {
-                    // Convert to blob and download
-                    canvas.toBlob(function(blob) {
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = 'daily-app-icon-512x512.png';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                        
-                        alert('✅ Icon downloaded successfully! Check your Downloads folder.');
-                    }, 'image/png');
-                });
-            };
-            document.head.appendChild(script);
+            const size = 512;
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            const radius = 80;
+
+            // Clip to rounded rect
+            ctx.beginPath();
+            ctx.moveTo(radius, 0);
+            ctx.lineTo(size - radius, 0);
+            ctx.quadraticCurveTo(size, 0, size, radius);
+            ctx.lineTo(size, size - radius);
+            ctx.quadraticCurveTo(size, size, size - radius, size);
+            ctx.lineTo(radius, size);
+            ctx.quadraticCurveTo(0, size, 0, size - radius);
+            ctx.lineTo(0, radius);
+            ctx.quadraticCurveTo(0, 0, radius, 0);
+            ctx.closePath();
+            ctx.clip();
+
+            // Background gradient (135deg: top-left #1E3A8A → bottom-right #3B82F6)
+            const grad = ctx.createLinearGradient(0, 0, size, size);
+            grad.addColorStop(0, '#1E3A8A');
+            grad.addColorStop(1, '#3B82F6');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, size, size);
+
+            // Decorative circle top-right
+            ctx.beginPath();
+            ctx.arc(size - 100 + 150, -100 + 150, 150, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(96, 165, 250, 0.3)';
+            ctx.fill();
+
+            // Decorative circle bottom-left
+            ctx.beginPath();
+            ctx.arc(-60 + 100, size - 60 + 100 - size + 100, 100, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(96, 165, 250, 0.2)';
+            ctx.fill();
+
+            // Text "d.ai.ly"
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = '900 110px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.letterSpacing = '-3px';
+            ctx.shadowColor = 'rgba(0,0,0,0.2)';
+            ctx.shadowBlur = 20;
+            ctx.shadowOffsetY = 4;
+            ctx.fillText('d.ai.ly', size / 2, size / 2);
+
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'daily-app-icon-512x512.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 'image/png');
         }
     </script>
 </body>
