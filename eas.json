@@ -21,6 +21,11 @@
       "autoIncrement": true,
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://daily-api-8tlg.onrender.com",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://saqpypvijslluvnpkvkq.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_yIDOMFnmEag0SAEWhfq8dw_KI58Mk4y"
       }
     }
   },

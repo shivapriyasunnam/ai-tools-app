@@ -68,11 +68,11 @@ The app (d.ai.ly) currently stores all data in AsyncStorage (device-local) with 
 - [x] Updated `server/app/auth.py` to use JWKS-based JWT verification (ES256/RS256/HS256) — Supabase now uses ECC P-256 keys, not shared secret HS256
 
 ### Phase 3 — Deploy
-- [ ] Create Render Web Service (Python), connect GitHub repo, set root to `server/`
-- [ ] Set Render start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-- [ ] Add all env vars to Render dashboard
-- [ ] Set `EXPO_PUBLIC_API_URL` in app `.env` to Render URL
-- [ ] Smoke test deployed server (Swagger UI, CRUD round-trip, finance proxy)
+- [x] Create Render Web Service (Python), connect GitHub repo, set root to `server/`
+- [x] Set Render start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- [x] Add all env vars to Render dashboard
+- [x] Set `EXPO_PUBLIC_API_URL` in app `.env` to Render URL (`https://daily-api-8tlg.onrender.com`)
+- [x] Smoke test deployed server (Swagger UI ✅, /health ✅)
 - [ ] Test app against production server end-to-end
 - [ ] Build release APK: `eas build --platform android`
 
