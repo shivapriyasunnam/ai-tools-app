@@ -35,7 +35,9 @@ export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading, initialVa
   const [date, setDate] = useState(`${localYear}-${localMonth}-${localDay}`);
   const [notes, setNotes] = useState(initialValues?.notes || '');
 
-  const handleAddExpense = () => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleAddExpense = async () => {
     if (!description.trim() || !amount.trim()) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
@@ -46,9 +48,6 @@ export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading, initialVa
       return;
     }
 
-
-
-    // Always use current local date and time for activity entry
     const isoDate = new Date().toISOString();
 
     const expense = {
@@ -61,16 +60,11 @@ export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading, initialVa
       method: 'manual',
     };
 
-    onExpenseAdded(expense);
-
-    if (!isEdit) {
-      // Reset form only if not editing
-      setDescription('');
-      setAmount('');
-      setSelectedCategory('Other');
-  const now = new Date();
-  setDate(now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()));
-      setNotes('');
+    setSubmitting(true);
+    try {
+      await onExpenseAdded(expense);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -165,15 +159,15 @@ export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading, initialVa
       <View style={styles.buttonRow}>
         <TouchableOpacity
           onPress={handleAddExpense}
-          disabled={loading}
-          style={[styles.button, { backgroundColor: colors.accent, flex: 1, opacity: loading ? 0.6 : 1 }]}
+          disabled={submitting || loading}
+          style={[styles.button, { backgroundColor: colors.accent, flex: 1, opacity: (submitting || loading) ? 0.6 : 1 }]}
         >
-          <Text style={styles.buttonText}>{isEdit ? '✓ Save Changes' : '✓ Add Expense'}</Text>
+          <Text style={styles.buttonText}>{submitting ? 'Saving...' : isEdit ? '✓ Save Changes' : '✓ Add Expense'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={onCancel}
-          disabled={loading}
+          disabled={submitting || loading}
           style={[styles.button, { backgroundColor: colors.gray[300], flex: 1, marginLeft: spacing.md }]}
         >
           <Text style={[styles.buttonText, { color: colors.text }]}>Cancel</Text>

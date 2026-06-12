@@ -1,105 +1,69 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { apiClient } from '@/src/services/apiClient';
 import { createContext, useEffect, useState } from 'react';
-
-const TODO_STORAGE_KEY = 'TODO_ITEMS';
 
 export const TodoContext = createContext();
 
 export const TodoProvider = ({ children }) => {
   const [todos, setTodos] = useState([]);
 
-  // Load todos from storage on mount
   useEffect(() => {
-    loadTodos();
+    apiClient.get('/api/todos')
+      .then(data => setTodos(data.map(normalizeTodo)))
+      .catch(() => setTodos([]));
   }, []);
 
-  // Save todos to storage whenever they change
-  useEffect(() => {
-    if (todos.length > 0 || todos.length === 0) {
-      saveTodos();
-    }
-  }, [todos]);
-
-  const loadTodos = async () => {
-    try {
-      const storedTodos = await AsyncStorage.getItem(TODO_STORAGE_KEY);
-      if (storedTodos) {
-        setTodos(JSON.parse(storedTodos));
-      }
-    } catch (error) {
-      console.error('Error loading todos:', error);
-    }
-  };
-
-  const saveTodos = async () => {
-    try {
-      await AsyncStorage.setItem(TODO_STORAGE_KEY, JSON.stringify(todos));
-    } catch (error) {
-      console.error('Error saving todos:', error);
-    }
-  };
-
-  const addTodo = (todo) => {
-    const newTodo = {
-      id: Date.now().toString(),
+  const addTodo = async (todo) => {
+    const created = await apiClient.post('/api/todos', {
       title: todo.title,
       description: todo.description || '',
       completed: false,
-      priority: todo.priority || 'medium', // low, medium, high
+      priority: todo.priority || 'medium',
       category: todo.category || 'general',
-      dueDate: todo.dueDate || null,
-      createdAt: new Date().toISOString(),
-    };
-    setTodos([newTodo, ...todos]);
+      due_date: todo.dueDate || null,
+    });
+    setTodos(prev => [normalizeTodo(created), ...prev]);
   };
 
-  const updateTodo = (id, updates) => {
-    setTodos(todos.map(todo => 
-      todo.id === id ? { ...todo, ...updates } : todo
-    ));
+  const updateTodo = async (id, updates) => {
+    const payload = { ...updates };
+    if (updates.dueDate !== undefined) { payload.due_date = updates.dueDate; delete payload.dueDate; }
+    if (updates.completedAt !== undefined) { payload.completed_at = updates.completedAt; delete payload.completedAt; }
+    const updated = await apiClient.put(`/api/todos/${id}`, payload);
+    setTodos(prev => prev.map(t => t.id === id ? normalizeTodo(updated) : t));
   };
 
-  const deleteTodo = (id) => {
-    setTodos(todos.filter(todo => todo.id !== id));
+  const deleteTodo = async (id) => {
+    await apiClient.delete(`/api/todos/${id}`);
+    setTodos(prev => prev.filter(t => t.id !== id));
   };
 
-  const toggleComplete = (id) => {
-    setTodos(todos.map(todo => {
-      if (todo.id === id) {
-        if (!todo.completed) {
-          // Mark as completed and set completedAt
-          return { ...todo, completed: true, completedAt: new Date().toISOString() };
-        } else {
-          // Mark as not completed and clear completedAt
-          const { completedAt, ...rest } = todo;
-          return { ...rest, completed: false };
-        }
-      }
-      return todo;
-    }));
+  const toggleComplete = async (id) => {
+    const todo = todos.find(t => t.id === id);
+    if (!todo) return;
+    const nowCompleted = !todo.completed;
+    const updated = await apiClient.put(`/api/todos/${id}`, {
+      completed: nowCompleted,
+      completed_at: nowCompleted ? new Date().toISOString() : null,
+    });
+    setTodos(prev => prev.map(t => t.id === id ? normalizeTodo(updated) : t));
+  };
+
+  const clearCompleted = async () => {
+    const completed = todos.filter(t => t.completed);
+    await Promise.all(completed.map(t => apiClient.delete(`/api/todos/${t.id}`)));
+    setTodos(prev => prev.filter(t => !t.completed));
   };
 
   const getTotalTodos = () => todos.length;
-
   const getCompletedCount = () => todos.filter(t => t.completed).length;
-
   const getPendingCount = () => todos.filter(t => !t.completed).length;
-
   const getTodosByCategory = () => {
     const categories = {};
     todos.forEach(todo => {
-      if (!categories[todo.category]) {
-        categories[todo.category] = 0;
-      }
-      if (!todo.completed) {
-        categories[todo.category]++;
-      }
+      if (!categories[todo.category]) categories[todo.category] = 0;
+      if (!todo.completed) categories[todo.category]++;
     });
     return categories;
-  };
-
-  const clearCompleted = () => {
-    setTodos(todos.filter(todo => !todo.completed));
   };
 
   return (
@@ -121,3 +85,13 @@ export const TodoProvider = ({ children }) => {
     </TodoContext.Provider>
   );
 };
+
+// Map server snake_case to app camelCase
+function normalizeTodo(t) {
+  return {
+    ...t,
+    dueDate: t.due_date ?? t.dueDate ?? null,
+    completedAt: t.completed_at ?? t.completedAt ?? null,
+    createdAt: t.created_at ?? t.createdAt,
+  };
+}

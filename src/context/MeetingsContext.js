@@ -1,5 +1,5 @@
+import { apiClient } from '@/src/services/apiClient';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { storageService } from '../services/storageService';
 
 const MeetingsContext = createContext(undefined);
 
@@ -7,38 +7,23 @@ export const MeetingsProvider = ({ children }) => {
   const [meetings, setMeetings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load meetings on mount
   useEffect(() => {
-    loadMeetings();
+    apiClient.get('/api/meetings')
+      .then(setMeetings)
+      .catch(() => setMeetings([]))
+      .finally(() => setIsLoading(false));
   }, []);
-
-  const loadMeetings = async () => {
-    try {
-      const storedMeetings = await storageService.getMeetings();
-      setMeetings(storedMeetings);
-    } catch (error) {
-      console.error('Error loading meetings:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const saveMeetings = async (newMeetings) => {
-    try {
-      await storageService.saveMeetings(newMeetings);
-      setMeetings(newMeetings);
-      return true;
-    } catch (error) {
-      console.error('Error saving meetings:', error);
-      return false;
-    }
-  };
 
   const addMeeting = async (meeting) => {
     try {
-      const newMeetings = [...meetings, { ...meeting, id: Date.now().toString() }];
-      await storageService.saveMeetings(newMeetings);
-      setMeetings(newMeetings);
+      const created = await apiClient.post('/api/meetings', {
+        title: meeting.title,
+        start: meeting.start,
+        end: meeting.end,
+        organizer: meeting.organizer,
+        description: meeting.description,
+      });
+      setMeetings(prev => [...prev, created]);
       return true;
     } catch (error) {
       console.error('Error adding meeting:', error);
@@ -48,9 +33,8 @@ export const MeetingsProvider = ({ children }) => {
 
   const deleteMeeting = async (meetingId) => {
     try {
-      const filteredMeetings = meetings.filter(m => m.id !== meetingId);
-      await storageService.saveMeetings(filteredMeetings);
-      setMeetings(filteredMeetings);
+      await apiClient.delete(`/api/meetings/${meetingId}`);
+      setMeetings(prev => prev.filter(m => m.id !== meetingId));
       return true;
     } catch (error) {
       console.error('Error deleting meeting:', error);
@@ -58,51 +42,62 @@ export const MeetingsProvider = ({ children }) => {
     }
   };
 
-  // Get meetings for today
+  const saveMeetings = async (newMeetings) => {
+    // Used by calendar sync — replaces all meetings
+    try {
+      await Promise.all(meetings.map(m => apiClient.delete(`/api/meetings/${m.id}`)));
+      const created = await Promise.all(newMeetings.map(m => apiClient.post('/api/meetings', m)));
+      setMeetings(created);
+      return true;
+    } catch (error) {
+      console.error('Error saving meetings:', error);
+      return false;
+    }
+  };
+
   const getTodayMeetings = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-
-    return meetings.filter(meeting => {
-      const meetingDate = new Date(meeting.start);
-      return meetingDate >= today && meetingDate < tomorrow;
+    return meetings.filter(m => {
+      const d = new Date(m.start);
+      return d >= today && d < tomorrow;
     });
   };
 
-  // Get meetings for this week
   const getWeekMeetings = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const nextWeek = new Date(today);
     nextWeek.setDate(nextWeek.getDate() + 7);
-
-    return meetings.filter(meeting => {
-      const meetingDate = new Date(meeting.start);
-      return meetingDate >= today && meetingDate < nextWeek;
+    return meetings.filter(m => {
+      const d = new Date(m.start);
+      return d >= today && d < nextWeek;
     });
   };
 
-  const value = {
-    meetings,
-    isLoading,
-    saveMeetings,
-    addMeeting,
-    deleteMeeting,
-    getTodayMeetings,
-    getWeekMeetings,
-    loadMeetings,
-  };
-
-  return <MeetingsContext.Provider value={value}>{children}</MeetingsContext.Provider>;
+  return (
+    <MeetingsContext.Provider
+      value={{
+        meetings,
+        isLoading,
+        saveMeetings,
+        addMeeting,
+        deleteMeeting,
+        getTodayMeetings,
+        getWeekMeetings,
+        loadMeetings: () => {},
+      }}
+    >
+      {children}
+    </MeetingsContext.Provider>
+  );
 };
 
 export const useMeetings = () => {
   const context = useContext(MeetingsContext);
-  if (context === undefined) {
-    throw new Error('useMeetings must be used within a MeetingsProvider');
-  }
+  if (context === undefined) throw new Error('useMeetings must be used within a MeetingsProvider');
   return context;
 };
 

@@ -1,36 +1,30 @@
-        <Tabs.Screen
-          name="profile"
-          options={{
-            title: 'Profile',
-            href: null, // Hidden tab - doesn't appear in tab bar
-          }}
-        />
-  // The income-tracker tab has been removed as it was not present in the file.
 import CustomHeader from '@/components/ui/CustomHeader';
 import ToolsBottomSheet from '@/src/components/ToolsBottomSheet';
 import { colors } from '@/src/constants';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabsLayout() {
   const bottomSheetRef = useRef(null);
   const insets = useSafeAreaInsets();
+  const [sheetMounted, setSheetMounted] = useState(false);
 
   const handleOpenBottomSheet = () => {
-    console.log('🔵 Button pressed! Opening bottom sheet...');
-    console.log('Bottom sheet ref:', bottomSheetRef.current);
-    if (bottomSheetRef.current) {
-      console.log('✅ Ref exists, calling snapToIndex');
-      // Reset scroll to top before opening so user always starts at beginning
+    if (sheetMounted && bottomSheetRef.current) {
       bottomSheetRef.current.resetScroll?.();
       bottomSheetRef.current.snapToIndex(0);
     } else {
-      console.error('❌ Bottom sheet ref is null!');
+      setSheetMounted(true);
     }
+  };
+
+  const handleSheetClosed = () => {
+    // Delay unmount so the close animation can finish
+    setTimeout(() => setSheetMounted(false), 350);
   };
 
   // Pan gesture for swipe up to open bottom sheet
@@ -48,7 +42,7 @@ export default function TabsLayout() {
     .runOnJS(true);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: colors.primary,
@@ -227,11 +221,13 @@ export default function TabsLayout() {
       
       {/* Swipe-up gesture zone just above the tab bar */}
       <GestureDetector gesture={swipeUpGesture}>
-        <View style={styles.swipeZone} />
+        <View style={[styles.swipeZone, { bottom: 70 + insets.bottom }]} />
       </GestureDetector>
       
-      <ToolsBottomSheet ref={bottomSheetRef} />
-    </GestureHandlerRootView>
+      {sheetMounted && (
+        <ToolsBottomSheet ref={bottomSheetRef} onClosed={handleSheetClosed} />
+      )}
+    </View>
   );
 }
 
@@ -242,12 +238,11 @@ const styles = StyleSheet.create({
   },
   swipeZone: {
     position: 'absolute',
-    bottom: 70, // Position just above the 70px tab bar
     left: 0,
     right: 0,
-    height: 80, // Larger swipe zone for easier detection
+    height: 80,
     backgroundColor: 'transparent',
-    pointerEvents: 'box-only', // Only this view receives touch events, not its children
+    pointerEvents: 'none', // transparent to touches; GestureDetector handles swipes at native level
   },
   floatingButton: {
     flex: 1,

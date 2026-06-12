@@ -26,7 +26,9 @@ function IncomeForm({ onSubmit, onCancel, initialValues = {}, loading, isEdit })
   const [date, setDate] = useState(`${localYear}-${localMonth}-${localDay}`);
   const [notes, setNotes] = useState(initialValues.notes || '');
 
-  const handleSubmit = () => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
     if (!description.trim() || !amount.trim()) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
@@ -35,20 +37,18 @@ function IncomeForm({ onSubmit, onCancel, initialValues = {}, loading, isEdit })
       Alert.alert('Error', 'Please enter a valid amount');
       return;
     }
-    // Always use current local date and time for activity entry
     const isoDate = new Date().toISOString();
-    onSubmit({
-      ...initialValues,
-      description: description.trim(),
-      amount: parseFloat(amount),
-      date: isoDate,
-      notes,
-    });
-    if (!isEdit) {
-      setDescription('');
-      setAmount('');
-      setDate(`${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`);
-      setNotes('');
+    setSubmitting(true);
+    try {
+      await onSubmit({
+        ...initialValues,
+        description: description.trim(),
+        amount: parseFloat(amount),
+        date: isoDate,
+        notes,
+      });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -89,14 +89,14 @@ function IncomeForm({ onSubmit, onCancel, initialValues = {}, loading, isEdit })
       <View style={formStyles.buttonRow}>
         <TouchableOpacity
           onPress={handleSubmit}
-          disabled={loading}
-          style={[formStyles.button, { backgroundColor: colors.accent, opacity: loading ? 0.6 : 1 }]}
+          disabled={submitting || loading}
+          style={[formStyles.button, { backgroundColor: colors.accent, opacity: (submitting || loading) ? 0.6 : 1 }]}
         >
-          <Text style={formStyles.buttonText}>{isEdit ? 'Save Changes' : 'Add Income'}</Text>
+          <Text style={formStyles.buttonText}>{submitting ? 'Saving...' : isEdit ? 'Save Changes' : 'Add Income'}</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={onCancel}
-          disabled={loading}
+          disabled={submitting || loading}
           style={[formStyles.button, { backgroundColor: colors.gray[300], marginLeft: 8 }]}
         >
           <Text style={[formStyles.buttonText, { color: colors.gray[700] }]}>Cancel</Text>
@@ -162,10 +162,14 @@ export default function IncomeTrackerScreen() {
       )
     : incomes;
 
-  const handleAddIncome = (income) => {
-    addIncome(income);
-    setMode('view');
-    Alert.alert('Success', 'Income added successfully!');
+  const handleAddIncome = async (income) => {
+    try {
+      await addIncome(income);
+      setMode('view');
+      Alert.alert('Success', 'Income added successfully!');
+    } catch (err) {
+      Alert.alert('Error', 'Failed to add income: ' + err.message);
+    }
   };
 
   const handleEditIncome = (income) => {
@@ -173,11 +177,15 @@ export default function IncomeTrackerScreen() {
     setMode('edit');
   };
 
-  const handleUpdateIncome = (updated) => {
-    updateIncome(updated.id, updated);
-    setEditIncome(null);
-    setMode('view');
-    Alert.alert('Success', 'Income updated!');
+  const handleUpdateIncome = async (updated) => {
+    try {
+      await updateIncome(updated.id, updated);
+      setEditIncome(null);
+      setMode('view');
+      Alert.alert('Success', 'Income updated!');
+    } catch (err) {
+      Alert.alert('Error', 'Failed to update income: ' + err.message);
+    }
   };
 
   return (

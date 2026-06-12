@@ -1,4 +1,4 @@
-import { storageService } from '@/src/services/storageService';
+import { apiClient } from '@/src/services/apiClient';
 import { createContext, useCallback, useEffect, useState } from 'react';
 
 export const IncomeContext = createContext();
@@ -8,56 +8,40 @@ export const IncomeProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadIncomes();
+    apiClient.get('/api/income')
+      .then(setIncomes)
+      .catch(() => setIncomes([]))
+      .finally(() => setIsLoading(false));
   }, []);
 
-  useEffect(() => {
-    if (!isLoading && incomes.length >= 0) {
-      storageService.saveIncomes(incomes);
-    }
-  }, [incomes, isLoading]);
-
-  const loadIncomes = async () => {
-    try {
-      setIsLoading(true);
-      const savedIncomes = await storageService.getIncomes();
-      setIncomes(savedIncomes);
-    } catch (error) {
-      console.error('Error loading incomes:', error);
-      setIncomes([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const addIncome = useCallback((income) => {
-    const newIncome = {
-      id: Date.now() + Math.random(),
-      createdAt: new Date().toISOString(),
-  date: income.date || new Date().toISOString(),
-      description: income.description,
+  const addIncome = useCallback(async (income) => {
+    const created = await apiClient.post('/api/income', {
       amount: parseFloat(income.amount),
-      notes: income.notes || '',
-    };
-    setIncomes(prev => [newIncome, ...prev]);
-    return newIncome;
+      date: income.date || new Date().toISOString(),
+      description: income.description,
+    });
+    setIncomes(prev => [created, ...prev]);
+    return created;
   }, []);
 
-  const deleteIncome = useCallback((id) => {
+  const deleteIncome = useCallback(async (id) => {
+    await apiClient.delete(`/api/income/${id}`);
     setIncomes(prev => prev.filter(i => i.id !== id));
   }, []);
 
-  const updateIncome = useCallback((id, updates) => {
-    setIncomes(prev => prev.map(i => i.id === id ? { ...i, ...updates } : i));
+  const updateIncome = useCallback(async (id, updates) => {
+    const updated = await apiClient.put(`/api/income/${id}`, updates);
+    setIncomes(prev => prev.map(i => i.id === id ? updated : i));
   }, []);
 
   const getTotalIncome = useCallback(() => {
     return incomes.reduce((sum, i) => sum + i.amount, 0);
   }, [incomes]);
 
-  const clearIncomes = useCallback(() => {
+  const clearIncomes = useCallback(async () => {
+    await Promise.all(incomes.map(i => apiClient.delete(`/api/income/${i.id}`)));
     setIncomes([]);
-  }, []);
+  }, [incomes]);
 
   return (
     <IncomeContext.Provider

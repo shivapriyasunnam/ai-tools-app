@@ -37,10 +37,14 @@ export default function ExpenseTrackerScreen() {
       )
     : expenses;
 
-  const handleAddManualExpense = (expense) => {
-    addExpense(expense);
-    setMode('view');
-    Alert.alert('Success', 'Expense added successfully!');
+  const handleAddManualExpense = async (expense) => {
+    try {
+      await addExpense(expense);
+      setMode('view');
+      Alert.alert('Success', 'Expense added successfully!');
+    } catch (err) {
+      Alert.alert('Error', 'Failed to add expense: ' + err.message);
+    }
   };
 
   const handleEditExpense = (expense) => {
@@ -48,32 +52,34 @@ export default function ExpenseTrackerScreen() {
     setMode('edit');
   };
 
-  const handleUpdateExpense = (updated) => {
-    updateExpense(updated.id, updated);
-    setEditExpense(null);
-    setMode('view');
-    Alert.alert('Success', 'Expense updated!');
+  const handleUpdateExpense = async (updated) => {
+    try {
+      await updateExpense(updated.id, updated);
+      setEditExpense(null);
+      setMode('view');
+      Alert.alert('Success', 'Expense updated!');
+    } catch (err) {
+      Alert.alert('Error', 'Failed to update expense: ' + err.message);
+    }
   };
 
-  const handleCSVImport = (csvText) => {
+  const handleCSVImport = async (csvText) => {
     setProcessingCSV(true);
     try {
       const parsedExpenses = parseCSV(csvText);
       if (parseError) {
         Alert.alert('Error', parseError);
-        setProcessingCSV(false);
         return;
       }
       if (!parsedExpenses || parsedExpenses.length === 0) {
         Alert.alert('Error', 'No valid expenses found in CSV');
-        setProcessingCSV(false);
         return;
       }
-      addMultipleExpenses(parsedExpenses);
+      await addMultipleExpenses(parsedExpenses);
       Alert.alert('Success', `Imported ${parsedExpenses.length} expenses!`);
       setMode('view');
     } catch (err) {
-      Alert.alert('Error', 'Failed to parse CSV: ' + err.message);
+      Alert.alert('Error', 'Failed to import CSV: ' + err.message);
     } finally {
       setProcessingCSV(false);
     }

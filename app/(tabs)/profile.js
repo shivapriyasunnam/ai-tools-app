@@ -1,4 +1,5 @@
 import { useUser } from '@/src/context/UserContext';
+import { useAuth } from '@/src/context/AuthContext';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -6,6 +7,7 @@ import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'reac
 export default function ProfileScreen() {
   const router = useRouter();
   const { userName, saveUserName } = useUser();
+  const { session, signOut } = useAuth();
   const [name, setName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -18,33 +20,44 @@ export default function ProfileScreen() {
       Alert.alert('Error', 'Please enter your name');
       return;
     }
-    
     setIsSaving(true);
     const success = await saveUserName(name.trim());
     setIsSaving(false);
-    
     if (success) {
       Alert.alert('Success', 'Your name has been saved!', [
-        {
-          text: 'OK',
-          onPress: () => router.push('/(tabs)/'),
-        },
+        { text: 'OK', onPress: () => router.push('/(tabs)/') },
       ]);
     } else {
       Alert.alert('Error', 'Failed to save your name. Please try again.');
     }
   };
 
-  const handleLoginSignup = () => {
-    Alert.alert('Coming Soon', 'Login/Signup functionality will be available soon!');
+  const handleSignOut = async () => {
+    Alert.alert('Sign out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Sign out',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await signOut();
+          } catch (e) {
+            Alert.alert('Error', e.message);
+          }
+        },
+      },
+    ]);
   };
 
   return (
     <View style={styles.container}>
+      <View style={styles.accountCard}>
+        <Text style={styles.accountEmail}>{session?.user?.email}</Text>
+        <Text style={styles.accountLabel}>Signed in with Google</Text>
+      </View>
 
-      
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Name</Text>
+        <Text style={styles.label}>Display Name</Text>
         <TextInput
           style={styles.input}
           placeholder="Enter your name"
@@ -53,7 +66,7 @@ export default function ProfileScreen() {
           onChangeText={setName}
           autoCapitalize="words"
         />
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.saveButton}
           onPress={handleSaveName}
           disabled={isSaving}
@@ -63,12 +76,9 @@ export default function ProfileScreen() {
           </Text>
         </TouchableOpacity>
       </View>
-      
-      <TouchableOpacity 
-        style={styles.loginButton}
-        onPress={handleLoginSignup}
-      >
-        <Text style={styles.loginButtonText}>Login / Sign Up</Text>
+
+      <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+        <Text style={styles.signOutButtonText}>Sign Out</Text>
       </TouchableOpacity>
     </View>
   );
@@ -81,12 +91,27 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingTop: 60,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#6366F1',
-    marginBottom: 32,
-    textAlign: 'center',
+  accountCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  accountEmail: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1E293B',
+    marginBottom: 4,
+  },
+  accountLabel: {
+    fontSize: 13,
+    color: '#64748B',
   },
   inputContainer: {
     backgroundColor: '#FFFFFF',
@@ -95,7 +120,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
   },
@@ -126,23 +151,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  loginButton: {
-    backgroundColor: '#6366F1',
+  signOutButton: {
+    backgroundColor: '#FEE2E2',
     paddingVertical: 14,
-    paddingHorizontal: 32,
     borderRadius: 12,
-    marginTop: 16,
-    elevation: 2,
-    shadowColor: '#6366F1',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
     alignItems: 'center',
+    marginTop: 8,
   },
-  loginButtonText: {
-    color: '#FFFFFF',
+  signOutButtonText: {
+    color: '#DC2626',
     fontSize: 16,
     fontWeight: '600',
-    textAlign: 'center',
   },
 });

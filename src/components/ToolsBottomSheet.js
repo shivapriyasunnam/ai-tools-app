@@ -2,16 +2,22 @@ import { colors } from '@/src/constants';
 import { Ionicons } from '@expo/vector-icons';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useRouter } from 'expo-router';
-import { forwardRef, useCallback, useImperativeHandle, useMemo, useRef } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-const ToolsBottomSheet = forwardRef((props, ref) => {
+const ToolsBottomSheet = forwardRef(({ onClosed }, ref) => {
   const snapPoints = useMemo(() => ['60%', '90%'], []);
   const router = useRouter();
   const sheetRef = useRef(null);
   const scrollRef = useRef(null);
 
-  console.log('ToolsBottomSheet rendered');
+  // Auto-open when mounted
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      sheetRef.current?.snapToIndex(0);
+    }, 50);
+    return () => clearTimeout(timer);
+  }, []);
 
   const tools = [
     {
@@ -103,12 +109,11 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
   };
 
   const handleSheetChanges = useCallback((index) => {
-    console.log('Bottom sheet index changed to:', index);
-    // If closed (-1) ensure scroll resets so next open starts at top
     if (index === -1) {
       resetScroll(false);
+      onClosed?.();
     }
-  }, []);
+  }, [onClosed]);
 
   // Expose imperative methods to parent
   useImperativeHandle(ref, () => ({
@@ -147,7 +152,7 @@ const ToolsBottomSheet = forwardRef((props, ref) => {
       handleIndicatorStyle={styles.handleIndicator}
       onChange={handleSheetChanges}
       enableDynamicSizing={false}
-      animateOnMount={true}
+      animateOnMount={false}
     >
       <View style={styles.bottomSheetBackground}>
         <View style={styles.headerContainer}>

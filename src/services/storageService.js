@@ -1,158 +1,20 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const EXPENSES_KEY = 'expenses_data';
-const INCOMES_KEY = 'incomes_data';
-const BUDGETS_KEY = 'budgets_data';
-const MEETINGS_KEY = 'meetings_data';
-const USER_PROFILE_KEY = 'user_profile';
-const REMINDERS_KEY = 'reminders_data';
+// storageService is replaced by apiClient calls in each context.
+// Kept as a stub so any remaining references don't break during migration.
+import { apiClient } from './apiClient';
 
 export const storageService = {
-  // Expenses
-  saveExpenses: async (expenses) => {
-    try {
-      await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(expenses));
-      return true;
-    } catch (error) {
-      console.error('Error saving expenses:', error);
-      return false;
-    }
-  },
-
-  // Incomes
-  saveIncomes: async (incomes) => {
-    try {
-      await AsyncStorage.setItem(INCOMES_KEY, JSON.stringify(incomes));
-      return true;
-    } catch (error) {
-      console.error('Error saving incomes:', error);
-      return false;
-    }
-  },
-
-  getExpenses: async () => {
-    try {
-      const data = await AsyncStorage.getItem(EXPENSES_KEY);
-      return data ? JSON.parse(data) : [];
-    } catch (error) {
-      console.error('Error retrieving expenses:', error);
-      return [];
-    }
-  },
-
-  getIncomes: async () => {
-    try {
-      const data = await AsyncStorage.getItem(INCOMES_KEY);
-      return data ? JSON.parse(data) : [];
-    } catch (error) {
-      console.error('Error retrieving incomes:', error);
-      return [];
-    }
-  },
-
-  // Budgets
-  saveBudgets: async (budgets) => {
-    try {
-      await AsyncStorage.setItem(BUDGETS_KEY, JSON.stringify(budgets));
-      return true;
-    } catch (error) {
-      console.error('Error saving budgets:', error);
-      return false;
-    }
-  },
-
-  getBudgets: async () => {
-    try {
-      const data = await AsyncStorage.getItem(BUDGETS_KEY);
-      return data ? JSON.parse(data) : [];
-    } catch (error) {
-      console.error('Error retrieving budgets:', error);
-      return [];
-    }
-  },
-
-  // Clear all data
-  clearAllData: async () => {
-    try {
-      await AsyncStorage.multiRemove([EXPENSES_KEY, BUDGETS_KEY, MEETINGS_KEY]);
-      return true;
-    } catch (error) {
-      console.error('Error clearing data:', error);
-      return false;
-    }
-  },
-
-  // Delete single expense
-  deleteExpense: async (expenses) => {
-    try {
-      await AsyncStorage.setItem(EXPENSES_KEY, JSON.stringify(expenses));
-      return true;
-    } catch (error) {
-      console.error('Error deleting expense:', error);
-      return false;
-    }
-  },
-
-  // User Profile
-  saveUserProfile: async (profile) => {
-    try {
-      await AsyncStorage.setItem(USER_PROFILE_KEY, JSON.stringify(profile));
-      return true;
-    } catch (error) {
-      console.error('Error saving user profile:', error);
-      return false;
-    }
-  },
-
-  getUserProfile: async () => {
-    try {
-      const data = await AsyncStorage.getItem(USER_PROFILE_KEY);
-      return data ? JSON.parse(data) : { name: '' };
-    } catch (error) {
-      console.error('Error retrieving user profile:', error);
-      return { name: '' };
-    }
-  },
-
-  // Meetings
-  saveMeetings: async (meetings) => {
-    try {
-      await AsyncStorage.setItem(MEETINGS_KEY, JSON.stringify(meetings));
-      return true;
-    } catch (error) {
-      console.error('Error saving meetings:', error);
-      return false;
-    }
-  },
-
-  getMeetings: async () => {
-    try {
-      const data = await AsyncStorage.getItem(MEETINGS_KEY);
-      return data ? JSON.parse(data) : [];
-    } catch (error) {
-      console.error('Error retrieving meetings:', error);
-      return [];
-    }
-  },
-
-  // Reminders
-  saveReminders: async (reminders) => {
-    try {
-      await AsyncStorage.setItem(REMINDERS_KEY, JSON.stringify(reminders));
-      return true;
-    } catch (error) {
-      console.error('Error saving reminders:', error);
-      return false;
-    }
-  },
-
-  getReminders: async () => {
-    try {
-      const data = await AsyncStorage.getItem(REMINDERS_KEY);
-      return data ? JSON.parse(data) : [];
-    } catch (error) {
-      console.error('Error retrieving reminders:', error);
-      return [];
-    }
-  },
+  saveExpenses: async () => true,
+  getExpenses: async () => apiClient.get('/api/expenses').catch(() => []),
+  saveIncomes: async () => true,
+  getIncomes: async () => apiClient.get('/api/income').catch(() => []),
+  saveBudgets: async () => true,
+  getBudgets: async () => apiClient.get('/api/budgets').catch(() => []),
+  saveReminders: async () => true,
+  getReminders: async () => apiClient.get('/api/reminders').catch(() => []),
+  saveMeetings: async () => true,
+  getMeetings: async () => apiClient.get('/api/meetings').catch(() => []),
+  deleteExpense: async () => true,
+  clearAllData: async () => true,
+  saveUserProfile: async (profile) => apiClient.put('/api/user/profile', profile).catch(() => null),
+  getUserProfile: async () => apiClient.get('/api/user/profile').catch(() => ({ name: '' })),
 };

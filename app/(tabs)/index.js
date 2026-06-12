@@ -17,6 +17,7 @@ import { useMeetings } from '@/src/context/MeetingsContext';
 import { useQuickNotes } from '@/src/context/QuickNotesContext';
 import { useReminders } from '@/src/context/RemindersContext';
 import { TodoContext } from '@/src/context/TodoContext';
+import { useAuth } from '@/src/context/AuthContext';
 import { useUser } from '@/src/context/UserContext';
 import usePomodoroStats from '@/src/hooks/usePomodoroStats';
 
@@ -46,6 +47,7 @@ function HomeScreen() {
   const { getTotalBudget, getTotalSpent, getTotalRemaining, getBudgetStatus } = useContext(BudgetContext);
   const { notes } = useQuickNotes();
   const { userName } = useUser();
+  const { session } = useAuth();
   const { getTodayMeetings, getWeekMeetings } = useMeetings();
   const { getActiveReminders } = useReminders();
   const total = getTotal();
@@ -200,7 +202,7 @@ function HomeScreen() {
     router.push('/(tabs)/pomodoro-timer');
   };
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -214,7 +216,11 @@ function HomeScreen() {
             </Text>
           </View>
           <TouchableOpacity style={styles.profileIcon} onPress={() => router.push('/(tabs)/profile')}>
-            <Text style={styles.profileText}>{userName ? userName.charAt(0).toUpperCase() : 'P'}</Text>
+            <Text style={styles.profileText}>
+              {userName
+                ? userName.charAt(0).toUpperCase()
+                : session?.user?.email?.charAt(0).toUpperCase() ?? 'P'}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -532,7 +538,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 100,
+    paddingTop: 1,
+    paddingBottom: 20,
   },
   header: {
     flexDirection: 'row',
