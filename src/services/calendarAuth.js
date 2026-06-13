@@ -1,179 +1,114 @@
-import * as AuthSession from 'expo-auth-session';
-import * as WebBrowser from 'expo-web-browser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as WebBrowser from 'expo-web-browser';
+import { makeRedirectUri } from 'expo-auth-session';
+import { supabase } from '@/src/services/supabaseClient';
 
-WebBrowser.maybeCompleteAuthSession();
-
-const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
-const MICROSOFT_CLIENT_ID = 'YOUR_MICROSOFT_CLIENT_ID';
+// Reuses the exact same Supabase OAuth flow as app sign-in, just with calendar scope added.
+// provider_token from Google expires in ~1h so we store it with an expiry.
+const TOKEN_KEY = 'google_calendar_token_v2';
 
 export const connectGoogleCalendar = async () => {
   try {
-    const redirectUrl = AuthSession.getRedirectUrl();
-    console.log('Redirect URL:', redirectUrl);
-    
-    const request = new AuthSession.AuthRequest({
-      clientId: GOOGLE_CLIENT_ID,
-      scopes: [
-        'https://www.googleapis.com/auth/calendar.readonly',
-        'https://www.googleapis.com/auth/calendar.events',
-      ],
-      redirectUrl,
-      usePKCE: true,
-      discoveryUrl: 'https://accounts.google.com/.well-known/openid-configuration',
+    // Clear any previous token so we always get a fresh one with calendar scope
+    await AsyncStorage.removeItem(TOKEN_KEY);
+    const redirectTo = makeRedirectUri({ scheme: 'daily', path: 'auth/callback' });
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo,
+        skipBrowserRedirect: true,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent',
+          scope: 'openid email profile https://www.googleapis.com/auth/calendar.readonly',
+        },
+      },
     });
 
-    const result = await request.promptAsync(
-      {
-        authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-      },
-      { useProxy: true }
-    );
+    if (error) return { success: false, error: error.message };
+    if (!data?.url) return { success: false, error: 'No auth URL received' };
 
-    if (result.type === 'success') {
-      const { access_token } = result.params;
-      
-      if (access_token) {
-        // Save token
-        await AsyncStorage.setItem('google_calendar_token', access_token);
-        
-        // Fetch user's meetings
-        const meetings = await fetchGoogleMeetings(access_token);
-        return { success: true, meetings };
-      }
-    } else {
-      return { success: false, error: 'Authorization cancelled' };
+    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+
+    if (result.type !== 'success' || !result.url) {
+      return { success: false, error: result.type === 'cancel' ? 'Cancelled' : 'Auth failed' };
     }
-    
-    return { success: false };
-  } catch (error) {
-    console.error('Google Calendar connection error:', error);
-    return { success: false, error: error.message };
+
+    const url = new URL(result.url);
+    const code = url.searchParams.get('code');
+    if (!code) return { success: false, error: 'No auth code in redirect' };
+
+    const { data: sessionData, error: exchangeError } =
+      await supabase.auth.exchangeCodeForSession(code).catch(() => ({ data: null, error: new Error('Exchange failed') }));
+
+    if (exchangeError) return { success: false, error: exchangeError.message };
+
+    const token = sessionData?.session?.provider_token;
+    if (!token) return { success: false, error: 'Calendar access not granted — make sure to allow Calendar permission on the Google screen.' };
+
+    await AsyncStorage.setItem(TOKEN_KEY, JSON.stringify({
+      accessToken: token,
+      expiresAt: Date.now() + 3600_000,
+    }));
+
+    const events = await fetchGoogleCalendarEvents(token);
+    return { success: true, events };
+  } catch (err) {
+    return { success: false, error: err.message };
   }
 };
 
-export const connectOutlookCalendar = async () => {
+export const getValidCalendarToken = async () => {
   try {
-    const redirectUrl = AuthSession.getRedirectUrl();
-    console.log('Redirect URL:', redirectUrl);
-    
-    const request = new AuthSession.AuthRequest({
-      clientId: MICROSOFT_CLIENT_ID,
-      scopes: [
-        'Calendars.Read',
-        'Calendars.Read.Shared',
-        'offline_access',
-      ],
-      redirectUrl,
-      usePKCE: true,
-      discoveryUrl: 'https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration',
-    });
+    const raw = await AsyncStorage.getItem(TOKEN_KEY);
+    if (!raw) return null;
 
-    const result = await request.promptAsync(
-      {
-        authorizationEndpoint: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-      },
-      { useProxy: true }
-    );
+    const { accessToken, expiresAt } = JSON.parse(raw);
+    if (Date.now() < expiresAt - 60_000) return accessToken;
 
-    if (result.type === 'success') {
-      const { access_token } = result.params;
-      
-      if (access_token) {
-        // Save token
-        await AsyncStorage.setItem('outlook_calendar_token', access_token);
-        
-        // Fetch user's meetings
-        const meetings = await fetchOutlookMeetings(access_token);
-        return { success: true, meetings };
-      }
-    } else {
-      return { success: false, error: 'Authorization cancelled' };
-    }
-    
-    return { success: false };
-  } catch (error) {
-    console.error('Outlook Calendar connection error:', error);
-    return { success: false, error: error.message };
-  }
-};
-
-// Fetch Google Calendar meetings
-const fetchGoogleMeetings = async (accessToken) => {
-  try {
-    const now = new Date().toISOString();
-    const response = await fetch(
-      `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${now}&maxResults=10`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
-
-    if (!response.ok) throw new Error('Failed to fetch Google meetings');
-    const data = await response.json();
-    
-    return data.items?.map(event => ({
-      id: event.id,
-      title: event.summary,
-      start: event.start.dateTime || event.start.date,
-      end: event.end.dateTime || event.end.date,
-      organizer: event.organizer?.email,
-    })) || [];
-  } catch (error) {
-    console.error('Google meetings fetch error:', error);
-    return [];
-  }
-};
-
-// Fetch Outlook Calendar meetings
-const fetchOutlookMeetings = async (accessToken) => {
-  try {
-    const response = await fetch(
-      'https://graph.microsoft.com/v1.0/me/events?$top=10&$orderby=start/dateTime',
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
-
-    if (!response.ok) throw new Error('Failed to fetch Outlook meetings');
-    const data = await response.json();
-    
-    return data.value?.map(event => ({
-      id: event.id,
-      title: event.subject,
-      start: event.start.dateTime,
-      end: event.end.dateTime,
-      organizer: event.organizer?.emailAddress?.address,
-    })) || [];
-  } catch (error) {
-    console.error('Outlook meetings fetch error:', error);
-    return [];
-  }
-};
-
-// Get stored token
-export const getStoredToken = async (provider) => {
-  try {
-    const key = provider === 'google' ? 'google_calendar_token' : 'outlook_calendar_token';
-    return await AsyncStorage.getItem(key);
-  } catch (error) {
-    console.error('Get stored token error:', error);
+    // Token expired — user needs to reconnect via connectGoogleCalendar()
+    return null;
+  } catch {
     return null;
   }
 };
 
-// Disconnect calendar
-export const disconnectCalendar = async (provider) => {
-  try {
-    const key = provider === 'google' ? 'google_calendar_token' : 'outlook_calendar_token';
-    await AsyncStorage.removeItem(key);
-    return true;
-  } catch (error) {
-    console.error('Disconnect error:', error);
-    return false;
+export const isCalendarConnected = async () => (await getValidCalendarToken()) !== null;
+
+export const fetchGoogleCalendarEvents = async (accessToken) => {
+  const now = new Date().toISOString();
+  const twoWeeksOut = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+
+  const url = new URL('https://www.googleapis.com/calendar/v3/calendars/primary/events');
+  url.searchParams.set('timeMin', now);
+  url.searchParams.set('timeMax', twoWeeksOut);
+  url.searchParams.set('maxResults', '50');
+  url.searchParams.set('singleEvents', 'true');
+  url.searchParams.set('orderBy', 'startTime');
+
+  const response = await fetch(url.toString(), {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Calendar API ${response.status}: ${text}`);
   }
+
+  const data = await response.json();
+
+  return (data.items ?? []).map(event => ({
+    id: event.id,
+    title: event.summary ?? '(No title)',
+    start: event.start?.dateTime ?? event.start?.date,
+    end: event.end?.dateTime ?? event.end?.date,
+    organizer: event.organizer?.email ?? null,
+    description: event.description ?? null,
+    isAllDay: !event.start?.dateTime,
+  }));
+};
+
+export const disconnectGoogleCalendar = async () => {
+  await AsyncStorage.removeItem(TOKEN_KEY);
 };
