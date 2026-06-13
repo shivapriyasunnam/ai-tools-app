@@ -229,7 +229,7 @@ function HomeScreen() {
           <Text style={styles.sectionTitle}>Today's Overview</Text>
         </View>
         <View style={styles.statsContainer}>
-          <View style={styles.statCardLarge}>
+          <TouchableOpacity style={styles.statCardLarge} onPress={() => router.push('/(tabs)/meetings-scheduler')} activeOpacity={0.7}>
             <View style={styles.statCardHeader}>
               <View style={[styles.statIconCircle, { backgroundColor: '#DBEAFE' }]}>
                 <Text style={styles.statCardIcon}>📅</Text>
@@ -243,9 +243,9 @@ function HomeScreen() {
             <Text style={styles.statCardSubtext}>
               {remainingWeekMeetings > 0 ? `${remainingWeekMeetings} more this week` : 'No more meetings this week'}
             </Text>
-          </View>
+          </TouchableOpacity>
 
-          <View style={styles.statCardLarge}>
+          <TouchableOpacity style={styles.statCardLarge} onPress={() => router.push('/(tabs)/pomodoro-timer')} activeOpacity={0.7}>
             <View style={styles.statCardHeader}>
               <View style={[styles.statIconCircle, { backgroundColor: '#FCE7F3' }]}>
                 <Text style={styles.statCardIcon}>⏱️</Text>
@@ -257,31 +257,31 @@ function HomeScreen() {
             <Text style={styles.statCardValue}>{totalSessions}</Text>
             <Text style={styles.statCardLabel}>Pomodoro Sessions</Text>
             <Text style={styles.statCardSubtext}>{totalFocusedHours} focused</Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
 
         <View style={styles.statsContainer}>
-          <View style={styles.statCardLarge}>
+          <TouchableOpacity style={styles.statCardLarge} onPress={() => router.push('/(tabs)/todo-list')} activeOpacity={0.7}>
             <View style={styles.statCardHeader}>
-              <View style={[styles.statIconCircle, { backgroundColor: '#F3E8FF' }]}> 
+              <View style={[styles.statIconCircle, { backgroundColor: '#F3E8FF' }]}>
                 <Text style={styles.statCardIcon}>✅</Text>
               </View>
             </View>
             <Text style={styles.statCardValue}>{completedTodos}/{totalTodos}</Text>
             <Text style={styles.statCardLabel}>Tasks</Text>
             <Text style={styles.statCardSubtext}>
-              {completedTodos === 0 
-                ? 'No tasks completed yet' 
+              {completedTodos === 0
+                ? 'No tasks completed yet'
                 : `${completedTodos} completed${pendingTodos > 0 ? `, ${pendingTodos} pending` : ''}`
               }
             </Text>
-          </View>
+          </TouchableOpacity>
 
           {/* Reminders Card */}
-          <View style={styles.statCardLarge}>
+          <TouchableOpacity style={styles.statCardLarge} onPress={() => router.push('/(tabs)/reminders')} activeOpacity={0.7}>
             <View style={styles.statCardHeader}>
-              <View style={[styles.statIconCircle, { backgroundColor: '#FEF3C7' }]}> 
+              <View style={[styles.statIconCircle, { backgroundColor: '#FEF3C7' }]}>
                 <Text style={styles.statCardIcon}>⏰</Text>
               </View>
             </View>
@@ -290,7 +290,7 @@ function HomeScreen() {
             <Text style={styles.statCardSubtext}>
               {totalReminders === 0 ? 'No active reminders' : 'Don\'t forget!'}
             </Text>
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Financial Overview Section Header */}
