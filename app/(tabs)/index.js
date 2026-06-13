@@ -298,12 +298,21 @@ function HomeScreen() {
           <Text style={styles.sectionTitle}>Financial Overview</Text>
           <Text style={styles.financialSubtitleOutside}>This month</Text>
         </View>
-        
+
         {/* Financial Overview Card */}
         <View style={styles.financialCard}>
-          <View style={styles.balanceContainer}>
-            <Text style={styles.balanceLabel}>Total Balance</Text>
-            <Text style={styles.balanceAmount}>${(income - total).toFixed(2)}</Text>
+          <View style={styles.balanceRow}>
+            <View style={styles.balanceContainer}>
+              <Text style={styles.balanceLabel}>Total Balance</Text>
+              <Text style={styles.balanceAmount}>${(income - total).toFixed(2)}</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.addExpenseButton}
+              onPress={() => router.push('/add-expense')}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="add" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
 
           <View style={styles.financialStats}>
@@ -603,9 +612,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#9CA3AF',
   },
-  balanceContainer: {
+  balanceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginBottom: 20,
   },
+  addExpenseButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#6366F1',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  balanceContainer: {},
   balanceLabel: {
   fontSize: 14,
   color: '#888',

@@ -49,6 +49,16 @@ export default function RootLayout() {
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen name="sign-in" options={{ headerShown: false }} />
                 <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="add-expense"
+                  options={{
+                    title: 'Add Expense',
+                    presentation: 'modal',
+                    headerStyle: { backgroundColor: '#F8F9FA' },
+                    headerTintColor: '#111827',
+                    headerTitleStyle: { fontWeight: '700' },
+                  }}
+                />
               </Stack>
             </AuthGate>
             <StatusBar style="dark" backgroundColor="#F8F9FA" />
