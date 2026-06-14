@@ -42,6 +42,57 @@
     "plugins": [
       "expo-router",
       [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "AddExpenseWidget",
+              "label": "Add Expense",
+              "description": "Quickly log a new expense",
+              "minWidth": "110dp",
+              "minHeight": "40dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 1,
+              "updatePeriodMillis": 1800000,
+              "previewImage": "./assets/images/icon.png"
+            },
+            {
+              "name": "UpcomingTasksWidget",
+              "label": "Tasks & Reminders",
+              "description": "Your upcoming tasks and reminders",
+              "minWidth": "250dp",
+              "minHeight": "180dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 3,
+              "updatePeriodMillis": 1800000,
+              "previewImage": "./assets/images/icon.png"
+            },
+            {
+              "name": "UpcomingMeetingsWidget",
+              "label": "Upcoming Meetings",
+              "description": "Your next scheduled meetings",
+              "minWidth": "250dp",
+              "minHeight": "180dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 3,
+              "updatePeriodMillis": 1800000,
+              "previewImage": "./assets/images/icon.png"
+            },
+            {
+              "name": "FinancialOverviewWidget",
+              "label": "Financial Overview",
+              "description": "This month's income, spending, and budget",
+              "minWidth": "250dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 4,
+              "targetCellHeight": 2,
+              "updatePeriodMillis": 1800000,
+              "previewImage": "./assets/images/icon.png"
+            }
+          ]
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "ios": {

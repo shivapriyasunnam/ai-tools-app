@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiClient } from '@/src/services/apiClient';
 import { createContext, useEffect, useState } from 'react';
 
@@ -8,7 +9,11 @@ export const TodoProvider = ({ children }) => {
 
   useEffect(() => {
     apiClient.get('/api/todos')
-      .then(data => setTodos(data.map(normalizeTodo)))
+      .then(data => {
+        const normalized = data.map(normalizeTodo);
+        setTodos(normalized);
+        cacheTodosForWidget(normalized);
+      })
       .catch(() => setTodos([]));
   }, []);
 
@@ -85,6 +90,13 @@ export const TodoProvider = ({ children }) => {
     </TodoContext.Provider>
   );
 };
+
+function cacheTodosForWidget(todos) {
+  const slim = todos
+    .filter(t => !t.completed)
+    .map(t => ({ id: t.id, title: t.title, priority: t.priority, dueDate: t.dueDate }));
+  AsyncStorage.setItem('widget_todos', JSON.stringify(slim)).catch(() => {});
+}
 
 // Map server snake_case to app camelCase
 function normalizeTodo(t) {

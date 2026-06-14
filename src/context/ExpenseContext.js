@@ -1,7 +1,23 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiClient } from '@/src/services/apiClient';
 import { createContext, useCallback, useEffect, useState } from 'react';
 
 export const ExpenseContext = createContext();
+
+function cacheExpensesForWidget(expenses) {
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthlyTotal = expenses
+    .filter(e => new Date(e.date) >= startOfMonth)
+    .reduce((sum, e) => sum + e.amount, 0);
+  const byCategory = expenses
+    .filter(e => new Date(e.date) >= startOfMonth)
+    .reduce((acc, e) => {
+      acc[e.category] = (acc[e.category] || 0) + e.amount;
+      return acc;
+    }, {});
+  AsyncStorage.setItem('widget_expenses', JSON.stringify({ monthlyTotal, byCategory })).catch(() => {});
+}
 
 export const ExpenseProvider = ({ children }) => {
   const [expenses, setExpenses] = useState([]);
@@ -9,7 +25,10 @@ export const ExpenseProvider = ({ children }) => {
 
   useEffect(() => {
     apiClient.get('/api/expenses')
-      .then(setExpenses)
+      .then(data => {
+        setExpenses(data);
+        cacheExpensesForWidget(data);
+      })
       .catch(() => setExpenses([]))
       .finally(() => setIsLoading(false));
   }, []);
@@ -76,6 +95,11 @@ export const ExpenseProvider = ({ children }) => {
   const clearExpenses = useCallback(async () => {
     await Promise.all(expenses.map(e => apiClient.delete(`/api/expenses/${e.id}`)));
     setExpenses([]);
+  }, [expenses]);
+
+  // Keep a slim cache in AsyncStorage so widgets can read it without the RN context
+  useEffect(() => {
+    cacheExpensesForWidget(expenses);
   }, [expenses]);
 
   return (

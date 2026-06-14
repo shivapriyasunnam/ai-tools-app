@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiClient } from '@/src/services/apiClient';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { notificationService } from '../services/notificationService';
@@ -11,7 +12,11 @@ export const RemindersProvider = ({ children }) => {
 
   useEffect(() => {
     apiClient.get('/api/reminders')
-      .then(data => setReminders(data.map(normalizeReminder)))
+      .then(data => {
+        const normalized = data.map(normalizeReminder);
+        setReminders(normalized);
+        cacheRemindersForWidget(normalized);
+      })
       .catch(() => setReminders([]))
       .finally(() => setIsLoading(false));
   }, []);
@@ -127,4 +132,11 @@ export default RemindersContext;
 
 function normalizeReminder(r) {
   return { ...r, dueDate: r.due_date ?? r.dueDate ?? null, createdAt: r.created_at ?? r.createdAt };
+}
+
+function cacheRemindersForWidget(reminders) {
+  const slim = reminders
+    .filter(r => !r.completed)
+    .map(r => ({ id: r.id, title: r.title, priority: r.priority, dueDate: r.dueDate }));
+  AsyncStorage.setItem('widget_reminders', JSON.stringify(slim)).catch(() => {});
 }

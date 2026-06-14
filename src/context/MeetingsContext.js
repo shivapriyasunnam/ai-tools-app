@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiClient } from '@/src/services/apiClient';
 import { createContext, useContext, useEffect, useState } from 'react';
 
@@ -9,7 +10,10 @@ export const MeetingsProvider = ({ children }) => {
 
   useEffect(() => {
     apiClient.get('/api/meetings')
-      .then(setMeetings)
+      .then(data => {
+        setMeetings(data);
+        cacheMeetingsForWidget(data);
+      })
       .catch(() => setMeetings([]))
       .finally(() => setIsLoading(false));
   }, []);
@@ -94,6 +98,16 @@ export const MeetingsProvider = ({ children }) => {
     </MeetingsContext.Provider>
   );
 };
+
+function cacheMeetingsForWidget(meetings) {
+  const now = new Date();
+  const upcoming = meetings
+    .filter(m => new Date(m.start) >= now)
+    .sort((a, b) => new Date(a.start) - new Date(b.start))
+    .slice(0, 5)
+    .map(m => ({ id: m.id, title: m.title, start: m.start, end: m.end }));
+  AsyncStorage.setItem('widget_meetings', JSON.stringify(upcoming)).catch(() => {});
+}
 
 export const useMeetings = () => {
   const context = useContext(MeetingsContext);

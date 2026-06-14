@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiClient } from '@/src/services/apiClient';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { ExpenseContext } from './ExpenseContext';
@@ -107,6 +108,17 @@ export const BudgetProvider = ({ children }) => {
   };
 
   const getTotalRemaining = () => getTotalBudget() - getTotalSpent();
+
+  // Cache budget summary for widgets whenever budgets or expenses change
+  useEffect(() => {
+    const totalBudget = getTotalBudget();
+    const totalSpent = getTotalSpent();
+    AsyncStorage.setItem('widget_budgets', JSON.stringify({
+      totalBudget,
+      totalSpent,
+      totalRemaining: totalBudget - totalSpent,
+    })).catch(() => {});
+  }, [budgets, expenses]);
 
   return (
     <BudgetContext.Provider

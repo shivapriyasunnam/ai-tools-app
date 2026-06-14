@@ -1,7 +1,17 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiClient } from '@/src/services/apiClient';
 import { createContext, useCallback, useEffect, useState } from 'react';
 
 export const IncomeContext = createContext();
+
+function cacheIncomeForWidget(incomes) {
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthlyIncome = incomes
+    .filter(i => new Date(i.date) >= startOfMonth)
+    .reduce((sum, i) => sum + i.amount, 0);
+  AsyncStorage.setItem('widget_income', JSON.stringify({ monthlyIncome })).catch(() => {});
+}
 
 export const IncomeProvider = ({ children }) => {
   const [incomes, setIncomes] = useState([]);
@@ -9,7 +19,10 @@ export const IncomeProvider = ({ children }) => {
 
   useEffect(() => {
     apiClient.get('/api/income')
-      .then(setIncomes)
+      .then(data => {
+        setIncomes(data);
+        cacheIncomeForWidget(data);
+      })
       .catch(() => setIncomes([]))
       .finally(() => setIsLoading(false));
   }, []);
