@@ -1,0 +1,10 @@
+<resources>
+  <string name="app_name">d.ai.ly</string>
+  <string name="expo_system_ui_user_interface_style" translatable="false">light</string>
+  <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
+  <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
+  <string name="widget_addexpensewidget_description" translatable="false">Quickly log a new expense</string>
+  <string name="widget_upcomingtaskswidget_description" translatable="false">Your upcoming tasks and reminders</string>
+  <string name="widget_upcomingmeetingswidget_description" translatable="false">Your next scheduled meetings</string>
+  <string name="widget_financialoverviewwidget_description" translatable="false">This month\'s income, spending, and budget</string>
+</resources>

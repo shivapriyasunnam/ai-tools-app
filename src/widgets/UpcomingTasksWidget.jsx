@@ -4,7 +4,11 @@ import {
   TextWidget,
 } from 'react-native-android-widget';
 
-const PRIORITY_COLOR = { high: '#EF4444', medium: '#F59E0B', low: '#10B981' };
+const PRIORITY_COLORS = {
+  high:   { dot: '#F87171' },
+  medium: { dot: '#FBBF24' },
+  low:    { dot: '#34D399' },
+};
 
 function formatRelativeDate(dateStr) {
   if (!dateStr) return '';
@@ -45,67 +49,93 @@ export function UpcomingTasksWidget({ todos = [], reminders = [] }) {
       style={{
         height: 'match_parent',
         width: 'match_parent',
-        backgroundColor: '#1E1B4B',
-        borderRadius: 16,
-        padding: 12,
+        backgroundColor: '#0F172A',
+        borderRadius: 20,
+        padding: 16,
         flexDirection: 'column',
       }}
       clickAction="OPEN_URI"
       clickActionData={{ uri: 'daily://todo-list' }}
     >
-      <FlexWidget style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+      {/* Header */}
+      <FlexWidget style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14 }}>
+        <TextWidget
+          text="✓"
+          style={{ fontSize: 15, color: '#818CF8', fontWeight: '800', marginRight: 7 }}
+        />
         <TextWidget
           text="Tasks & Reminders"
-          style={{ fontSize: 13, color: '#A5B4FC', fontWeight: '700', flex: 1 }}
+          style={{ fontSize: 15, color: '#F8FAFC', fontWeight: '800', flex: 1 }}
         />
-        <TextWidget
-          text={`${items.length}`}
-          style={{ fontSize: 11, color: '#6366F1', fontWeight: '600' }}
-        />
+        {items.length > 0 && (
+          <FlexWidget style={{ flexDirection: 'row', backgroundColor: '#312E81', borderRadius: 10, paddingLeft: 8, paddingRight: 8, paddingTop: 3, paddingBottom: 3 }}>
+            <TextWidget text={`${items.length}`} style={{ fontSize: 11, color: '#A5B4FC', fontWeight: '700' }} />
+          </FlexWidget>
+        )}
       </FlexWidget>
 
-      {items.length === 0 && (
+      {items.length === 0 ? (
         <TextWidget
           text="All clear!"
-          style={{ fontSize: 13, color: '#6B7280', marginTop: 8 }}
+          style={{ fontSize: 13, color: '#475569', fontWeight: '500', marginTop: 8 }}
         />
+      ) : (
+        items.map((item, i) => {
+          const p = PRIORITY_COLORS[item.priority] || PRIORITY_COLORS.medium;
+          const dateLabel = item.date ? formatRelativeDate(item.date) : null;
+          const isOverdue = dateLabel === 'Overdue';
+          return (
+            <FlexWidget
+              key={item.id}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: '#1E293B',
+                borderRadius: 10,
+                paddingLeft: 10,
+                paddingRight: 10,
+                paddingTop: 9,
+                paddingBottom: 9,
+                marginBottom: i < items.length - 1 ? 6 : 0,
+              }}
+              clickAction="OPEN_URI"
+              clickActionData={{ uri: 'daily://todo-list' }}
+            >
+              <FlexWidget
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: p.dot,
+                  marginRight: 9,
+                }}
+              />
+              <TextWidget
+                text={item.title}
+                style={{ fontSize: 12, color: '#E2E8F0', flex: 1, fontWeight: '500' }}
+                maxLines={1}
+              />
+              {dateLabel ? (
+                <FlexWidget style={{
+                  flexDirection: 'row',
+                  backgroundColor: isOverdue ? '#3B0F0F' : '#0F172A',
+                  borderRadius: 6,
+                  paddingLeft: 5,
+                  paddingRight: 5,
+                  paddingTop: 2,
+                  paddingBottom: 2,
+                  marginLeft: 6,
+                }}>
+                  <TextWidget
+                    text={dateLabel}
+                    style={{ fontSize: 9, color: isOverdue ? '#F87171' : '#64748B', fontWeight: '600' }}
+                  />
+                </FlexWidget>
+              ) : null}
+            </FlexWidget>
+          );
+        })
       )}
-
-      {items.map((item, i) => (
-        <FlexWidget
-          key={item.id}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            paddingVertical: 6,
-            borderTopWidth: i === 0 ? 0 : 1,
-            borderTopColor: '#312E81',
-          }}
-          clickAction="OPEN_URI"
-          clickActionData={{ uri: 'daily://todo-list' }}
-        >
-          <FlexWidget
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: 4,
-              backgroundColor: PRIORITY_COLOR[item.priority] || '#6366F1',
-              marginRight: 8,
-            }}
-          />
-          <TextWidget
-            text={item.title}
-            style={{ fontSize: 12, color: '#E5E7EB', flex: 1 }}
-            maxLines={1}
-          />
-          {item.date ? (
-            <TextWidget
-              text={formatRelativeDate(item.date)}
-              style={{ fontSize: 10, color: '#6B7280', marginLeft: 4 }}
-            />
-          ) : null}
-        </FlexWidget>
-      ))}
     </FlexWidget>
   );
 }
