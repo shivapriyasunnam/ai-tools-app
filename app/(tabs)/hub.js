@@ -1,9 +1,14 @@
 
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import { Card } from '../../src/components/ui';
 import { colors, spacing } from '../../src/constants';
 import { apiService } from '../../src/services/api';
+
+const BANNER_AD_UNIT_ID = __DEV__
+  ? TestIds.ADAPTIVE_BANNER
+  : 'ca-app-pub-7933176628735047/5587939995';
 
 
 
@@ -59,6 +64,7 @@ export default function HubScreen() {
   }, []);
 
   return (
+  <View style={{ flex: 1 }}>
     <ScrollView contentContainerStyle={styles.container}>
       {/* <Text style={styles.title}>Hub</Text> */}
       {/* <Text style={styles.subtitle}>Your central dashboard for quick insights.</Text> */}
@@ -162,6 +168,11 @@ export default function HubScreen() {
         )}
       </View>
     </ScrollView>
+    <BannerAd
+      unitId={BANNER_AD_UNIT_ID}
+      size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+    />
+  </View>
   );
 }
 

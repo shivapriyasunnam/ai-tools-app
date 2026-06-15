@@ -6,6 +6,7 @@ import { initExecutorch } from 'react-native-executorch';
 import { ExpoResourceFetcher } from 'react-native-executorch-expo-resource-fetcher';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import mobileAds from 'react-native-google-mobile-ads';
 
 initExecutorch({ resourceFetcher: ExpoResourceFetcher });
 
@@ -38,6 +39,10 @@ function AuthGate({ children }) {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+
+  useEffect(() => {
+    mobileAds().initialize();
+  }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

@@ -3,6 +3,11 @@ import { useAuth } from '@/src/context/AuthContext';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
+
+const BANNER_AD_UNIT_ID = __DEV__
+  ? TestIds.ADAPTIVE_BANNER
+  : 'ca-app-pub-7933176628735047/5587939995';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -50,36 +55,42 @@ export default function ProfileScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.accountCard}>
-        <Text style={styles.accountEmail}>{session?.user?.email}</Text>
-        <Text style={styles.accountLabel}>Signed in with Google</Text>
-      </View>
+    <View style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
+      <View style={styles.container}>
+        <View style={styles.accountCard}>
+          <Text style={styles.accountEmail}>{session?.user?.email}</Text>
+          <Text style={styles.accountLabel}>Signed in with Google</Text>
+        </View>
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.label}>Display Name</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter your name"
-          placeholderTextColor="#94A3B8"
-          value={name}
-          onChangeText={setName}
-          autoCapitalize="words"
-        />
-        <TouchableOpacity
-          style={styles.saveButton}
-          onPress={handleSaveName}
-          disabled={isSaving}
-        >
-          <Text style={styles.saveButtonText}>
-            {isSaving ? 'Saving...' : 'Save Name'}
-          </Text>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Display Name</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your name"
+            placeholderTextColor="#94A3B8"
+            value={name}
+            onChangeText={setName}
+            autoCapitalize="words"
+          />
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={handleSaveName}
+            disabled={isSaving}
+          >
+            <Text style={styles.saveButtonText}>
+              {isSaving ? 'Saving...' : 'Save Name'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+          <Text style={styles.signOutButtonText}>Sign Out</Text>
         </TouchableOpacity>
       </View>
-
-      <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-        <Text style={styles.signOutButtonText}>Sign Out</Text>
-      </TouchableOpacity>
+      <BannerAd
+        unitId={BANNER_AD_UNIT_ID}
+        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+      />
     </View>
   );
 }
