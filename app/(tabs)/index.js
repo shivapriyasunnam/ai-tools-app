@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import {
+  Modal,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -186,6 +188,8 @@ function HomeScreen() {
     return 'Good Night';
   };
   
+  const [financialMenuVisible, setFinancialMenuVisible] = useState(false);
+
   const handleAddExpense = () => {
     router.push('/(tabs)/expense-tracker');
   };
@@ -300,6 +304,10 @@ function HomeScreen() {
         </View>
 
         {/* Financial Overview Card */}
+        <TouchableOpacity
+          activeOpacity={0.85}
+          onPress={() => setFinancialMenuVisible(true)}
+        >
         <View style={styles.financialCard}>
           <View style={styles.balanceRow}>
             <View style={styles.balanceContainer}>
@@ -412,6 +420,42 @@ function HomeScreen() {
             </>
           )}
         </View>
+        </TouchableOpacity>
+
+        {/* Financial Navigation Menu */}
+        <Modal
+          transparent
+          visible={financialMenuVisible}
+          animationType="fade"
+          onRequestClose={() => setFinancialMenuVisible(false)}
+        >
+          <Pressable style={styles.menuOverlay} onPress={() => setFinancialMenuVisible(false)}>
+            <View style={styles.menuCard}>
+              <Text style={styles.menuTitle}>Go to</Text>
+              {[
+                { label: 'Expense', icon: 'wallet-outline', color: '#EF4444', bg: '#FEE2E2', route: '/(tabs)/expense-tracker' },
+                { label: 'Budgets', icon: 'pie-chart-outline', color: '#6366F1', bg: '#E0E7FF', route: '/(tabs)/budget-planner' },
+                { label: 'Income', icon: 'cash-outline', color: '#10B981', bg: '#D1FAE5', route: '/(tabs)/income-tracker' },
+              ].map((item, index, arr) => (
+                <TouchableOpacity
+                  key={item.label}
+                  style={[styles.menuItem, index === arr.length - 1 && { borderBottomWidth: 0 }]}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setFinancialMenuVisible(false);
+                    router.push(item.route);
+                  }}
+                >
+                  <View style={[styles.menuItemIcon, { backgroundColor: item.bg }]}>
+                    <Ionicons name={item.icon} size={20} color={item.color} />
+                  </View>
+                  <Text style={styles.menuItemLabel}>{item.label}</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Pressable>
+        </Modal>
 
         {/* Quick Actions Grid */}
         <View style={styles.sectionHeader}>
@@ -990,5 +1034,54 @@ const styles = StyleSheet.create({
   categoryBudgetPercentage: {
     fontSize: 14,
     fontWeight: '600',
+  },
+
+  // Financial Navigation Menu
+  menuOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  menuCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
+    elevation: 8,
+  },
+  menuTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#9CA3AF',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 12,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  menuItemIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
+  },
+  menuItemLabel: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
   },
 });
