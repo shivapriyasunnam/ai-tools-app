@@ -11,12 +11,14 @@ import {
 } from 'react-native';
 import { colors, spacing } from '@/src/constants';
 import { ExpenseContext } from '@/src/context/ExpenseContext';
+import { useTheme } from '@/src/context/ThemeContext';
 import { useCSVParser } from '@/src/hooks/useCSVParser';
 import { CSVUpload } from '@/src/components/CSVUpload';
 import { ManualExpenseForm } from '@/src/components/ManualExpenseForm';
 import { ExpensesList } from '@/src/components/ExpensesList';
 
 export default function ExpenseTrackerScreen() {
+  const { theme } = useTheme();
   const [mode, setMode] = useState('view'); // 'view', 'manual', 'csv', 'edit'
   const [processingCSV, setProcessingCSV] = useState(false);
   const [filter, setFilter] = useState('');
@@ -86,13 +88,11 @@ export default function ExpenseTrackerScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         {mode === 'view' && (
           <View>
-            <Text style={styles.title}>💰 Expense Tracker</Text>
-
             {/* Summary Cards */}
             <View style={styles.summaryCard}>
               <Text style={styles.summaryLabel}>Total Spent</Text>
@@ -103,7 +103,7 @@ export default function ExpenseTrackerScreen() {
             <View style={styles.modeSelector}>
               <TouchableOpacity
                 onPress={() => setMode('manual')}
-                style={[styles.modeButton, { backgroundColor: colors.primary }]}
+                style={[styles.modeButton, { backgroundColor: theme.colors.primary }]}
               >
                 <Text style={styles.modeButtonText}>➕ Add Manual</Text>
               </TouchableOpacity>
@@ -118,11 +118,11 @@ export default function ExpenseTrackerScreen() {
 
             {/* Category Summary */}
             {Object.keys(categoryTotals).length > 0 && (
-              <View style={styles.categorySummary}>
-                <Text style={styles.categoryTitle}>📊 By Category</Text>
+              <View style={[styles.categorySummary, { backgroundColor: theme.colors.surface }]}>
+                <Text style={[styles.categoryTitle, { color: theme.colors.text }]}>📊 By Category</Text>
                 {Object.entries(categoryTotals).map(([category, total]) => (
-                  <View key={category} style={styles.categoryItem}>
-                    <Text style={styles.categoryName}>{category}</Text>
+                  <View key={category} style={[styles.categoryItem, { borderBottomColor: theme.colors.border }]}>
+                    <Text style={[styles.categoryName, { color: theme.colors.text }]}>{category}</Text>
                     <Text style={styles.categoryAmount}>${total.toFixed(2)}</Text>
                   </View>
                 ))}
@@ -136,20 +136,20 @@ export default function ExpenseTrackerScreen() {
                 value={filter}
                 onChangeText={setFilter}
                 style={{
-                  backgroundColor: colors.gray[100],
+                  backgroundColor: theme.colors.gray[100],
                   borderRadius: 8,
                   padding: spacing.md,
                   fontSize: 14,
-                  color: colors.text,
+                  color: theme.colors.text,
                 }}
-                placeholderTextColor={colors.gray[400]}
+                placeholderTextColor={theme.colors.textSecondary}
               />
             </View>
 
             {/* Expenses List */}
             {filteredExpenses.length > 0 && (
               <View>
-                <Text style={styles.expensesTitle}>📝 Recent Expenses ({filteredExpenses.length})</Text>
+                <Text style={[styles.expensesTitle, { color: theme.colors.text }]}>📝 Recent Expenses ({filteredExpenses.length})</Text>
                 <ExpensesList
                   expenses={filteredExpenses}
                   onDeleteExpense={deleteExpense}
@@ -162,8 +162,8 @@ export default function ExpenseTrackerScreen() {
             {filteredExpenses.length === 0 && (
               <View style={styles.emptyState}>
                 <Text style={styles.emptyIcon}>💸</Text>
-                <Text style={styles.emptyText}>No expenses found</Text>
-                <Text style={styles.emptySubtext}>Try a different search or add a new expense</Text>
+                <Text style={[styles.emptyText, { color: theme.colors.text }]}>No expenses found</Text>
+                <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>Try a different search or add a new expense</Text>
               </View>
             )}
           </View>

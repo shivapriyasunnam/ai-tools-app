@@ -1,4 +1,5 @@
 import { colors } from '@/src/constants';
+import { useTheme } from '@/src/context/ThemeContext';
 import { useState } from 'react';
 import {
     SafeAreaView,
@@ -10,6 +11,7 @@ import {
 } from 'react-native';
 
 export default function CalculatorScreen() {
+  const { theme } = useTheme();
   const [display, setDisplay] = useState('0');
   const [previousValue, setPreviousValue] = useState(null);
   const [operation, setOperation] = useState(null);
@@ -94,54 +96,46 @@ export default function CalculatorScreen() {
   };
 
   const Button = ({ text, onPress, type = 'number', span = false }) => {
-    let buttonStyle = [styles.button];
-    let textStyle = [styles.buttonText];
+    let buttonStyle = [styles.button, { backgroundColor: theme.colors.gray[100], borderColor: theme.colors.border }];
+    let textStyle = [styles.buttonText, { color: theme.colors.text }];
 
     if (type === 'operator') {
-      buttonStyle.push(styles.operatorButton);
-      if (operation === text) {
-        buttonStyle.push(styles.operatorButtonActive);
-      }
-      textStyle.push(styles.operatorText);
+      buttonStyle = [styles.button, { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }];
+      if (operation === text) buttonStyle.push({ backgroundColor: theme.colors.primary + 'CC' });
+      textStyle = [styles.buttonText, styles.operatorText];
     } else if (type === 'function') {
-      buttonStyle.push(styles.functionButton);
-      textStyle.push(styles.functionText);
+      buttonStyle = [styles.button, { backgroundColor: theme.colors.gray[200], borderColor: theme.colors.border }];
+      textStyle = [styles.buttonText, { color: theme.colors.text }, styles.functionText];
     } else if (type === 'equals') {
-      buttonStyle.push(styles.equalsButton);
-      textStyle.push(styles.equalsText);
+      buttonStyle = [styles.button, { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }];
+      textStyle = [styles.buttonText, styles.equalsText];
     }
 
-    if (span) {
-      buttonStyle.push(styles.buttonSpan);
-    }
+    if (span) buttonStyle.push(styles.buttonSpan);
 
     return (
-      <TouchableOpacity
-        style={buttonStyle}
-        onPress={onPress}
-        activeOpacity={0.7}
-      >
+      <TouchableOpacity style={buttonStyle} onPress={onPress} activeOpacity={0.7}>
         <Text style={textStyle}>{text}</Text>
       </TouchableOpacity>
     );
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      
-      <View style={styles.displayContainer}>
-        <Text style={styles.displayText} numberOfLines={1} adjustsFontSizeToFit>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <StatusBar barStyle={theme.isDark ? 'light-content' : 'dark-content'} />
+
+      <View style={[styles.displayContainer, { backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
+        <Text style={[styles.displayText, { color: theme.colors.text }]} numberOfLines={1} adjustsFontSizeToFit>
           {display}
         </Text>
         {operation && previousValue !== null && (
-          <Text style={styles.operationText}>
+          <Text style={[styles.operationText, { color: theme.colors.textSecondary }]}>
             {previousValue} {operation}
           </Text>
         )}
       </View>
 
-      <View style={styles.buttonContainer}>
+      <View style={[styles.buttonContainer, { backgroundColor: theme.colors.background }]}>
         <View style={styles.row}>
           <Button text="C" onPress={handleClear} type="function" />
           <Button text="±" onPress={handleToggleSign} type="function" />

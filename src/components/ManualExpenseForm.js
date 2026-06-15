@@ -8,6 +8,7 @@ import {
     View,
 } from 'react-native';
 import { colors, spacing } from '../constants';
+import { useTheme } from '../context/ThemeContext';
 
 const CATEGORIES = [
   'Groceries',
@@ -22,6 +23,7 @@ const CATEGORIES = [
 
 
 export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading, initialValues, isEdit }) => {
+  const { theme } = useTheme();
   const [description, setDescription] = useState(initialValues?.description || '');
   const [amount, setAmount] = useState(initialValues?.amount?.toString() || '');
   const [selectedCategory, setSelectedCategory] = useState(initialValues?.category || 'Other');
@@ -69,50 +71,49 @@ export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading, initialVa
   };
 
   return (
-    <View style={styles.container}>
-  <Text style={styles.title}>{isEdit ? '✎ Edit Expense' : '➕ Add Expense Manually'}</Text>
-
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Text style={[styles.title, { color: theme.colors.text }]}>{isEdit ? '✎ Edit Expense' : '➕ Add Expense Manually'}</Text>
 
       {/* Date */}
       <View>
-        <Text style={styles.label}>Date</Text>
+        <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Date</Text>
         <TextInput
           placeholder="YYYY-MM-DD"
           value={date}
           onChangeText={setDate}
-          placeholderTextColor={colors.gray[400]}
-          style={styles.input}
+          placeholderTextColor={theme.colors.textSecondary}
+          style={[styles.input, { color: theme.colors.text, backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
         />
       </View>
 
       {/* Description */}
       <View>
-        <Text style={styles.label}>Description *</Text>
+        <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Description *</Text>
         <TextInput
           placeholder="What did you buy?"
           value={description}
           onChangeText={setDescription}
-          placeholderTextColor={colors.gray[400]}
-          style={styles.input}
+          placeholderTextColor={theme.colors.textSecondary}
+          style={[styles.input, { color: theme.colors.text, backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
         />
       </View>
 
       {/* Amount */}
       <View>
-        <Text style={styles.label}>Amount ($) *</Text>
+        <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Amount ($) *</Text>
         <TextInput
           placeholder="0.00"
           value={amount}
           onChangeText={setAmount}
           keyboardType="decimal-pad"
-          placeholderTextColor={colors.gray[400]}
-          style={styles.input}
+          placeholderTextColor={theme.colors.textSecondary}
+          style={[styles.input, { color: theme.colors.text, backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
         />
       </View>
 
       {/* Category */}
       <View>
-        <Text style={styles.label}>Category</Text>
+        <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Category</Text>
         <View style={styles.categoryGrid}>
           {CATEGORIES.map(category => (
             <TouchableOpacity
@@ -122,7 +123,7 @@ export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading, initialVa
                 styles.categoryButton,
                 {
                   backgroundColor:
-                    selectedCategory === category ? colors.primary : colors.gray[200],
+                    selectedCategory === category ? theme.colors.primary : theme.colors.gray[200],
                 },
               ]}
             >
@@ -130,7 +131,7 @@ export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading, initialVa
                 style={[
                   styles.categoryText,
                   {
-                    color: selectedCategory === category ? colors.white : colors.text,
+                    color: selectedCategory === category ? colors.white : theme.colors.text,
                   },
                 ]}
               >
@@ -143,15 +144,15 @@ export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading, initialVa
 
       {/* Notes */}
       <View>
-        <Text style={styles.label}>Notes (Optional)</Text>
+        <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Notes (Optional)</Text>
         <TextInput
           placeholder="Add any additional notes..."
           value={notes}
           onChangeText={setNotes}
           multiline
           numberOfLines={3}
-          placeholderTextColor={colors.gray[400]}
-          style={[styles.input, { textAlignVertical: 'top', minHeight: 80 }]}
+          placeholderTextColor={theme.colors.textSecondary}
+          style={[styles.input, { textAlignVertical: 'top', minHeight: 80, color: theme.colors.text, backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
         />
       </View>
 

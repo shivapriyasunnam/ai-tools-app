@@ -1,5 +1,6 @@
 import { useUser } from '@/src/context/UserContext';
 import { useAuth } from '@/src/context/AuthContext';
+import { useTheme } from '@/src/context/ThemeContext';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -11,6 +12,7 @@ const BANNER_AD_UNIT_ID = __DEV__
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
   const { userName, saveUserName } = useUser();
   const { session, signOut } = useAuth();
   const [name, setName] = useState('');
@@ -55,19 +57,19 @@ export default function ProfileScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
-      <View style={styles.container}>
-        <View style={styles.accountCard}>
-          <Text style={styles.accountEmail}>{session?.user?.email}</Text>
-          <Text style={styles.accountLabel}>Signed in with Google</Text>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={[styles.accountCard, { backgroundColor: theme.colors.surface }]}>
+          <Text style={[styles.accountEmail, { color: theme.colors.text }]}>{session?.user?.email}</Text>
+          <Text style={[styles.accountLabel, { color: theme.colors.textSecondary }]}>Signed in with Google</Text>
         </View>
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Display Name</Text>
+        <View style={[styles.inputContainer, { backgroundColor: theme.colors.surface }]}>
+          <Text style={[styles.label, { color: theme.colors.text }]}>Display Name</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.colors.gray[100], color: theme.colors.text, borderColor: theme.colors.border }]}
             placeholder="Enter your name"
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor={theme.colors.textSecondary}
             value={name}
             onChangeText={setName}
             autoCapitalize="words"

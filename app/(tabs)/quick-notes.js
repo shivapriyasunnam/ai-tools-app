@@ -1,4 +1,5 @@
 import { useQuickNotes } from '@/src/context/QuickNotesContext';
+import { useTheme } from '@/src/context/ThemeContext';
 import { answerFromNotes, initLLM } from '@/src/services/ai/ragAnswer';
 import { embed } from '@/src/services/ai/embeddings';
 import { queryNotes } from '@/src/services/ai/vectorStore';
@@ -20,6 +21,7 @@ import {
 const PRIMARY = '#6C63FF';
 
 export default function QuickNotesScreen() {
+  const { theme } = useTheme();
   const { notes, addNote, editNote, deleteNote } = useQuickNotes();
   const [input, setInput] = useState('');
   const [editingId, setEditingId] = useState(null);
@@ -113,11 +115,11 @@ export default function QuickNotesScreen() {
   // ── render helpers ─────────────────────────────────────────────────────────
 
   const renderNote = ({ item }) => (
-    <View style={[styles.noteItem, editingId === item.id && styles.noteItemEditing]}>
+    <View style={[styles.noteItem, { backgroundColor: theme.colors.surface }, editingId === item.id && styles.noteItemEditing]}>
       {editingId === item.id ? (
         <>
           <TextInput
-            style={styles.noteInput}
+            style={[styles.noteInput, { backgroundColor: theme.colors.background, color: theme.colors.text, borderColor: theme.colors.border }]}
             value={editingText}
             onChangeText={setEditingText}
             autoFocus
@@ -131,7 +133,7 @@ export default function QuickNotesScreen() {
         </>
       ) : (
         <>
-          <Text style={styles.noteText}>{item.text}</Text>
+          <Text style={[styles.noteText, { color: theme.colors.text }]}>{item.text}</Text>
           <View style={styles.noteActions}>
             <TouchableOpacity onPress={() => startEdit(item.id, item.text)}>
               <Text style={styles.editBtn}>Edit</Text>
@@ -164,13 +166,14 @@ export default function QuickNotesScreen() {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
 
         {/* Search / Ask bar */}
-        <View style={styles.searchBar}>
+        <View style={[styles.searchBar, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: theme.colors.text }]}
             placeholder="Search or ask your notes…"
+            placeholderTextColor={theme.colors.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
             onSubmitEditing={handleSemanticSearch}
@@ -240,8 +243,9 @@ export default function QuickNotesScreen() {
         {/* Add note input */}
         <View style={styles.inputRow}>
           <TextInput
-            style={styles.input}
+            style={[styles.input, { backgroundColor: theme.colors.surface, color: theme.colors.text, borderColor: theme.colors.border }]}
             placeholder="Type a note..."
+            placeholderTextColor={theme.colors.textSecondary}
             value={input}
             onChangeText={setInput}
             onSubmitEditing={handleAddNote}

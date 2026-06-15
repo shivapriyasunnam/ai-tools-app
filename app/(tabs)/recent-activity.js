@@ -15,9 +15,11 @@ import { ExpenseContext } from '@/src/context/ExpenseContext';
 import { IncomeContext } from '@/src/context/IncomeContext';
 import { useQuickNotes } from '@/src/context/QuickNotesContext';
 import { TodoContext } from '@/src/context/TodoContext';
+import { useTheme } from '@/src/context/ThemeContext';
 
 function RecentActivityScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
   const { expenses } = useContext(ExpenseContext);
   const { incomes } = useContext(IncomeContext);
   const { todos } = useContext(TodoContext);
@@ -176,18 +178,18 @@ function RecentActivityScreen() {
   const groupOrder = ['Today', 'Yesterday', 'This Week', 'This Month', 'Older'];
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView 
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['bottom']}>
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         {allActivities.length === 0 ? (
           <View style={styles.emptyState}>
-            <View style={styles.emptyIconContainer}>
-              <Ionicons name="time-outline" size={64} color="#9CA3AF" />
+            <View style={[styles.emptyIconContainer, { backgroundColor: theme.colors.gray[100] }]}>
+              <Ionicons name="time-outline" size={64} color={theme.colors.textSecondary} />
             </View>
-            <Text style={styles.emptyTitle}>No Recent Activity</Text>
-            <Text style={styles.emptySubtitle}>
+            <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>No Recent Activity</Text>
+            <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>
               Your recent expenses, income, and completed tasks will appear here
             </Text>
           </View>
@@ -195,10 +197,10 @@ function RecentActivityScreen() {
           groupOrder.map(groupKey => {
             const activities = groupedActivities[groupKey];
             if (!activities || activities.length === 0) return null;
-            
+
             return (
               <View key={groupKey} style={styles.section}>
-                <Text style={styles.sectionTitle}>{groupKey}</Text>
+                <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{groupKey}</Text>
                 {activities.map(activity => {
                   // Navigation handler based on activity type
                   let onPress = undefined;
@@ -225,17 +227,17 @@ function RecentActivityScreen() {
                   return (
                     <TouchableOpacity
                       key={activity.id}
-                      style={styles.activityCard}
+                      style={[styles.activityCard, { backgroundColor: theme.colors.surface }]}
                       onPress={onPress}
                       activeOpacity={onPress ? 0.7 : 1}
                       disabled={!onPress}
                     >
-                      <View style={[styles.activityIcon, { backgroundColor: activity.iconBg }]}> 
+                      <View style={[styles.activityIcon, { backgroundColor: activity.iconBg }]}>
                         <Ionicons name={activity.icon} size={24} color={activity.iconColor} />
                       </View>
                       <View style={styles.activityContent}>
-                        <Text style={styles.activityTitle}>{activity.title}</Text>
-                        <Text style={styles.activitySubtitle}>
+                        <Text style={[styles.activityTitle, { color: theme.colors.text }]}>{activity.title}</Text>
+                        <Text style={[styles.activitySubtitle, { color: theme.colors.textSecondary }]}>
                           {activity.subtitle} • {formatDate(activity.date)}
                         </Text>
                       </View>

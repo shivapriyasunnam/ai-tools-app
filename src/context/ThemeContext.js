@@ -4,6 +4,19 @@ import { createContext, useContext, useEffect, useState } from 'react';
 const ThemeContext = createContext();
 
 const STORAGE_KEY = '@app_theme_mode';
+const PRIMARY_COLOR_KEY = '@app_primary_color';
+
+export const COLOR_PRESETS = [
+  { light: '#6366f1', dark: '#818cf8', name: 'Indigo' },
+  { light: '#8b5cf6', dark: '#a78bfa', name: 'Violet' },
+  { light: '#3b82f6', dark: '#60a5fa', name: 'Blue' },
+  { light: '#0ea5e9', dark: '#38bdf8', name: 'Sky' },
+  { light: '#14b8a6', dark: '#2dd4bf', name: 'Teal' },
+  { light: '#10b981', dark: '#34d399', name: 'Emerald' },
+  { light: '#f43f5e', dark: '#fb7185', name: 'Rose' },
+  { light: '#f97316', dark: '#fb923c', name: 'Orange' },
+  { light: '#ec4899', dark: '#f472b6', name: 'Pink' },
+];
 
 // Light theme colors
 const lightTheme = {
@@ -65,21 +78,27 @@ const darkTheme = {
 
 export const ThemeProvider = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [primaryColor, setPrimaryColorState] = useState(COLOR_PRESETS[0]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load theme preference on mount
   useEffect(() => {
-    loadThemePreference();
+    loadPreferences();
   }, []);
 
-  const loadThemePreference = async () => {
+  const loadPreferences = async () => {
     try {
-      const savedTheme = await AsyncStorage.getItem(STORAGE_KEY);
-      if (savedTheme !== null) {
-        setIsDarkMode(savedTheme === 'dark');
+      const [savedTheme, savedColor] = await Promise.all([
+        AsyncStorage.getItem(STORAGE_KEY),
+        AsyncStorage.getItem(PRIMARY_COLOR_KEY),
+      ]);
+      if (savedTheme !== null) setIsDarkMode(savedTheme === 'dark');
+      if (savedColor !== null) {
+        const parsed = JSON.parse(savedColor);
+        const match = COLOR_PRESETS.find(c => c.name === parsed.name);
+        if (match) setPrimaryColorState(match);
       }
     } catch (error) {
-      console.error('Failed to load theme preference:', error);
+      console.error('Failed to load preferences:', error);
     } finally {
       setIsLoading(false);
     }
@@ -104,7 +123,23 @@ export const ThemeProvider = ({ children }) => {
     }
   };
 
-  const theme = isDarkMode ? darkTheme : lightTheme;
+  const setPrimaryColor = async (colorPreset) => {
+    try {
+      setPrimaryColorState(colorPreset);
+      await AsyncStorage.setItem(PRIMARY_COLOR_KEY, JSON.stringify(colorPreset));
+    } catch (error) {
+      console.error('Failed to save primary color:', error);
+    }
+  };
+
+  const baseTheme = isDarkMode ? darkTheme : lightTheme;
+  const theme = {
+    ...baseTheme,
+    colors: {
+      ...baseTheme.colors,
+      primary: isDarkMode ? primaryColor.dark : primaryColor.light,
+    },
+  };
 
   return (
     <ThemeContext.Provider
@@ -113,6 +148,8 @@ export const ThemeProvider = ({ children }) => {
         theme,
         toggleTheme,
         setDarkMode,
+        primaryColor,
+        setPrimaryColor,
         isLoading,
       }}
     >

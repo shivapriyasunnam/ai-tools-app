@@ -4,6 +4,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-nat
 import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
 import { Card } from '../../src/components/ui';
 import { colors, spacing } from '../../src/constants';
+import { useTheme } from '../../src/context/ThemeContext';
 import { apiService } from '../../src/services/api';
 
 const BANNER_AD_UNIT_ID = __DEV__
@@ -13,6 +14,7 @@ const BANNER_AD_UNIT_ID = __DEV__
 
 
 export default function HubScreen() {
+  const { theme } = useTheme();
   // State for stocks and indices
   const [marketStats, setMarketStats] = useState(null);
   const [topStocks, setTopStocks] = useState(null);
@@ -64,25 +66,22 @@ export default function HubScreen() {
   }, []);
 
   return (
-  <View style={{ flex: 1 }}>
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* <Text style={styles.title}>Hub</Text> */}
-      {/* <Text style={styles.subtitle}>Your central dashboard for quick insights.</Text> */}
-
+  <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>US Stock Market Overview</Text>
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>US Stock Market Overview</Text>
         {loadingStocks ? (
-          <ActivityIndicator size="large" color={colors.primary} style={{ marginVertical: spacing.lg }} />
+          <ActivityIndicator size="large" color={theme.colors.primary} style={{ marginVertical: spacing.lg }} />
         ) : errorStocks ? (
           <Text style={{ color: colors.error, textAlign: 'center' }}>{errorStocks}</Text>
         ) : marketStats && (marketStats.nasdaq || marketStats.sp500) ? (
           <View style={styles.statsRow}>
             <View style={styles.statsCol}>
               <Card
-                title={<Text style={styles.cardTitle}>NASDAQ</Text>}
+                title={<Text style={[styles.cardTitle, { color: theme.colors.text }]}>NASDAQ</Text>}
                 description={
                   <View>
-                    <Text style={styles.cardValue}>
+                    <Text style={[styles.cardValue, { color: theme.colors.text }]}>
                       {marketStats.nasdaq?.price?.toLocaleString?.() ?? 'Data unavailable'}
                     </Text>
                     <Text style={styles.cardChange}>
@@ -97,10 +96,10 @@ export default function HubScreen() {
             </View>
             <View style={styles.statsCol}>
               <Card
-                title={<Text style={styles.cardTitle}>S&amp;P 500</Text>}
+                title={<Text style={[styles.cardTitle, { color: theme.colors.text }]}>S&amp;P 500</Text>}
                 description={
                   <View>
-                    <Text style={styles.cardValue}>
+                    <Text style={[styles.cardValue, { color: theme.colors.text }]}>
                       {marketStats.sp500?.price?.toLocaleString?.() ?? 'Data unavailable'}
                     </Text>
                     <Text style={styles.cardChange}>
@@ -124,9 +123,9 @@ export default function HubScreen() {
       {/* Crypto Market Overview will be implemented with live data next */}
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Top 3 Performing US Stocks</Text>
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Top 3 Performing US Stocks</Text>
         {loadingStocks ? (
-          <ActivityIndicator size="large" color={colors.primary} style={{ marginVertical: spacing.lg }} />
+          <ActivityIndicator size="large" color={theme.colors.primary} style={{ marginVertical: spacing.lg }} />
         ) : errorStocks ? (
           <Text style={{ color: colors.error, textAlign: 'center' }}>{errorStocks}</Text>
         ) : topStocks && topStocks.length > 0 ? (
@@ -135,7 +134,7 @@ export default function HubScreen() {
               key={stock.symbol}
               title={`${stock.symbol} - ${stock.name}`}
               description={`$${stock.price?.toLocaleString?.() ?? '--'}  (${stock.changesPercentage ? stock.changesPercentage.toFixed(2) + '%' : '--'})`}
-              color={colors.primary}
+              color={theme.colors.primary}
             />
           ))
         ) : (
@@ -147,9 +146,9 @@ export default function HubScreen() {
 
       {/* Top 3 Performing Crypto */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Top 3 Performing Crypto</Text>
+        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Top 3 Performing Crypto</Text>
         {loadingCryptos ? (
-          <ActivityIndicator size="large" color={colors.primary} style={{ marginVertical: spacing.lg }} />
+          <ActivityIndicator size="large" color={theme.colors.primary} style={{ marginVertical: spacing.lg }} />
         ) : errorCryptos ? (
           <Text style={{ color: colors.error, textAlign: 'center' }}>{errorCryptos}</Text>
         ) : topCryptos && topCryptos.length > 0 ? (

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors, spacing } from '../../constants';
+import { useTheme } from '../../context/ThemeContext';
 
 export const Button = ({
   title,
@@ -10,22 +11,24 @@ export const Button = ({
   loading = false,
   size = 'medium',
 }) => {
+  const { theme } = useTheme();
+
   const getBackgroundColor = () => {
     if (disabled) return colors.gray[300];
     switch (variant) {
       case 'primary':
-        return colors.primary;
+        return theme.colors.primary;
       case 'secondary':
         return colors.secondary;
       case 'outline':
         return colors.white;
       default:
-        return colors.primary;
+        return theme.colors.primary;
     }
   };
 
   const getTextColor = () => {
-    if (variant === 'outline') return colors.primary;
+    if (variant === 'outline') return theme.colors.primary;
     return colors.white;
   };
 
@@ -51,7 +54,7 @@ export const Button = ({
           styles.button,
           {
             backgroundColor: getBackgroundColor(),
-            borderColor: variant === 'outline' ? colors.primary : 'transparent',
+            borderColor: variant === 'outline' ? theme.colors.primary : 'transparent',
             ...getPadding(),
           },
         ]}

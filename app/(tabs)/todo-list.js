@@ -1,5 +1,6 @@
 import { colors, spacing } from '@/src/constants';
 import { TodoContext } from '@/src/context/TodoContext';
+import { useTheme } from '@/src/context/ThemeContext';
 import { useContext, useState } from 'react';
 import {
     Alert,
@@ -14,6 +15,7 @@ import {
 
 // Form component for adding/editing todos
 function TodoForm({ onSubmit, onCancel, initialValues = {}, isEdit }) {
+  const { theme } = useTheme();
   const [title, setTitle] = useState(initialValues.title || '');
   const [description, setDescription] = useState(initialValues.description || '');
   const [priority, setPriority] = useState(initialValues.priority || 'medium');
@@ -72,7 +74,7 @@ function TodoForm({ onSubmit, onCancel, initialValues = {}, isEdit }) {
           <Text style={[formStyles.optionText, priority === 'low' && { color: colors.white }]}>Low</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[formStyles.optionButton, priority === 'medium' && { backgroundColor: colors.primary, borderColor: colors.primary }]}
+          style={[formStyles.optionButton, priority === 'medium' && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
           onPress={() => setPriority('medium')}
         >
           <Text style={[formStyles.optionText, priority === 'medium' && { color: colors.white }]}>Medium</Text>
@@ -89,19 +91,19 @@ function TodoForm({ onSubmit, onCancel, initialValues = {}, isEdit }) {
       <Text style={formStyles.label}>Category</Text>
       <View style={formStyles.optionsRow}>
         <TouchableOpacity
-          style={[formStyles.optionButton, category === 'general' && { backgroundColor: colors.primary, borderColor: colors.primary }]}
+          style={[formStyles.optionButton, category === 'general' && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
           onPress={() => setCategory('general')}
         >
           <Text style={[formStyles.optionText, category === 'general' && { color: colors.white }]}>General</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[formStyles.optionButton, category === 'work' && { backgroundColor: colors.primary, borderColor: colors.primary }]}
+          style={[formStyles.optionButton, category === 'work' && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
           onPress={() => setCategory('work')}
         >
           <Text style={[formStyles.optionText, category === 'work' && { color: colors.white }]}>Work</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[formStyles.optionButton, category === 'personal' && { backgroundColor: colors.primary, borderColor: colors.primary }]}
+          style={[formStyles.optionButton, category === 'personal' && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
           onPress={() => setCategory('personal')}
         >
           <Text style={[formStyles.optionText, category === 'personal' && { color: colors.white }]}>Personal</Text>
@@ -111,7 +113,7 @@ function TodoForm({ onSubmit, onCancel, initialValues = {}, isEdit }) {
       <View style={formStyles.buttonRow}>
         <TouchableOpacity
           onPress={handleSubmit}
-          style={[formStyles.button, { backgroundColor: colors.primary }]}
+          style={[formStyles.button, { backgroundColor: theme.colors.primary }]}
         >
           <Text style={formStyles.buttonText}>{isEdit ? 'Save Changes' : 'Add Task'}</Text>
         </TouchableOpacity>
@@ -194,6 +196,7 @@ const formStyles = StyleSheet.create({
 });
 
 export default function TodoListScreen() {
+  const { theme } = useTheme();
   const [mode, setMode] = useState('view'); // 'view', 'add', 'edit'
   const [filter, setFilter] = useState('all'); // 'all', 'pending', 'completed'
   const [searchQuery, setSearchQuery] = useState('');
@@ -273,7 +276,7 @@ export default function TodoListScreen() {
   const getPriorityColor = (priority) => {
     switch (priority) {
       case 'high': return colors.error;
-      case 'medium': return colors.primary;
+      case 'medium': return theme.colors.primary;
       case 'low': return colors.success;
       default: return colors.gray[500];
     }
@@ -289,15 +292,13 @@ export default function TodoListScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         {mode === 'view' && (
           <View>
-            {/* <Text style={styles.title}>✅ To-Do List</Text> */}
-
             {/* Summary Card */}
-            <View style={styles.summaryCard}>
+            <View style={[styles.summaryCard, { backgroundColor: theme.colors.primary }]}>
               <Text style={styles.summaryLabel}>Tasks Overview</Text>
               <View style={styles.summaryStats}>
                 <View style={styles.statItem}>
@@ -315,7 +316,7 @@ export default function TodoListScreen() {
             {/* Add Button */}
             <TouchableOpacity
               onPress={() => setMode('add')}
-              style={[styles.addButton, { backgroundColor: colors.primary }]}
+              style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
             >
               <Text style={styles.addButtonText}>➕ Add New Task</Text>
             </TouchableOpacity>
@@ -323,26 +324,26 @@ export default function TodoListScreen() {
             {/* Filter Buttons */}
             <View style={styles.filterContainer}>
               <TouchableOpacity
-                style={[styles.filterButton, filter === 'all' && styles.filterButtonActive]}
+                style={[styles.filterButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, filter === 'all' && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
                 onPress={() => setFilter('all')}
               >
-                <Text style={[styles.filterButtonText, filter === 'all' && styles.filterButtonTextActive]}>
+                <Text style={[styles.filterButtonText, { color: theme.colors.text }, filter === 'all' && styles.filterButtonTextActive]}>
                   All ({todos.length})
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.filterButton, filter === 'pending' && styles.filterButtonActive]}
+                style={[styles.filterButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, filter === 'pending' && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
                 onPress={() => setFilter('pending')}
               >
-                <Text style={[styles.filterButtonText, filter === 'pending' && styles.filterButtonTextActive]}>
+                <Text style={[styles.filterButtonText, { color: theme.colors.text }, filter === 'pending' && styles.filterButtonTextActive]}>
                   Pending ({pendingCount})
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.filterButton, filter === 'completed' && styles.filterButtonActive]}
+                style={[styles.filterButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }, filter === 'completed' && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
                 onPress={() => setFilter('completed')}
               >
-                <Text style={[styles.filterButtonText, filter === 'completed' && styles.filterButtonTextActive]}>
+                <Text style={[styles.filterButtonText, { color: theme.colors.text }, filter === 'completed' && styles.filterButtonTextActive]}>
                   Done ({completedCount})
                 </Text>
               </TouchableOpacity>
@@ -355,13 +356,13 @@ export default function TodoListScreen() {
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 style={{
-                  backgroundColor: colors.gray[100],
+                  backgroundColor: theme.colors.gray[100],
                   borderRadius: 8,
                   padding: spacing.md,
                   fontSize: 14,
-                  color: colors.text,
+                  color: theme.colors.text,
                 }}
-                placeholderTextColor={colors.gray[400]}
+                placeholderTextColor={theme.colors.textSecondary}
               />
             </View>
 
@@ -377,12 +378,12 @@ export default function TodoListScreen() {
                   )}
                 </View>
                 {filteredTodos.map(todo => (
-                  <View key={todo.id} style={styles.todoItem}>
+                  <View key={todo.id} style={[styles.todoItem, { backgroundColor: theme.colors.surface }]}>
                     <TouchableOpacity
                       onPress={() => toggleComplete(todo.id)}
-                      style={styles.checkbox}
+                      style={[styles.checkbox, { borderColor: theme.colors.primary }]}
                     >
-                      <Text style={styles.checkboxIcon}>
+                      <Text style={[styles.checkboxIcon, { color: theme.colors.primary }]}>
                         {todo.completed ? '✓' : ''}
                       </Text>
                     </TouchableOpacity>
@@ -390,6 +391,7 @@ export default function TodoListScreen() {
                       <View style={styles.todoHeader}>
                         <Text style={[
                           styles.todoTitle,
+                          { color: theme.colors.text },
                           todo.completed && styles.todoTitleCompleted
                         ]}>
                           {todo.title}
@@ -414,7 +416,7 @@ export default function TodoListScreen() {
                     </View>
                     <View style={styles.todoActions}>
                       <TouchableOpacity onPress={() => handleEditTodo(todo)} style={styles.actionButton}>
-                        <Text style={styles.editText}>Edit</Text>
+                        <Text style={[styles.editText, { color: theme.colors.primary }]}>Edit</Text>
                       </TouchableOpacity>
                       <TouchableOpacity onPress={() => handleDeleteTodo(todo.id)} style={styles.actionButton}>
                         <Text style={styles.deleteText}>Delete</Text>
@@ -424,12 +426,12 @@ export default function TodoListScreen() {
                 ))}
               </View>
             ) : (
-              <View style={styles.emptyState}>
+              <View style={[styles.emptyState, { backgroundColor: theme.colors.surface }]}>
                 <Text style={styles.emptyIcon}>📋</Text>
-                <Text style={styles.emptyText}>
+                <Text style={[styles.emptyText, { color: theme.colors.text }]}>
                   {searchQuery ? 'No tasks found' : filter === 'completed' ? 'No completed tasks' : 'No tasks yet'}
                 </Text>
-                <Text style={styles.emptySubtext}>
+                <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>
                   {searchQuery ? 'Try a different search' : 'Add your first task to get started'}
                 </Text>
               </View>

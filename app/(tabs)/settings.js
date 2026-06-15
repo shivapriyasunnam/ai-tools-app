@@ -1,9 +1,10 @@
 import { spacing } from '@/src/constants';
-import { useTheme } from '@/src/context/ThemeContext';
+import { COLOR_PRESETS, useTheme } from '@/src/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import {
     Alert,
+    Linking,
     SafeAreaView,
     ScrollView,
     StyleSheet,
@@ -14,7 +15,7 @@ import {
 } from 'react-native';
 
 export default function SettingsScreen() {
-  const { isDarkMode, setDarkMode, theme } = useTheme();
+  const { isDarkMode, setDarkMode, theme, primaryColor, setPrimaryColor } = useTheme();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [autoBackupEnabled, setAutoBackupEnabled] = useState(false);
@@ -37,7 +38,7 @@ export default function SettingsScreen() {
   };
 
   const handleToggleDarkMode = (value) => {
-    showComingSoon('Dark Mode');
+    setDarkMode(value);
   };
 
   const handleToggleAutoBackup = (value) => {
@@ -123,25 +124,6 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Notifications Section */}
-        <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>Notifications</Text>
-          {renderToggleItem(
-            'notifications-outline',
-            'Push Notifications',
-            'Receive notifications for reminders and tasks',
-            notificationsEnabled,
-            handleToggleNotifications
-          )}
-          {renderToggleItem(
-            'volume-high-outline',
-            'Sound',
-            'Play sound with notifications',
-            soundEnabled,
-            handleToggleSound
-          )}
-        </View>
-
         {/* Appearance Section */}
         <View style={[styles.section, { backgroundColor: theme.colors.surface }]}>
           <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>Appearance</Text>
@@ -152,6 +134,38 @@ export default function SettingsScreen() {
             isDarkMode,
             handleToggleDarkMode
           )}
+          <View style={styles.colorPickerRow}>
+            <View style={styles.settingLeft}>
+              <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary + '15' }]}>
+                <Ionicons name="color-palette-outline" size={24} color={theme.colors.primary} />
+              </View>
+              <View style={styles.settingText}>
+                <Text style={[styles.settingTitle, { color: theme.colors.text }]}>Accent Color</Text>
+                <Text style={[styles.settingSubtitle, { color: theme.colors.textSecondary }]}>{primaryColor.name}</Text>
+              </View>
+            </View>
+            <View style={styles.swatchGrid}>
+              {COLOR_PRESETS.map((preset) => {
+                const isSelected = primaryColor.name === preset.name;
+                return (
+                  <TouchableOpacity
+                    key={preset.name}
+                    onPress={() => setPrimaryColor(preset)}
+                    style={[
+                      styles.swatch,
+                      { backgroundColor: preset.light },
+                      isSelected && { borderWidth: 3, borderColor: theme.colors.text },
+                    ]}
+                    activeOpacity={0.7}
+                  >
+                    {isSelected && (
+                      <Ionicons name="checkmark" size={14} color="#fff" />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
         </View>
 
         {/* Data & Storage Section */}
@@ -191,13 +205,7 @@ export default function SettingsScreen() {
             'document-text-outline',
             'Privacy Policy',
             'Read our privacy policy',
-            () => showComingSoon('Privacy Policy')
-          )}
-          {renderButtonItem(
-            'shield-checkmark-outline',
-            'Terms of Service',
-            'Read our terms of service',
-            () => showComingSoon('Terms of Service')
+            () => Linking.openURL('https://github.com/shivapriyasunnam/splitsmart/blob/main/privacy-policy.md')
           )}
         </View>
 
@@ -279,6 +287,24 @@ const styles = StyleSheet.create({
   },
   settingSubtitle: {
     fontSize: 13,
+  },
+  colorPickerRow: {
+    padding: spacing.md,
+    borderRadius: 8,
+  },
+  swatchGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: spacing.md,
+    marginLeft: 52,
+  },
+  swatch: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   footer: {
     alignItems: 'center',

@@ -5,10 +5,12 @@ import { useRouter } from 'expo-router';
 
 import { ExpenseContext } from '@/src/context/ExpenseContext';
 import { ManualExpenseForm } from '@/src/components/ManualExpenseForm';
+import { useTheme } from '@/src/context/ThemeContext';
 
 export default function AddExpenseScreen() {
   const router = useRouter();
   const { addExpense } = useContext(ExpenseContext);
+  const { theme } = useTheme();
 
   const handleExpenseAdded = async (expense) => {
     try {
@@ -22,7 +24,7 @@ export default function AddExpenseScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['bottom']}>
       <ScrollView keyboardShouldPersistTaps="handled">
         <ManualExpenseForm
           onExpenseAdded={handleExpenseAdded}
@@ -36,6 +38,5 @@ export default function AddExpenseScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
 });

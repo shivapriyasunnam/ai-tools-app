@@ -1,4 +1,5 @@
 import { colors } from '@/src/constants';
+import { useTheme } from '@/src/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useRouter } from 'expo-router';
@@ -8,6 +9,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 const ToolsBottomSheet = forwardRef(({ onClosed }, ref) => {
   const snapPoints = useMemo(() => ['60%', '90%'], []);
   const router = useRouter();
+  const { theme } = useTheme();
   const sheetRef = useRef(null);
   const scrollRef = useRef(null);
 
@@ -73,7 +75,7 @@ const ToolsBottomSheet = forwardRef(({ onClosed }, ref) => {
       name: 'Meetings Scheduler',
       icon: 'calendar',
       description: 'Schedule and organize meetings',
-      color: '#6366F1',
+      color: theme.colors.primary,
       route: '/(tabs)/meetings-scheduler',
     },
     {
@@ -149,17 +151,17 @@ const ToolsBottomSheet = forwardRef(({ onClosed }, ref) => {
       enablePanDownToClose
       backdropComponent={CustomBackdrop}
       backgroundStyle={{ backgroundColor: 'transparent', borderTopLeftRadius: 24, borderTopRightRadius: 24 }}
-      handleIndicatorStyle={styles.handleIndicator}
+      handleIndicatorStyle={[styles.handleIndicator, { backgroundColor: theme.colors.border }]}
       onChange={handleSheetChanges}
       enableDynamicSizing={false}
       animateOnMount={false}
     >
-      <View style={styles.bottomSheetBackground}>
-        <View style={styles.headerContainer}>
-          <Text style={styles.title}>Tools</Text>
-          <Text style={styles.subtitle}>Boost your productivity</Text>
+      <View style={[styles.bottomSheetBackground, { backgroundColor: theme.colors.surface }]}>
+        <View style={[styles.headerContainer, { backgroundColor: theme.colors.surface }]}>
+          <Text style={[styles.title, { color: theme.colors.text }]}>Tools</Text>
+          <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>Boost your productivity</Text>
         </View>
-        <BottomSheetScrollView 
+        <BottomSheetScrollView
           ref={scrollRef}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -168,15 +170,15 @@ const ToolsBottomSheet = forwardRef(({ onClosed }, ref) => {
             {tools.map((tool) => (
               <TouchableOpacity
                 key={tool.id}
-                style={styles.toolCard}
+                style={[styles.toolCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
                 onPress={() => handleToolPress(tool)}
                 activeOpacity={0.7}
               >
-                <View style={[styles.iconContainer, { backgroundColor: tool.color + '20' }]}> 
+                <View style={[styles.iconContainer, { backgroundColor: tool.color + '20' }]}>
                   <Ionicons name={tool.icon} size={32} color={tool.color} />
                 </View>
-                <Text style={styles.toolName}>{tool.name}</Text>
-                <Text style={styles.toolDescription}>{tool.description}</Text>
+                <Text style={[styles.toolName, { color: theme.colors.text }]}>{tool.name}</Text>
+                <Text style={[styles.toolDescription, { color: theme.colors.textSecondary }]}>{tool.description}</Text>
               </TouchableOpacity>
             ))}
           </View>

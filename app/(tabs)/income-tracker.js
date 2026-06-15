@@ -1,5 +1,6 @@
 import { colors, spacing } from '@/src/constants';
 import { IncomeContext } from '@/src/context/IncomeContext';
+import { useTheme } from '@/src/context/ThemeContext';
 import { useContext, useState } from 'react';
 import {
     Alert,
@@ -148,6 +149,7 @@ const formStyles = StyleSheet.create({
 });
 
 export default function IncomeTrackerScreen() {
+  const { theme } = useTheme();
   const [mode, setMode] = useState('view'); // 'view', 'add', 'edit'
   const [filter, setFilter] = useState('');
   const [editIncome, setEditIncome] = useState(null);
@@ -189,7 +191,7 @@ export default function IncomeTrackerScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         {mode === 'view' && (
@@ -217,32 +219,32 @@ export default function IncomeTrackerScreen() {
                 value={filter}
                 onChangeText={setFilter}
                 style={{
-                  backgroundColor: colors.gray[100],
+                  backgroundColor: theme.colors.gray[100],
                   borderRadius: 8,
                   padding: spacing.md,
                   fontSize: 14,
-                  color: colors.text,
+                  color: theme.colors.text,
                 }}
-                placeholderTextColor={colors.gray[400]}
+                placeholderTextColor={theme.colors.textSecondary}
               />
             </View>
 
             {/* Income List */}
             {filteredIncomes.length > 0 ? (
               <View>
-                <Text style={styles.listTitle}>📝 Income Records ({filteredIncomes.length})</Text>
+                <Text style={[styles.listTitle, { color: theme.colors.text }]}>📝 Income Records ({filteredIncomes.length})</Text>
                 {filteredIncomes.map(income => (
-                  <View key={income.id} style={styles.incomeItem}>
+                  <View key={income.id} style={[styles.incomeItem, { backgroundColor: theme.colors.surface }]}>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.description}>{income.description}</Text>
-                      <Text style={styles.meta}>{income.date}</Text>
+                      <Text style={[styles.description, { color: theme.colors.text }]}>{income.description}</Text>
+                      <Text style={[styles.meta, { color: theme.colors.textSecondary }]}>{income.date}</Text>
                       {income.notes ? <Text style={styles.notes}>{income.notes}</Text> : null}
                     </View>
                     <View style={{ alignItems: 'flex-end' }}>
                       <Text style={styles.amount}>${income.amount.toFixed(2)}</Text>
                       <View style={{ flexDirection: 'row', marginTop: spacing.xs }}>
                         <TouchableOpacity onPress={() => handleEditIncome(income)} style={styles.actionButton}>
-                          <Text style={styles.editText}>Edit</Text>
+                          <Text style={[styles.editText, { color: theme.colors.primary }]}>Edit</Text>
                         </TouchableOpacity>
                         <TouchableOpacity 
                           onPress={() => {
@@ -265,10 +267,10 @@ export default function IncomeTrackerScreen() {
                 ))}
               </View>
             ) : (
-              <View style={styles.emptyState}>
+              <View style={[styles.emptyState, { backgroundColor: theme.colors.surface }]}>
                 <Text style={styles.emptyIcon}>💵</Text>
-                <Text style={styles.emptyText}>No income records yet</Text>
-                <Text style={styles.emptySubtext}>Add your first income to start tracking</Text>
+                <Text style={[styles.emptyText, { color: theme.colors.text }]}>No income records yet</Text>
+                <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>Add your first income to start tracking</Text>
               </View>
             )}
           </View>

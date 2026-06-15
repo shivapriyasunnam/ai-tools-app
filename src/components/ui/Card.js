@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors, spacing } from '../../constants';
+import { useTheme } from '../../context/ThemeContext';
 
 export const Card = ({
   title,
@@ -10,13 +11,14 @@ export const Card = ({
   color = colors.primary,
   children,
 }) => {
+  const { theme } = useTheme();
   const content = (
-    <View style={[styles.card, { borderLeftColor: color }]}>
+    <View style={[styles.card, { borderLeftColor: color, backgroundColor: theme.colors.surface }]}>
       <View style={styles.header}>
         {icon && <View style={styles.iconContainer}>{icon}</View>}
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>{title}</Text>
-          {description && <Text style={styles.description}>{description}</Text>}
+          <Text style={[styles.title, { color: theme.colors.text }]}>{title}</Text>
+          {description && <Text style={[styles.description, { color: theme.colors.textSecondary }]}>{description}</Text>}
         </View>
       </View>
       {children && <View style={styles.content}>{children}</View>}

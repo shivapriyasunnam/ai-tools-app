@@ -7,25 +7,28 @@ import {
   StyleSheet,
 } from 'react-native';
 import { colors, spacing } from '../constants';
+import { useTheme } from '../context/ThemeContext';
 
 
 export const ExpensesList = ({ expenses, onDeleteExpense, onEditExpense }) => {
+  const { theme } = useTheme();
+
   const renderExpense = ({ item }) => (
-    <View style={styles.expenseItem}>
+    <View style={[styles.expenseItem, { backgroundColor: theme.colors.surface, borderLeftColor: theme.colors.primary }]}>
       <View style={styles.expenseInfo}>
-        <Text style={styles.description}>{item.description}</Text>
+        <Text style={[styles.description, { color: theme.colors.text }]}>{item.description}</Text>
         <View style={styles.metaRow}>
-          <Text style={styles.category}>📁 {item.category}</Text>
-          <Text style={styles.date}>📅 {item.date}</Text>
+          <Text style={[styles.category, { color: theme.colors.textSecondary }]}>📁 {item.category}</Text>
+          <Text style={[styles.date, { color: theme.colors.textSecondary }]}>📅 {item.date}</Text>
         </View>
-        {item.notes && <Text style={styles.notes}>📝 {item.notes}</Text>}
+        {item.notes && <Text style={[styles.notes, { color: theme.colors.textSecondary }]}>📝 {item.notes}</Text>}
         {item.method === 'csv' && (
           <Text style={styles.method}>📤 From CSV</Text>
         )}
       </View>
 
       <View style={styles.expenseActions}>
-        <Text style={styles.amount}>${item.amount.toFixed(2)}</Text>
+        <Text style={[styles.amount, { color: theme.colors.primary }]}>${item.amount.toFixed(2)}</Text>
         <View style={{ flexDirection: 'row', gap: 4 }}>
           {onEditExpense && (
             <TouchableOpacity
@@ -53,7 +56,7 @@ export const ExpensesList = ({ expenses, onDeleteExpense, onEditExpense }) => {
       renderItem={renderExpense}
       scrollEnabled={false}
       ListEmptyComponent={
-        <Text style={styles.emptyText}>
+        <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
           No expenses yet. Add one to get started!
         </Text>
       }

@@ -3,8 +3,10 @@ import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, Touchable
 import colors from '../constants/colors';
 import spacing from '../constants/spacing';
 import { PomodoroContext } from '../context/PomodoroContext';
+import { useTheme } from '../context/ThemeContext';
 
 export default function PomodoroTimerScreen() {
+  const { theme } = useTheme();
   const { timer, isRunning, startTimer, resetTimer, sessions, resetSessions } = useContext(PomodoroContext);
   const [mode, setMode] = useState(timer.type || 'work');
   const [customMinutes, setCustomMinutes] = useState('25');
@@ -110,11 +112,8 @@ export default function PomodoroTimerScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Title */}
-        {/* <Text style={styles.title}>⏱️ Pomodoro Timer</Text> */}
-
         {/* Timer Display Card */}
         <View style={styles.summaryCard}>
           <Text style={styles.summaryLabel}>
@@ -133,8 +132,8 @@ export default function PomodoroTimerScreen() {
 
         {/* Custom Time Input */}
         {isEditingTime && (
-          <View style={styles.customTimeCard}>
-            <Text style={styles.customTimeTitle}>Set Custom Time</Text>
+          <View style={[styles.customTimeCard, { backgroundColor: theme.colors.surface }]}>
+            <Text style={[styles.customTimeTitle, { color: theme.colors.text }]}>Set Custom Time</Text>
             <View style={styles.timeInputRow}>
               <View style={styles.timeInputGroup}>
                 <Text style={styles.timeInputLabel}>Minutes</Text>
@@ -174,19 +173,19 @@ export default function PomodoroTimerScreen() {
         {/* Mode Selection Buttons */}
         <View style={styles.modeSelector}>
           <TouchableOpacity
-            style={[styles.modeButton, mode === 'work' && { backgroundColor: colors.primary }]}
+            style={[styles.modeButton, mode === 'work' && { backgroundColor: theme.colors.primary }]}
             onPress={() => switchMode('work')}
           >
             <Text style={styles.modeButtonText}>Work</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.modeButton, mode === 'shortBreak' && { backgroundColor: colors.primary }]}
+            style={[styles.modeButton, mode === 'shortBreak' && { backgroundColor: theme.colors.primary }]}
             onPress={() => switchMode('shortBreak')}
           >
             <Text style={styles.modeButtonText}>Short Break</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.modeButton, mode === 'longBreak' && { backgroundColor: colors.primary }]}
+            style={[styles.modeButton, mode === 'longBreak' && { backgroundColor: theme.colors.primary }]}
             onPress={() => switchMode('longBreak')}
           >
             <Text style={styles.modeButtonText}>Long Break</Text>
@@ -196,7 +195,7 @@ export default function PomodoroTimerScreen() {
         {/* Action Buttons */}
         <View style={styles.actionButtons}>
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: colors.primary }]}
+            style={[styles.actionButton, { backgroundColor: theme.colors.primary }]}
             onPress={handleStart}
           >
             <Text style={styles.actionButtonText}>{isRunning ? '⏸ Pause' : '▶ Start'}</Text>
@@ -211,20 +210,20 @@ export default function PomodoroTimerScreen() {
 
         {/* Session History */}
         <View style={styles.historySection}>
-          <Text style={styles.historyTitle}>📊 Session History</Text>
+          <Text style={[styles.historyTitle, { color: theme.colors.text }]}>📊 Session History</Text>
           {sessions.length === 0 ? (
-            <View style={styles.emptyState}>
+            <View style={[styles.emptyState, { backgroundColor: theme.colors.surface }]}>
               <Text style={styles.emptyIcon}>⏱️</Text>
-              <Text style={styles.emptyText}>No sessions yet</Text>
-              <Text style={styles.emptySubtext}>Start a timer session to track your progress</Text>
+              <Text style={[styles.emptyText, { color: theme.colors.text }]}>No sessions yet</Text>
+              <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>Start a timer session to track your progress</Text>
             </View>
           ) : (
             <View>
               {sessions.map((item) => (
-                <View key={item.id} style={styles.sessionItem}>
+                <View key={item.id} style={[styles.sessionItem, { backgroundColor: theme.colors.surface }]}>
                   <View style={styles.sessionInfo}>
-                    <Text style={styles.sessionLabel}>{getSessionLabel(item.type)}</Text>
-                    <Text style={styles.sessionDuration}>{formatDuration(item.start, item.end)}</Text>
+                    <Text style={[styles.sessionLabel, { color: theme.colors.text }]}>{getSessionLabel(item.type)}</Text>
+                    <Text style={[styles.sessionDuration, { color: theme.colors.textSecondary }]}>{formatDuration(item.start, item.end)}</Text>
                   </View>
                   <TouchableOpacity onPress={() => handleDeleteSession(item.id)}>
                     <Text style={styles.deleteText}>Delete</Text>

@@ -1,5 +1,6 @@
 import { colors, spacing } from '@/src/constants';
 import { useReminders } from '@/src/context/RemindersContext';
+import { useTheme } from '@/src/context/ThemeContext';
 import { notificationService } from '@/src/services/notificationService';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
@@ -16,6 +17,7 @@ import {
 } from 'react-native';
 
 export default function RemindersScreen() {
+  const { theme } = useTheme();
   const [mode, setMode] = useState('view'); // 'view', 'add', 'edit'
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -176,21 +178,19 @@ export default function RemindersScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         {mode === 'view' && (
           <View>
-            {/* <Text style={styles.title}>🔔 Reminders</Text> */}
-
             {/* Summary Cards */}
             <View style={styles.summaryRow}>
-              <View style={styles.summaryCard}>
-                <Text style={styles.summaryLabel}>Active</Text>
+              <View style={[styles.summaryCard, { backgroundColor: theme.colors.surface }]}>
+                <Text style={[styles.summaryLabel, { color: theme.colors.textSecondary }]}>Active</Text>
                 <Text style={styles.summaryAmount}>{activeReminders.length}</Text>
               </View>
-              <View style={styles.summaryCard}>
-                <Text style={styles.summaryLabel}>Completed</Text>
+              <View style={[styles.summaryCard, { backgroundColor: theme.colors.surface }]}>
+                <Text style={[styles.summaryLabel, { color: theme.colors.textSecondary }]}>Completed</Text>
                 <Text style={styles.summaryAmount}>{completedReminders.length}</Text>
               </View>
             </View>
@@ -198,7 +198,7 @@ export default function RemindersScreen() {
             {/* Add Button */}
             <TouchableOpacity
               onPress={() => setMode('add')}
-              style={[styles.addButton, { backgroundColor: colors.primary }]}
+              style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
             >
               <Text style={styles.addButtonText}>➕ Add New Reminder</Text>
             </TouchableOpacity>
@@ -206,9 +206,9 @@ export default function RemindersScreen() {
             {/* Active Reminders */}
             {activeReminders.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>📝 Active Reminders</Text>
+                <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>📝 Active Reminders</Text>
                 {activeReminders.map((reminder) => (
-                  <View key={reminder.id} style={styles.reminderCard}>
+                  <View key={reminder.id} style={[styles.reminderCard, { backgroundColor: theme.colors.surface }]}>
                     <TouchableOpacity
                       onPress={() => handleToggleComplete(reminder.id)}
                       style={styles.checkbox}
@@ -216,9 +216,9 @@ export default function RemindersScreen() {
                       <Text style={styles.checkboxText}>⭕</Text>
                     </TouchableOpacity>
                     <View style={styles.reminderContent}>
-                      <Text style={styles.reminderTitle}>{reminder.title}</Text>
+                      <Text style={[styles.reminderTitle, { color: theme.colors.text }]}>{reminder.title}</Text>
                       {reminder.description && (
-                        <Text style={styles.reminderDescription}>{reminder.description}</Text>
+                        <Text style={[styles.reminderDescription, { color: theme.colors.textSecondary }]}>{reminder.description}</Text>
                       )}
                       <View style={styles.reminderMeta}>
                         <Text style={[styles.reminderPriority, { color: getPriorityColor(reminder.priority) }]}>
@@ -250,9 +250,9 @@ export default function RemindersScreen() {
             {/* Completed Reminders */}
             {completedReminders.length > 0 && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>✅ Completed</Text>
+                <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>✅ Completed</Text>
                 {completedReminders.map((reminder) => (
-                  <View key={reminder.id} style={[styles.reminderCard, styles.completedCard]}>
+                  <View key={reminder.id} style={[styles.reminderCard, styles.completedCard, { backgroundColor: theme.colors.surface }]}>
                     <TouchableOpacity
                       onPress={() => handleToggleComplete(reminder.id)}
                       style={styles.checkbox}
@@ -277,8 +277,8 @@ export default function RemindersScreen() {
 
             {reminders.length === 0 && (
               <View style={styles.emptyState}>
-                <Text style={styles.emptyText}>No reminders yet!</Text>
-                <Text style={styles.emptySubtext}>Tap the button above to add your first reminder.</Text>
+                <Text style={[styles.emptyText, { color: theme.colors.text }]}>No reminders yet!</Text>
+                <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>Tap the button above to add your first reminder.</Text>
               </View>
             )}
           </View>
@@ -287,45 +287,45 @@ export default function RemindersScreen() {
         {/* Add/Edit Form */}
         {(mode === 'add' || mode === 'edit') && (
           <View>
-            <Text style={styles.title}>{mode === 'add' ? '➕ Add Reminder' : '✏️ Edit Reminder'}</Text>
+            <Text style={[styles.title, { color: theme.colors.primary }]}>{mode === 'add' ? '➕ Add Reminder' : '✏️ Edit Reminder'}</Text>
 
-            <View style={styles.form}>
-              <Text style={styles.label}>Title *</Text>
+            <View style={[styles.form, { backgroundColor: theme.colors.surface }]}>
+              <Text style={[styles.label, { color: theme.colors.text }]}>Title *</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: theme.colors.gray[100], color: theme.colors.text, borderColor: theme.colors.border }]}
                 placeholder="Enter reminder title"
-                placeholderTextColor={colors.gray[400]}
+                placeholderTextColor={theme.colors.textSecondary}
                 value={title}
                 onChangeText={setTitle}
               />
 
-              <Text style={styles.label}>Description</Text>
+              <Text style={[styles.label, { color: theme.colors.text }]}>Description</Text>
               <TextInput
-                style={[styles.input, styles.textArea]}
+                style={[styles.input, styles.textArea, { backgroundColor: theme.colors.gray[100], color: theme.colors.text, borderColor: theme.colors.border }]}
                 placeholder="Enter description (optional)"
-                placeholderTextColor={colors.gray[400]}
+                placeholderTextColor={theme.colors.textSecondary}
                 value={description}
                 onChangeText={setDescription}
                 multiline
                 numberOfLines={3}
               />
 
-              <Text style={styles.label}>Due Date</Text>
-              <TouchableOpacity 
-                style={styles.dateTimeButton}
+              <Text style={[styles.label, { color: theme.colors.text }]}>Due Date</Text>
+              <TouchableOpacity
+                style={[styles.dateTimeButton, { backgroundColor: theme.colors.gray[100], borderColor: theme.colors.border }]}
                 onPress={() => setShowDatePicker(true)}
               >
                 <Text style={styles.dateTimeIcon}>📅</Text>
-                <Text style={styles.dateTimeText}>
-                  {dueDate.toLocaleDateString('en-US', { 
+                <Text style={[styles.dateTimeText, { color: theme.colors.text }]}>
+                  {dueDate.toLocaleDateString('en-US', {
                     weekday: 'short',
-                    month: 'short', 
-                    day: 'numeric', 
-                    year: 'numeric' 
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
                   })}
                 </Text>
               </TouchableOpacity>
-              
+
               {showDatePicker && (
                 <DateTimePicker
                   value={dueDate}
@@ -340,17 +340,17 @@ export default function RemindersScreen() {
                 />
               )}
 
-              <Text style={styles.label}>Due Time</Text>
-              <TouchableOpacity 
-                style={styles.dateTimeButton}
+              <Text style={[styles.label, { color: theme.colors.text }]}>Due Time</Text>
+              <TouchableOpacity
+                style={[styles.dateTimeButton, { backgroundColor: theme.colors.gray[100], borderColor: theme.colors.border }]}
                 onPress={() => setShowTimePicker(true)}
               >
                 <Text style={styles.dateTimeIcon}>⏰</Text>
-                <Text style={styles.dateTimeText}>
-                  {dueTime.toLocaleTimeString('en-US', { 
-                    hour: 'numeric', 
+                <Text style={[styles.dateTimeText, { color: theme.colors.text }]}>
+                  {dueTime.toLocaleTimeString('en-US', {
+                    hour: 'numeric',
                     minute: '2-digit',
-                    hour12: true 
+                    hour12: true
                   })}
                 </Text>
               </TouchableOpacity>
@@ -369,60 +369,36 @@ export default function RemindersScreen() {
                 />
               )}
 
-              <Text style={styles.label}>Priority</Text>
+              <Text style={[styles.label, { color: theme.colors.text }]}>Priority</Text>
               <View style={styles.priorityButtons}>
                 <TouchableOpacity
-                  style={[
-                    styles.priorityButton,
-                    priority === 'low' && styles.priorityButtonActiveLow,
-                  ]}
+                  style={[styles.priorityButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }, priority === 'low' && styles.priorityButtonActiveLow]}
                   onPress={() => setPriority('low')}
                   activeOpacity={0.7}
                 >
                   <View style={styles.priorityContent}>
                     <Text style={styles.priorityIcon}>🟢</Text>
-                    <Text style={[
-                      styles.priorityButtonText, 
-                      priority === 'low' && styles.priorityButtonTextActive
-                    ]}>
-                      Low
-                    </Text>
+                    <Text style={[styles.priorityButtonText, { color: theme.colors.text }, priority === 'low' && styles.priorityButtonTextActive]}>Low</Text>
                   </View>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[
-                    styles.priorityButton,
-                    priority === 'medium' && styles.priorityButtonActiveMedium,
-                  ]}
+                  style={[styles.priorityButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }, priority === 'medium' && styles.priorityButtonActiveMedium]}
                   onPress={() => setPriority('medium')}
                   activeOpacity={0.7}
                 >
                   <View style={styles.priorityContent}>
                     <Text style={styles.priorityIcon}>🟡</Text>
-                    <Text style={[
-                      styles.priorityButtonText, 
-                      priority === 'medium' && styles.priorityButtonTextActive
-                    ]}>
-                      Medium
-                    </Text>
+                    <Text style={[styles.priorityButtonText, { color: theme.colors.text }, priority === 'medium' && styles.priorityButtonTextActive]}>Medium</Text>
                   </View>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[
-                    styles.priorityButton,
-                    priority === 'high' && styles.priorityButtonActiveHigh,
-                  ]}
+                  style={[styles.priorityButton, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }, priority === 'high' && styles.priorityButtonActiveHigh]}
                   onPress={() => setPriority('high')}
                   activeOpacity={0.7}
                 >
                   <View style={styles.priorityContent}>
                     <Text style={styles.priorityIcon}>🔴</Text>
-                    <Text style={[
-                      styles.priorityButtonText, 
-                      priority === 'high' && styles.priorityButtonTextActive
-                    ]}>
-                      High
-                    </Text>
+                    <Text style={[styles.priorityButtonText, { color: theme.colors.text }, priority === 'high' && styles.priorityButtonTextActive]}>High</Text>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -438,7 +414,7 @@ export default function RemindersScreen() {
                   <Text style={styles.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.button, styles.saveButton]}
+                  style={[styles.button, styles.saveButton, { backgroundColor: theme.colors.primary }]}
                   onPress={mode === 'add' ? handleAddReminder : handleUpdateReminder}
                 >
                   <Text style={styles.saveButtonText}>{mode === 'add' ? 'Add' : 'Update'}</Text>

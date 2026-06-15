@@ -1,9 +1,10 @@
 import { colors } from '@/src/constants';
+import { useAuth } from '@/src/context/AuthContext';
+import { useTheme } from '@/src/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
-// removed duplicate import
 import { usePathname, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { FlatList, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const TOOLS = [
   { name: 'Hub', route: '/(tabs)/hub', icon: 'grid' },
@@ -43,6 +44,8 @@ export default function CustomHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const [modalVisible, setModalVisible] = useState(false);
+  const { theme } = useTheme();
+  const { signOut } = useAuth();
 
   // Close modal when route changes
   useEffect(() => {
@@ -60,16 +63,25 @@ export default function CustomHeader() {
     }
   };
 
+  const isSettingsPage = pathname.endsWith('/settings');
+
   const goToSettings = () => {
     router.push('/(tabs)/settings');
   };
 
+  const handleLogout = () => {
+    Alert.alert('Log Out', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Log Out', style: 'destructive', onPress: () => signOut() },
+    ]);
+  };
+
   const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
   return (
-    <SafeAreaView style={{ backgroundColor: '#fff' }}>
-      <View style={[styles.header, { paddingTop: statusBarHeight }]}>  
+    <SafeAreaView style={{ backgroundColor: theme.colors.surface }}>
+      <View style={[styles.header, { paddingTop: statusBarHeight, backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
         <TouchableOpacity
-          style={styles.dropdown}
+          style={[styles.dropdown, { backgroundColor: theme.colors.primary }]}
           onPress={() => currentTool && setModalVisible(true)}
           disabled={!currentTool}
         >
@@ -77,9 +89,15 @@ export default function CustomHeader() {
           {currentTool && <Ionicons name="chevron-down" size={15} color="#fff" />}
         </TouchableOpacity>
         <View style={{ flex: 1 }} />
-        <TouchableOpacity onPress={goToSettings} style={styles.settingsBtn}>
-          <Ionicons name="settings-outline" size={24} color={colors.gray[700]} />
-        </TouchableOpacity>
+        {isSettingsPage ? (
+          <TouchableOpacity onPress={handleLogout} style={styles.settingsBtn}>
+            <Ionicons name="log-out-outline" size={24} color={theme.colors.textSecondary} />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity onPress={goToSettings} style={styles.settingsBtn}>
+            <Ionicons name="settings-outline" size={24} color={theme.colors.textSecondary} />
+          </TouchableOpacity>
+        )}
         <Modal
           visible={modalVisible}
           transparent
@@ -87,34 +105,38 @@ export default function CustomHeader() {
           onRequestClose={() => setModalVisible(false)}
         >
           <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)} activeOpacity={1}>
-            <View style={styles.menuContainer}>
+            <View style={[styles.menuContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
               <FlatList
                 data={TOOLS}
                 keyExtractor={item => item.route}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={({ pressed }) => [
-                      styles.menuItem,
-                      pressed && styles.menuItemActive,
-                    ]}
-                    onPress={() => handleSelectTool(item.route)}
-                  >
-                    <View style={{ flexDirection: 'row',
-                        paddingLeft: 15,
-                        padding: 8,
-                         alignItems: 'center', flex: 1 }}>
-                      <Ionicons
-                        name={item.icon}
-                        size={35}
-                        color={colors.gray[400]}
-                        style={styles.menuIcon}
-                      />
-                      <Text style={styles.menuItemText} numberOfLines={1}>
+                key="tools-grid-3"
+                numColumns={3}
+                scrollEnabled={false}
+                contentContainerStyle={styles.gridContent}
+                renderItem={({ item }) => {
+                  const isActive = pathname.endsWith(item.route.replace('/(tabs)', ''));
+                  return (
+                    <TouchableOpacity
+                      style={styles.gridItem}
+                      onPress={() => handleSelectTool(item.route)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[
+                        styles.gridIconBox,
+                        { backgroundColor: isActive ? theme.colors.primary : theme.colors.primary + '15' },
+                      ]}>
+                        <Ionicons
+                          name={item.icon}
+                          size={28}
+                          color={isActive ? '#fff' : theme.colors.primary}
+                        />
+                      </View>
+                      <Text style={[styles.gridItemText, { color: theme.colors.text }]} numberOfLines={2}>
                         {item.name}
                       </Text>
-                    </View>
-                  </TouchableOpacity>
-                )}
+                    </TouchableOpacity>
+                  );
+                }}
               />
             </View>
           </TouchableOpacity>
@@ -155,46 +177,44 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.15)',
-    justifyContent: 'flex-start',
-    paddingTop: 60,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
   },
   menuContainer: {
     backgroundColor: '#fff',
-    minWidth: 290,
-    maxWidth: 450,
-    marginHorizontal: 32,
-    borderRadius: 16,
-    paddingVertical: 0,
-    elevation: 8,
+    marginHorizontal: 24,
+    borderRadius: 20,
+    elevation: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.10,
-    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
     borderWidth: 1,
-    borderColor: '#B6E3FA', // light blue border
+    borderColor: '#B6E3FA',
+    overflow: 'hidden',
   },
-  menuItem: {
-    flexDirection: 'row',
+  gridContent: {
+    padding: 12,
+  },
+  gridItem: {
+    flex: 1,
     alignItems: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 18,
-    borderRadius: 10,
-    backgroundColor: 'transparent',
-    marginBottom: 2,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
   },
-  menuItemActive: {
-    backgroundColor: '#F5F7FA',
+  gridIconBox: {
+    width: 62,
+    height: 62,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 7,
   },
-  menuIcon: {
-    marginRight: 14,
-    marginLeft: 2,
-  },
-  menuItemText: {
-    fontSize: 20,
-    color: colors.gray[600],
-    fontWeight: '400',
-    letterSpacing: 0.1,
-    fontFamily: Platform.OS === 'ios' ? 'System' : 'Nunito',
+  gridItemText: {
+    fontSize: 11,
+    fontWeight: '500',
+    textAlign: 'center',
+    lineHeight: 14,
   },
 });

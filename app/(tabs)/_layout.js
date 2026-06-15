@@ -1,6 +1,7 @@
 import CustomHeader from '@/components/ui/CustomHeader';
 import ToolsBottomSheet from '@/src/components/ToolsBottomSheet';
 import { colors } from '@/src/constants';
+import { useTheme } from '@/src/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import { useRef, useState } from 'react';
@@ -12,6 +13,7 @@ export default function TabsLayout() {
   const bottomSheetRef = useRef(null);
   const insets = useSafeAreaInsets();
   const [sheetMounted, setSheetMounted] = useState(false);
+  const { theme } = useTheme();
 
   const handleOpenBottomSheet = () => {
     if (sheetMounted && bottomSheetRef.current) {
@@ -45,11 +47,11 @@ export default function TabsLayout() {
     <View style={{ flex: 1 }}>
       <Tabs
         screenOptions={{
-          tabBarActiveTintColor: colors.primary,
-          tabBarInactiveTintColor: colors.gray[400],
+          tabBarActiveTintColor: theme.colors.primary,
+          tabBarInactiveTintColor: theme.colors.gray[400],
           tabBarStyle: {
-            backgroundColor: colors.white,
-            borderTopColor: colors.gray[200],
+            backgroundColor: theme.colors.surface,
+            borderTopColor: theme.colors.border,
             borderTopWidth: 1,
             height: 70 + insets.bottom,
             paddingBottom: insets.bottom + 10,
@@ -99,7 +101,7 @@ export default function TabsLayout() {
                 }}
                 activeOpacity={0.8}
               >
-                <View style={styles.floatingButtonInner}>
+                <View style={[styles.floatingButtonInner, { backgroundColor: theme.colors.primary }]}>
                   <Ionicons name="arrow-up" size={24} color={colors.white} />
                 </View>
               </TouchableOpacity>

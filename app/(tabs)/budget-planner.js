@@ -1,5 +1,6 @@
 import { colors, spacing } from '@/src/constants';
 import { BudgetContext } from '@/src/context/BudgetContext';
+import { useTheme } from '@/src/context/ThemeContext';
 import { useContext, useState } from 'react';
 import {
     Alert,
@@ -14,6 +15,7 @@ import {
 
 // Form component for adding/editing budgets
 function BudgetForm({ onSubmit, onCancel, initialValues = {}, isEdit }) {
+  const { theme } = useTheme();
   const [category, setCategory] = useState(initialValues.category || '');
   const [limit, setLimit] = useState(initialValues.limit ? initialValues.limit.toString() : '');
   const [period, setPeriod] = useState(initialValues.period || 'monthly');
@@ -90,7 +92,7 @@ function BudgetForm({ onSubmit, onCancel, initialValues = {}, isEdit }) {
               <Text style={formStyles.noSuggestionsText}>No categories yet</Text>
             )}
             <TouchableOpacity onPress={() => setShowSuggestions(false)} style={formStyles.dismissSuggestionsButton}>
-              <Text style={formStyles.dismissSuggestionsText}>Close</Text>
+              <Text style={[formStyles.dismissSuggestionsText, { color: theme.colors.primary }]}>Close</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -109,19 +111,19 @@ function BudgetForm({ onSubmit, onCancel, initialValues = {}, isEdit }) {
       <Text style={formStyles.label}>Period</Text>
       <View style={formStyles.optionsRow}>
         <TouchableOpacity
-          style={[formStyles.optionButton, period === 'daily' && { backgroundColor: colors.primary, borderColor: colors.primary }]}
+          style={[formStyles.optionButton, period === 'daily' && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
           onPress={() => setPeriod('daily')}
         >
           <Text style={[formStyles.optionText, period === 'daily' && { color: colors.white }]}>Daily</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[formStyles.optionButton, period === 'weekly' && { backgroundColor: colors.primary, borderColor: colors.primary }]}
+          style={[formStyles.optionButton, period === 'weekly' && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
           onPress={() => setPeriod('weekly')}
         >
           <Text style={[formStyles.optionText, period === 'weekly' && { color: colors.white }]}>Weekly</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[formStyles.optionButton, period === 'monthly' && { backgroundColor: colors.primary, borderColor: colors.primary }]}
+          style={[formStyles.optionButton, period === 'monthly' && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
           onPress={() => setPeriod('monthly')}
         >
           <Text style={[formStyles.optionText, period === 'monthly' && { color: colors.white }]}>Monthly</Text>
@@ -149,7 +151,7 @@ function BudgetForm({ onSubmit, onCancel, initialValues = {}, isEdit }) {
       <View style={formStyles.buttonRow}>
         <TouchableOpacity
           onPress={handleSubmit}
-          style={[formStyles.button, { backgroundColor: colors.primary }]}
+          style={[formStyles.button, { backgroundColor: theme.colors.primary }]}
         >
           <Text style={formStyles.buttonText}>{isEdit ? 'Save Changes' : 'Add Budget'}</Text>
         </TouchableOpacity>
@@ -297,6 +299,7 @@ const formStyles = StyleSheet.create({
 });
 
 export default function BudgetPlannerScreen() {
+  const { theme } = useTheme();
   const [mode, setMode] = useState('view'); // 'view', 'add', 'edit'
   const [editBudget, setEditBudget] = useState(null);
 
@@ -364,13 +367,11 @@ export default function BudgetPlannerScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         {mode === 'view' && (
           <View>
-
-
             {/* Summary Card */}
             <View style={styles.summaryCard}>
               <Text style={styles.summaryLabel}>Total Budget (Monthly)</Text>
@@ -393,7 +394,7 @@ export default function BudgetPlannerScreen() {
             {/* Add Button */}
             <TouchableOpacity
               onPress={() => setMode('add')}
-              style={[styles.addButton, { backgroundColor: colors.primary }]}
+              style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
             >
               <Text style={styles.addButtonText}>➕ Add Budget Category</Text>
             </TouchableOpacity>
@@ -413,7 +414,7 @@ export default function BudgetPlannerScreen() {
                       <View style={styles.unbudgetedRight}>
                         <Text style={styles.unbudgetedSpent}>${spent.toFixed(2)}</Text>
                         <TouchableOpacity
-                          style={styles.setBudgetButton}
+                          style={[styles.setBudgetButton, { backgroundColor: theme.colors.primary }]}
                           onPress={() => startAddForCategory(cat)}
                         >
                           <Text style={styles.setBudgetButtonText}>Set Budget</Text>
@@ -428,13 +429,13 @@ export default function BudgetPlannerScreen() {
             {/* Budget List */}
             {budgetStatus.length > 0 ? (
               <View>
-                <Text style={styles.listTitle}>📋 Budget Categories ({budgetStatus.length})</Text>
+                <Text style={[styles.listTitle, { color: theme.colors.text }]}>📋 Budget Categories ({budgetStatus.length})</Text>
                 {budgetStatus.map(budget => (
-                  <View key={budget.id} style={styles.budgetItem}>
+                  <View key={budget.id} style={[styles.budgetItem, { backgroundColor: theme.colors.surface }]}>
                     <View style={styles.budgetHeader}>
                       <View style={styles.budgetInfo}>
                         <View style={[styles.categoryDot, { backgroundColor: budget.color }]} />
-                        <Text style={styles.budgetCategory}>{budget.category}</Text>
+                        <Text style={[styles.budgetCategory, { color: theme.colors.text }]}>{budget.category}</Text>
                       </View>
                       <Text style={[styles.budgetPercentage, { color: getStatusColor(budget.status) }]}>
                         {budget.percentage.toFixed(0)}%
@@ -455,10 +456,10 @@ export default function BudgetPlannerScreen() {
                     </View>
 
                     <View style={styles.budgetDetails}>
-                      <Text style={styles.budgetDetailText}>
+                      <Text style={[styles.budgetDetailText, { color: theme.colors.text }]}>
                         ${budget.spent.toFixed(2)} of ${budget.limit.toFixed(2)}
                       </Text>
-                      <Text style={styles.budgetPeriod}>{budget.period}</Text>
+                      <Text style={[styles.budgetPeriod, { color: theme.colors.textSecondary }]}>{budget.period}</Text>
                     </View>
 
                     {budget.remaining < 0 && (
@@ -469,7 +470,7 @@ export default function BudgetPlannerScreen() {
 
                     <View style={styles.budgetActions}>
                       <TouchableOpacity onPress={() => handleEditBudget(budget)} style={styles.actionButton}>
-                        <Text style={styles.editText}>Edit</Text>
+                        <Text style={[styles.editText, { color: theme.colors.primary }]}>Edit</Text>
                       </TouchableOpacity>
                       <TouchableOpacity onPress={() => handleDeleteBudget(budget.id)} style={styles.actionButton}>
                         <Text style={styles.deleteText}>Delete</Text>
@@ -481,8 +482,8 @@ export default function BudgetPlannerScreen() {
             ) : (
               <View style={styles.emptyState}>
                 <Text style={styles.emptyIcon}>💰</Text>
-                <Text style={styles.emptyText}>No budgets set yet</Text>
-                <Text style={styles.emptySubtext}>Add your first budget category to start tracking</Text>
+                <Text style={[styles.emptyText, { color: theme.colors.text }]}>No budgets set yet</Text>
+                <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>Add your first budget category to start tracking</Text>
               </View>
             )}
           </View>

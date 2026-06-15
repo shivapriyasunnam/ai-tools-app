@@ -10,8 +10,10 @@ import {
 } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { colors, spacing } from '../constants';
+import { useTheme } from '../context/ThemeContext';
 
 export const CSVUpload = ({ onExpensesLoaded, onCancel, loading }) => {
+  const { theme } = useTheme();
   const [csvText, setCSVText] = useState('');
   const [preview, setPreview] = useState(null);
   const [fileName, setFileName] = useState(null);
@@ -84,7 +86,7 @@ export const CSVUpload = ({ onExpensesLoaded, onCancel, loading }) => {
       {/* File Upload Section */}
       <TouchableOpacity
         onPress={handlePickFile}
-        style={[styles.uploadButton, { backgroundColor: colors.primary }]}
+        style={[styles.uploadButton, { backgroundColor: theme.colors.primary }]}
       >
         <Text style={styles.uploadButtonText}>📁 Upload Bank Statement</Text>
       </TouchableOpacity>

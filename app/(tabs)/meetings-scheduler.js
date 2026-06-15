@@ -1,5 +1,6 @@
 import { colors, spacing } from '@/src/constants';
 import { useMeetings } from '@/src/context/MeetingsContext';
+import { useTheme } from '@/src/context/ThemeContext';
 import {
   connectGoogleCalendar,
   disconnectGoogleCalendar,
@@ -112,6 +113,7 @@ function groupEventsByDay(events) {
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export default function MeetingsSchedulerScreen() {
+  const { theme } = useTheme();
   const { saveMeetings } = useMeetings();
 
   const [status, setStatus] = useState('checking'); // 'checking' | 'disconnected' | 'expired' | 'connected'
@@ -203,9 +205,9 @@ export default function MeetingsSchedulerScreen() {
 
   if (status === 'checking') {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
           <Text style={styles.checkingText}>Loading calendar…</Text>
         </View>
       </SafeAreaView>
@@ -214,7 +216,7 @@ export default function MeetingsSchedulerScreen() {
 
   if (status === 'expired') {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.title}>Session Expired</Text>
           <Text style={styles.subtitle}>Your calendar session expired. Reconnect to keep syncing.</Text>
@@ -228,7 +230,7 @@ export default function MeetingsSchedulerScreen() {
               </View>
             </View>
             <TouchableOpacity
-              style={[styles.connectButton, isConnecting && styles.connectButtonDisabled]}
+              style={[styles.connectButton, { backgroundColor: theme.colors.primary }, isConnecting && styles.connectButtonDisabled]}
               onPress={handleConnect}
               disabled={isConnecting}
             >
@@ -246,7 +248,7 @@ export default function MeetingsSchedulerScreen() {
 
   if (status === 'disconnected') {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.title}>Connect Your Calendar</Text>
           <Text style={styles.subtitle}>Sync your Google Calendar to see upcoming meetings</Text>
@@ -260,7 +262,7 @@ export default function MeetingsSchedulerScreen() {
               </View>
             </View>
             <TouchableOpacity
-              style={[styles.connectButton, isConnecting && styles.connectButtonDisabled]}
+              style={[styles.connectButton, { backgroundColor: theme.colors.primary }, isConnecting && styles.connectButtonDisabled]}
               onPress={handleConnect}
               disabled={isConnecting}
             >
@@ -272,7 +274,7 @@ export default function MeetingsSchedulerScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.infoBox}>
+          <View style={[styles.infoBox, { backgroundColor: theme.colors.primary + '10', borderLeftColor: theme.colors.primary }]}>
             <Text style={styles.infoText}>
               🔒 Your calendar data is secure and only used to sync your meetings.
             </Text>
@@ -294,16 +296,16 @@ export default function MeetingsSchedulerScreen() {
           <RefreshControl
             refreshing={isSyncing}
             onRefresh={handleSync}
-            tintColor={colors.primary}
+            tintColor={theme.colors.primary}
           />
         }
       >
         {/* Connected header */}
-        <View style={styles.connectedHeader}>
+        <View style={[styles.connectedHeader, { backgroundColor: theme.colors.surface }]}>
           <View style={styles.connectedLeft}>
             <GoogleCalendarIcon size={40} />
             <View style={{ marginLeft: 12 }}>
-              <Text style={styles.connectedTitle}>Google Calendar</Text>
+              <Text style={[styles.connectedTitle, { color: theme.colors.text }]}>Google Calendar</Text>
               <View style={styles.connectedBadge}>
                 <View style={styles.connectedDot} />
                 <Text style={styles.connectedBadgeText}>Connected</Text>
@@ -317,16 +319,16 @@ export default function MeetingsSchedulerScreen() {
 
         {/* Sync row */}
         <View style={styles.syncRow}>
-          <Text style={styles.upcomingLabel}>
+          <Text style={[styles.upcomingLabel, { color: theme.colors.text }]}>
             {events.length === 0
               ? 'No upcoming events'
               : `${events.length} event${events.length !== 1 ? 's' : ''} in the next 2 weeks`}
           </Text>
-          <TouchableOpacity onPress={handleSync} disabled={isSyncing} style={styles.syncButton}>
+          <TouchableOpacity onPress={handleSync} disabled={isSyncing} style={[styles.syncButton, { borderColor: theme.colors.primary }]}>
             {isSyncing ? (
-              <ActivityIndicator size="small" color={colors.primary} />
+              <ActivityIndicator size="small" color={theme.colors.primary} />
             ) : (
-              <Text style={styles.syncButtonText}>Sync</Text>
+              <Text style={[styles.syncButtonText, { color: theme.colors.primary }]}>Sync</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -335,13 +337,13 @@ export default function MeetingsSchedulerScreen() {
         {dayGroups.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyEmoji}>📅</Text>
-            <Text style={styles.emptyTitle}>All clear!</Text>
-            <Text style={styles.emptySubtitle}>No events in the next 2 weeks.</Text>
+            <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>All clear!</Text>
+            <Text style={[styles.emptySubtitle, { color: theme.colors.textSecondary }]}>No events in the next 2 weeks.</Text>
           </View>
         ) : (
           dayGroups.map(([dateKey, dayEvents]) => (
             <View key={dateKey}>
-              <Text style={styles.dayHeader}>{formatDayHeader(dayEvents[0].start)}</Text>
+              <Text style={[styles.dayHeader, { color: theme.colors.textSecondary }]}>{formatDayHeader(dayEvents[0].start)}</Text>
               {dayEvents.map(event => (
                 <EventCard key={event.id} event={event} />
               ))}
@@ -360,16 +362,17 @@ export default function MeetingsSchedulerScreen() {
 }
 
 function EventCard({ event }) {
+  const { theme } = useTheme();
   const startTime = formatEventTime(event.start, event.isAllDay);
   const endTime = event.isAllDay ? null : formatEventTime(event.end, false);
 
   return (
-    <View style={styles.eventCard}>
+    <View style={[styles.eventCard, { backgroundColor: theme.colors.surface }]}>
       <View style={styles.eventAccent} />
       <View style={styles.eventBody}>
-        <Text style={styles.eventTitle} numberOfLines={2}>{event.title}</Text>
+        <Text style={[styles.eventTitle, { color: theme.colors.text }]} numberOfLines={2}>{event.title}</Text>
         <View style={styles.eventMeta}>
-          <Text style={styles.eventTime}>
+          <Text style={[styles.eventTime, { color: theme.colors.textSecondary }]}>
             {endTime ? `${startTime} – ${endTime}` : startTime}
           </Text>
           {event.organizer ? (

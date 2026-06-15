@@ -21,6 +21,7 @@ import { useReminders } from '@/src/context/RemindersContext';
 import { TodoContext } from '@/src/context/TodoContext';
 import { useAuth } from '@/src/context/AuthContext';
 import { useUser } from '@/src/context/UserContext';
+import { useTheme } from '@/src/context/ThemeContext';
 import usePomodoroStats from '@/src/hooks/usePomodoroStats';
 
 function formatDate(date) {
@@ -42,6 +43,7 @@ function formatDate(date) {
 
 function HomeScreen() {
   const router = useRouter();
+  const { theme } = useTheme();
 
   const { expenses, getTotal } = useContext(ExpenseContext);
   const { incomes, getTotalIncome } = useContext(IncomeContext);
@@ -206,8 +208,8 @@ function HomeScreen() {
     router.push('/(tabs)/pomodoro-timer');
   };
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <ScrollView 
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top', 'left', 'right']}>
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -215,11 +217,11 @@ function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.title}>
+            <Text style={[styles.title, { color: theme.colors.text }]}>
               {getGreeting()}{userName ? `, ${userName}` : ''}!
             </Text>
           </View>
-          <TouchableOpacity style={styles.profileIcon} onPress={() => router.push('/(tabs)/profile')}>
+          <TouchableOpacity style={[styles.profileIcon, { backgroundColor: theme.colors.primary }]} onPress={() => router.push('/(tabs)/profile')}>
             <Text style={styles.profileText}>
               {userName
                 ? userName.charAt(0).toUpperCase()
@@ -230,10 +232,10 @@ function HomeScreen() {
 
         {/* Stats Overview */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Today's Overview</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Today's Overview</Text>
         </View>
         <View style={styles.statsContainer}>
-          <TouchableOpacity style={styles.statCardLarge} onPress={() => router.push('/(tabs)/meetings-scheduler')} activeOpacity={0.7}>
+          <TouchableOpacity style={[styles.statCardLarge, { backgroundColor: theme.colors.surface }]} onPress={() => router.push('/(tabs)/meetings-scheduler')} activeOpacity={0.7}>
             <View style={styles.statCardHeader}>
               <View style={[styles.statIconCircle, { backgroundColor: '#DBEAFE' }]}>
                 <Text style={styles.statCardIcon}>📅</Text>
@@ -242,14 +244,14 @@ function HomeScreen() {
                 <Text style={styles.statBadgeText}>Today</Text>
               </View>
             </View>
-            <Text style={styles.statCardValue}>{todayMeetingsCount}</Text>
-            <Text style={styles.statCardLabel}>Meetings Scheduled</Text>
+            <Text style={[styles.statCardValue, { color: theme.colors.text }]}>{todayMeetingsCount}</Text>
+            <Text style={[styles.statCardLabel, { color: theme.colors.text }]}>Meetings Scheduled</Text>
             <Text style={styles.statCardSubtext}>
               {remainingWeekMeetings > 0 ? `${remainingWeekMeetings} more this week` : 'No more meetings this week'}
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.statCardLarge} onPress={() => router.push('/(tabs)/pomodoro-timer')} activeOpacity={0.7}>
+          <TouchableOpacity style={[styles.statCardLarge, { backgroundColor: theme.colors.surface }]} onPress={() => router.push('/(tabs)/pomodoro-timer')} activeOpacity={0.7}>
             <View style={styles.statCardHeader}>
               <View style={[styles.statIconCircle, { backgroundColor: '#FCE7F3' }]}>
                 <Text style={styles.statCardIcon}>⏱️</Text>
@@ -258,22 +260,22 @@ function HomeScreen() {
                 <Text style={[styles.statBadgeText, { color: '#92400E' }]}>Active</Text>
               </View>
             </View>
-            <Text style={styles.statCardValue}>{totalSessions}</Text>
-            <Text style={styles.statCardLabel}>Pomodoro Sessions</Text>
+            <Text style={[styles.statCardValue, { color: theme.colors.text }]}>{totalSessions}</Text>
+            <Text style={[styles.statCardLabel, { color: theme.colors.text }]}>Pomodoro Sessions</Text>
             <Text style={styles.statCardSubtext}>{totalFocusedHours} focused</Text>
           </TouchableOpacity>
         </View>
 
 
         <View style={styles.statsContainer}>
-          <TouchableOpacity style={styles.statCardLarge} onPress={() => router.push('/(tabs)/todo-list')} activeOpacity={0.7}>
+          <TouchableOpacity style={[styles.statCardLarge, { backgroundColor: theme.colors.surface }]} onPress={() => router.push('/(tabs)/todo-list')} activeOpacity={0.7}>
             <View style={styles.statCardHeader}>
               <View style={[styles.statIconCircle, { backgroundColor: '#F3E8FF' }]}>
                 <Text style={styles.statCardIcon}>✅</Text>
               </View>
             </View>
-            <Text style={styles.statCardValue}>{completedTodos}/{totalTodos}</Text>
-            <Text style={styles.statCardLabel}>Tasks</Text>
+            <Text style={[styles.statCardValue, { color: theme.colors.text }]}>{completedTodos}/{totalTodos}</Text>
+            <Text style={[styles.statCardLabel, { color: theme.colors.text }]}>Tasks</Text>
             <Text style={styles.statCardSubtext}>
               {completedTodos === 0
                 ? 'No tasks completed yet'
@@ -283,14 +285,14 @@ function HomeScreen() {
           </TouchableOpacity>
 
           {/* Reminders Card */}
-          <TouchableOpacity style={styles.statCardLarge} onPress={() => router.push('/(tabs)/reminders')} activeOpacity={0.7}>
+          <TouchableOpacity style={[styles.statCardLarge, { backgroundColor: theme.colors.surface }]} onPress={() => router.push('/(tabs)/reminders')} activeOpacity={0.7}>
             <View style={styles.statCardHeader}>
               <View style={[styles.statIconCircle, { backgroundColor: '#FEF3C7' }]}>
                 <Text style={styles.statCardIcon}>⏰</Text>
               </View>
             </View>
-            <Text style={styles.statCardValue}>{totalReminders}</Text>
-            <Text style={styles.statCardLabel}>Reminders</Text>
+            <Text style={[styles.statCardValue, { color: theme.colors.text }]}>{totalReminders}</Text>
+            <Text style={[styles.statCardLabel, { color: theme.colors.text }]}>Reminders</Text>
             <Text style={styles.statCardSubtext}>
               {totalReminders === 0 ? 'No active reminders' : 'Don\'t forget!'}
             </Text>
@@ -299,8 +301,8 @@ function HomeScreen() {
 
         {/* Financial Overview Section Header */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Financial Overview</Text>
-          <Text style={styles.financialSubtitleOutside}>This month</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Financial Overview</Text>
+          <Text style={[styles.financialSubtitleOutside, { color: theme.colors.textSecondary }]}>This month</Text>
         </View>
 
         {/* Financial Overview Card */}
@@ -308,14 +310,14 @@ function HomeScreen() {
           activeOpacity={0.85}
           onPress={() => setFinancialMenuVisible(true)}
         >
-        <View style={styles.financialCard}>
+        <View style={[styles.financialCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
           <View style={styles.balanceRow}>
             <View style={styles.balanceContainer}>
-              <Text style={styles.balanceLabel}>Total Balance</Text>
-              <Text style={styles.balanceAmount}>${(income - total).toFixed(2)}</Text>
+              <Text style={[styles.balanceLabel, { color: theme.colors.textSecondary }]}>Total Balance</Text>
+              <Text style={[styles.balanceAmount, { color: theme.colors.text }]}>${(income - total).toFixed(2)}</Text>
             </View>
             <TouchableOpacity
-              style={styles.addExpenseButton}
+              style={[styles.addExpenseButton, { backgroundColor: theme.colors.primary }]}
               onPress={() => router.push('/add-expense')}
               activeOpacity={0.7}
             >
@@ -326,23 +328,23 @@ function HomeScreen() {
           <View style={styles.financialStats}>
             <View style={styles.financialStatItem}>
               <View style={[styles.statDot, { backgroundColor: '#10B981' }]} />
-              <Text style={styles.statItemLabel}>Income</Text>
-              <Text style={styles.statItemValue}>${income.toFixed(2)}</Text>
+              <Text style={[styles.statItemLabel, { color: theme.colors.textSecondary }]}>Income</Text>
+              <Text style={[styles.statItemValue, { color: theme.colors.text }]}>${income.toFixed(2)}</Text>
             </View>
             <View style={styles.financialStatItem}>
               <View style={[styles.statDot, { backgroundColor: '#EF4444' }]} />
-              <Text style={styles.statItemLabel}>Expenses</Text>
-              <Text style={styles.statItemValue}>${total.toFixed(2)}</Text>
+              <Text style={[styles.statItemLabel, { color: theme.colors.textSecondary }]}>Expenses</Text>
+              <Text style={[styles.statItemValue, { color: theme.colors.text }]}>${total.toFixed(2)}</Text>
             </View>
           </View>
 
           {/* Budget Analysis Section */}
           {totalBudget > 0 && (
             <>
-              <View style={styles.divider} />
+              <View style={[styles.divider, { backgroundColor: theme.colors.border }]} />
               
               <View style={styles.budgetAnalysisHeader}>
-                <Text style={styles.budgetAnalysisTitle}>Budget Analysis</Text>
+                <Text style={[styles.budgetAnalysisTitle, { color: theme.colors.text }]}>Budget Analysis</Text>
                 <View style={[
                   styles.budgetStatusBadge,
                   { backgroundColor: budgetUtilization >= 100 ? '#FEE2E2' : budgetUtilization >= 80 ? '#FEF3C7' : '#D1FAE5' }
@@ -375,19 +377,20 @@ function HomeScreen() {
 
               <View style={styles.budgetStatsRow}>
                 <View style={styles.budgetStatItem}>
-                  <Text style={styles.budgetStatLabel}>Budget</Text>
-                  <Text style={styles.budgetStatValue}>${totalBudget.toFixed(2)}</Text>
+                  <Text style={[styles.budgetStatLabel, { color: theme.colors.textSecondary }]}>Budget</Text>
+                  <Text style={[styles.budgetStatValue, { color: theme.colors.text }]}>${totalBudget.toFixed(2)}</Text>
                 </View>
                 <View style={styles.budgetStatItem}>
-                  <Text style={styles.budgetStatLabel}>Spent</Text>
+                  <Text style={[styles.budgetStatLabel, { color: theme.colors.textSecondary }]}>Spent</Text>
                   <Text style={[styles.budgetStatValue, { color: '#EF4444' }]}>
                     ${totalBudgetSpent.toFixed(2)}
                   </Text>
                 </View>
                 <View style={styles.budgetStatItem}>
-                  <Text style={styles.budgetStatLabel}>Remaining</Text>
+                  <Text style={[styles.budgetStatLabel, { color: theme.colors.textSecondary }]}>Remaining</Text>
                   <Text style={[
                     styles.budgetStatValue,
+                    { color: theme.colors.text },
                     { color: totalBudgetRemaining < 0 ? '#EF4444' : '#10B981' }
                   ]}>
                     ${totalBudgetRemaining.toFixed(2)}
@@ -398,12 +401,12 @@ function HomeScreen() {
               {/* Top Budget Categories */}
               {budgetStatus.length > 0 && (
                 <View style={styles.topCategoriesContainer}>
-                  <Text style={styles.topCategoriesTitle}>Top Categories</Text>
+                  <Text style={[styles.topCategoriesTitle, { color: theme.colors.text }]}>Top Categories</Text>
                   {budgetStatus.slice(0, 3).map((budget) => (
-                    <View key={budget.id} style={styles.categoryBudgetRow}>
+                    <View key={budget.id} style={[styles.categoryBudgetRow, { backgroundColor: theme.colors.gray[50] }]}>
                       <View style={styles.categoryBudgetInfo}>
                         <View style={[styles.categoryColorDot, { backgroundColor: budget.color }]} />
-                        <Text style={styles.categoryBudgetName}>{budget.category}</Text>
+                        <Text style={[styles.categoryBudgetName, { color: theme.colors.text }]}>{budget.category}</Text>
                       </View>
                       <View style={styles.categoryBudgetProgress}>
                         <Text style={[
@@ -430,16 +433,16 @@ function HomeScreen() {
           onRequestClose={() => setFinancialMenuVisible(false)}
         >
           <Pressable style={styles.menuOverlay} onPress={() => setFinancialMenuVisible(false)}>
-            <View style={styles.menuCard}>
-              <Text style={styles.menuTitle}>Go to</Text>
+            <View style={[styles.menuCard, { backgroundColor: theme.colors.surface }]}>
+              <Text style={[styles.menuTitle, { color: theme.colors.textSecondary }]}>Go to</Text>
               {[
                 { label: 'Expense', icon: 'wallet-outline', color: '#EF4444', bg: '#FEE2E2', route: '/(tabs)/expense-tracker' },
-                { label: 'Budgets', icon: 'pie-chart-outline', color: '#6366F1', bg: '#E0E7FF', route: '/(tabs)/budget-planner' },
+                { label: 'Budgets', icon: 'pie-chart-outline', color: theme.colors.primary, bg: theme.colors.primary + '20', route: '/(tabs)/budget-planner' },
                 { label: 'Income', icon: 'cash-outline', color: '#10B981', bg: '#D1FAE5', route: '/(tabs)/income-tracker' },
               ].map((item, index, arr) => (
                 <TouchableOpacity
                   key={item.label}
-                  style={[styles.menuItem, index === arr.length - 1 && { borderBottomWidth: 0 }]}
+                  style={[styles.menuItem, index === arr.length - 1 && { borderBottomWidth: 0 }, { borderBottomColor: theme.colors.border }]}
                   activeOpacity={0.7}
                   onPress={() => {
                     setFinancialMenuVisible(false);
@@ -449,7 +452,7 @@ function HomeScreen() {
                   <View style={[styles.menuItemIcon, { backgroundColor: item.bg }]}>
                     <Ionicons name={item.icon} size={20} color={item.color} />
                   </View>
-                  <Text style={styles.menuItemLabel}>{item.label}</Text>
+                  <Text style={[styles.menuItemLabel, { color: theme.colors.text }]}>{item.label}</Text>
                   <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
                 </TouchableOpacity>
               ))}
@@ -459,7 +462,7 @@ function HomeScreen() {
 
         {/* Quick Actions Grid */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Quick Actions</Text>
         </View>
         <View style={styles.actionsRow}>
           <TouchableOpacity 
@@ -470,58 +473,58 @@ function HomeScreen() {
             <View style={[styles.actionIconUnified, { backgroundColor: '#F59E0B' }]}> 
               <Text style={styles.actionEmojiUnified}>💰</Text>
             </View>
-            <Text style={styles.actionLabelUnified}>Add Expense</Text>
+            <Text style={[styles.actionLabelUnified, { color: '#1F2937' }]}>Add Expense</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={[styles.actionCardUnified, { backgroundColor: '#DBEAFE' }]}
             onPress={handleBudgetPlan}
             activeOpacity={0.7}
-          > 
-            <View style={[styles.actionIconUnified, { backgroundColor: '#3B82F6' }]}> 
+          >
+            <View style={[styles.actionIconUnified, { backgroundColor: '#3B82F6' }]}>
               <Text style={styles.actionEmojiUnified}>📊</Text>
             </View>
-            <Text style={styles.actionLabelUnified}>Budget Plan</Text>
+            <Text style={[styles.actionLabelUnified, { color: '#1F2937' }]}>Budget Plan</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={[styles.actionCardUnified, { backgroundColor: '#E0E7FF' }]}
             onPress={handleSchedule}
             activeOpacity={0.7}
-          > 
-            <View style={[styles.actionIconUnified, { backgroundColor: '#6366F1' }]}> 
+          >
+            <View style={[styles.actionIconUnified, { backgroundColor: theme.colors.primary }]}>
               <Text style={styles.actionEmojiUnified}>📅</Text>
             </View>
-            <Text style={styles.actionLabelUnified}>Schedule</Text>
+            <Text style={[styles.actionLabelUnified, { color: '#1F2937' }]}>Schedule</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
+
+          <TouchableOpacity
             style={[styles.actionCardUnified, { backgroundColor: '#FCE7F3' }]}
             onPress={handlePomodoro}
             activeOpacity={0.7}
-          > 
-            <View style={[styles.actionIconUnified, { backgroundColor: '#EC4899' }]}> 
+          >
+            <View style={[styles.actionIconUnified, { backgroundColor: '#EC4899' }]}>
               <Text style={styles.actionEmojiUnified}>⏱️</Text>
             </View>
-            <Text style={styles.actionLabelUnified}>Pomodoro</Text>
+            <Text style={[styles.actionLabelUnified, { color: '#1F2937' }]}>Pomodoro</Text>
           </TouchableOpacity>
         </View>
 
         {/* Recent Activity */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent Activity</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Recent Activity</Text>
           <TouchableOpacity onPress={() => router.push('/(tabs)/recent-activity')}>
-            <Text style={styles.sectionLink}>See all</Text>
+            <Text style={[styles.sectionLink, { color: theme.colors.primary }]}>See all</Text>
           </TouchableOpacity>
         </View>
         {allActivities.length === 0 ? (
-          <View style={styles.activityCard}>
-            <View style={[styles.activityIcon, { backgroundColor: '#F3F4F6' }]}> 
-              <Ionicons name="time-outline" size={24} color="#9CA3AF" />
+          <View style={[styles.activityCard, { backgroundColor: theme.colors.surface }]}>
+            <View style={[styles.activityIcon, { backgroundColor: theme.colors.gray[100] }]}>
+              <Ionicons name="time-outline" size={24} color={theme.colors.textSecondary} />
             </View>
             <View style={styles.activityContent}>
-              <Text style={styles.activityTitle}>No recent activity</Text>
-              <Text style={styles.activitySubtitle}>Your activities will appear here</Text>
+              <Text style={[styles.activityTitle, { color: theme.colors.text }]}>No recent activity</Text>
+              <Text style={[styles.activitySubtitle, { color: theme.colors.textSecondary }]}>Your activities will appear here</Text>
             </View>
           </View>
         ) : (
@@ -551,17 +554,17 @@ function HomeScreen() {
             return (
               <TouchableOpacity
                 key={activity.id}
-                style={styles.activityCard}
+                style={[styles.activityCard, { backgroundColor: theme.colors.surface }]}
                 onPress={onPress}
                 activeOpacity={onPress ? 0.7 : 1}
                 disabled={!onPress}
               >
-                <View style={[styles.activityIcon, { backgroundColor: activity.iconBg }]}> 
+                <View style={[styles.activityIcon, { backgroundColor: activity.iconBg }]}>
                   <Ionicons name={activity.icon} size={24} color={activity.iconColor} />
                 </View>
                 <View style={styles.activityContent}>
-                  <Text style={styles.activityTitle}>{activity.title}</Text>
-                  <Text style={styles.activitySubtitle}>
+                  <Text style={[styles.activityTitle, { color: theme.colors.text }]}>{activity.title}</Text>
+                  <Text style={[styles.activitySubtitle, { color: theme.colors.textSecondary }]}>
                     {activity.subtitle} • {formatDate(activity.date)}
                   </Text>
                 </View>
