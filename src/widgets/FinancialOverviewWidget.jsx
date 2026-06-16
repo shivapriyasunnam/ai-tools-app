@@ -105,7 +105,7 @@ export function FinancialOverviewWidget({ expenses = {}, budgets = {} }) {
       </FlexWidget>
 
       {/* Budget Progress */}
-      <FlexWidget style={{ flexDirection: 'column', backgroundColor: '#1E293B', borderRadius: 12, paddingLeft: 12, paddingRight: 12, paddingTop: 10, paddingBottom: 10 }}>
+      <FlexWidget style={{ flexDirection: 'column', width: 'match_parent', backgroundColor: '#1E293B', borderRadius: 12, paddingLeft: 12, paddingRight: 12, paddingTop: 10, paddingBottom: 10 }}>
         <FlexWidget style={{ flexDirection: 'row', alignItems: 'center', width: 'match_parent', marginBottom: 8 }}>
           <TextWidget text="Budget" style={{ fontSize: 11, color: '#94A3B8', fontWeight: '600' }} />
           <FlexWidget style={{ flex: 1, height: 1 }} />
@@ -114,7 +114,7 @@ export function FinancialOverviewWidget({ expenses = {}, budgets = {} }) {
             style={{ fontSize: 11, color: totalBudget > 0 ? budgetColor : '#64748B', fontWeight: '700' }}
           />
         </FlexWidget>
-        <FlexWidget style={{ height: 6, backgroundColor: '#334155', borderRadius: 3 }}>
+        <FlexWidget style={{ width: 'match_parent', height: 6, backgroundColor: '#334155', borderRadius: 3 }}>
           {totalBudget > 0 && (
             <FlexWidget
               style={{ height: 6, width: `${budgetPct}%`, backgroundColor: budgetColor, borderRadius: 3 }}

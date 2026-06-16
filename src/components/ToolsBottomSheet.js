@@ -79,20 +79,20 @@ const ToolsBottomSheet = forwardRef(({ onClosed }, ref) => {
       route: '/(tabs)/meetings-scheduler',
     },
     {
-      id: 'reminders',
-      name: 'Reminders',
-      icon: 'notifications',
-      description: 'Set important reminders',
-      color: '#F59E0B',
-      route: '/(tabs)/reminders',
-    },
-    {
       id: 'calculator',
       name: 'Calculator',
       icon: 'calculator',
       description: 'Quick calculations',
       color: '#10B981',
       route: '/(tabs)/calculator',
+    },
+    {
+      id: 'goals',
+      name: 'Goals',
+      icon: 'flag-outline',
+      description: 'Plans & goals tracker',
+      color: '#7C3AED',
+      route: '/(tabs)/goals',
     },
   ];
 

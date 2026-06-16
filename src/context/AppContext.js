@@ -1,13 +1,12 @@
 import { createContext, useState } from 'react';
 import { BudgetProvider } from './BudgetContext';
 import { ExpenseProvider } from './ExpenseContext';
+import { GoalsProvider } from './GoalsContext';
 import { HeaderProvider } from './HeaderContext';
 import { IncomeProvider } from './IncomeContext';
-
 import { MeetingsProvider } from './MeetingsContext';
 import { PomodoroProvider } from './PomodoroContext';
 import { QuickNotesProvider } from './QuickNotesContext';
-import { RemindersProvider } from './RemindersContext';
 import { ThemeProvider } from './ThemeContext';
 import { TodoProvider } from './TodoContext';
 import { UserProvider } from './UserContext';
@@ -27,8 +26,8 @@ export const AppProvider = ({ children }) => {
     <ThemeProvider>
       <UserProvider>
         <MeetingsProvider>
-          <RemindersProvider>
-            <TodoProvider>
+          <TodoProvider>
+            <GoalsProvider>
               <PomodoroProvider>
                 <IncomeProvider>
                   <ExpenseProvider>
@@ -40,8 +39,8 @@ export const AppProvider = ({ children }) => {
                   </ExpenseProvider>
                 </IncomeProvider>
               </PomodoroProvider>
-            </TodoProvider>
-          </RemindersProvider>
+            </GoalsProvider>
+          </TodoProvider>
         </MeetingsProvider>
       </UserProvider>
     </ThemeProvider>

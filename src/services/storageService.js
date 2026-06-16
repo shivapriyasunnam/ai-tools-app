@@ -9,8 +9,6 @@ export const storageService = {
   getIncomes: async () => apiClient.get('/api/income').catch(() => []),
   saveBudgets: async () => true,
   getBudgets: async () => apiClient.get('/api/budgets').catch(() => []),
-  saveReminders: async () => true,
-  getReminders: async () => apiClient.get('/api/reminders').catch(() => []),
   saveMeetings: async () => true,
   getMeetings: async () => apiClient.get('/api/meetings').catch(() => []),
   deleteExpense: async () => true,

@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiClient } from '@/src/services/apiClient';
+import { updateMeetingsWidget } from '@/src/services/widgetService';
 import { createContext, useContext, useEffect, useState } from 'react';
 
 const MeetingsContext = createContext(undefined);
@@ -12,7 +12,7 @@ export const MeetingsProvider = ({ children }) => {
     apiClient.get('/api/meetings')
       .then(data => {
         setMeetings(data);
-        cacheMeetingsForWidget(data);
+        updateMeetingsWidget(data).catch(() => {});
       })
       .catch(() => setMeetings([]))
       .finally(() => setIsLoading(false));
@@ -27,7 +27,9 @@ export const MeetingsProvider = ({ children }) => {
         organizer: meeting.organizer,
         description: meeting.description,
       });
-      setMeetings(prev => [...prev, created]);
+      const newMeetings = [...meetings, created];
+      setMeetings(newMeetings);
+      updateMeetingsWidget(newMeetings).catch(() => {});
       return true;
     } catch (error) {
       console.error('Error adding meeting:', error);
@@ -38,7 +40,9 @@ export const MeetingsProvider = ({ children }) => {
   const deleteMeeting = async (meetingId) => {
     try {
       await apiClient.delete(`/api/meetings/${meetingId}`);
-      setMeetings(prev => prev.filter(m => m.id !== meetingId));
+      const newMeetings = meetings.filter(m => m.id !== meetingId);
+      setMeetings(newMeetings);
+      updateMeetingsWidget(newMeetings).catch(() => {});
       return true;
     } catch (error) {
       console.error('Error deleting meeting:', error);
@@ -52,6 +56,7 @@ export const MeetingsProvider = ({ children }) => {
       await Promise.all(meetings.map(m => apiClient.delete(`/api/meetings/${m.id}`)));
       const created = await Promise.all(newMeetings.map(m => apiClient.post('/api/meetings', m)));
       setMeetings(created);
+      updateMeetingsWidget(created).catch(() => {});
       return true;
     } catch (error) {
       console.error('Error saving meetings:', error);
@@ -99,15 +104,6 @@ export const MeetingsProvider = ({ children }) => {
   );
 };
 
-function cacheMeetingsForWidget(meetings) {
-  const now = new Date();
-  const upcoming = meetings
-    .filter(m => new Date(m.start) >= now)
-    .sort((a, b) => new Date(a.start) - new Date(b.start))
-    .slice(0, 5)
-    .map(m => ({ id: m.id, title: m.title, start: m.start, end: m.end }));
-  AsyncStorage.setItem('widget_meetings', JSON.stringify(upcoming)).catch(() => {});
-}
 
 export const useMeetings = () => {
   const context = useContext(MeetingsContext);

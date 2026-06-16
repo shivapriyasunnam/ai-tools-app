@@ -72,19 +72,6 @@ def upgrade() -> None:
     op.create_index("ix_todo_user_id", "todo", ["user_id"])
 
     op.create_table(
-        "reminder",
-        sa.Column("id", sa.String, primary_key=True),
-        sa.Column("user_id", sa.String, nullable=False),
-        sa.Column("title", sa.String, nullable=False),
-        sa.Column("description", sa.String, nullable=True),
-        sa.Column("completed", sa.Boolean, nullable=False),
-        sa.Column("due_date", sa.String, nullable=True),
-        sa.Column("priority", sa.String, nullable=True),
-        sa.Column("created_at", sa.DateTime, nullable=False),
-    )
-    op.create_index("ix_reminder_user_id", "reminder", ["user_id"])
-
-    op.create_table(
         "meeting",
         sa.Column("id", sa.String, primary_key=True),
         sa.Column("user_id", sa.String, nullable=False),
@@ -134,7 +121,6 @@ def downgrade() -> None:
     op.drop_table("pomodorosession")
     op.drop_table("note")
     op.drop_table("meeting")
-    op.drop_table("reminder")
     op.drop_table("todo")
     op.drop_table("budget")
     op.drop_table("income")

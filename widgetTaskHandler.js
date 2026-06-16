@@ -30,11 +30,8 @@ export async function widgetTaskHandler({ widgetInfo, widgetAction, renderWidget
       break;
 
     case 'UpcomingTasksWidget': {
-      const [todos, reminders] = await Promise.all([
-        getWidgetData('widget_todos', []),
-        getWidgetData('widget_reminders', []),
-      ]);
-      renderWidget(<UpcomingTasksWidget todos={todos} reminders={reminders} />);
+      const todos = await getWidgetData('widget_todos', []);
+      renderWidget(<UpcomingTasksWidget todos={todos} />);
       break;
     }
 

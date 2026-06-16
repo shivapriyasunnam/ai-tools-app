@@ -14,7 +14,7 @@ load_dotenv()
 
 # Import all models so Alembic can detect them
 from app.models import (  # noqa: F401
-    Expense, Income, Budget, Todo, Reminder,
+    Expense, Income, Budget, Todo,
     Meeting, Note, PomodoroSession, UserProfile,
 )
 from sqlmodel import SQLModel

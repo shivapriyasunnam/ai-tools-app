@@ -1,7 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "Bash(node --check \"app/\\(tabs\\)/index.js\")",
+      "Bash(node --check \"app/\\(tabs\\)/_layout.js\")",
+      "Bash(node --check src/context/AppContext.js)",
+      "Bash(node --check components/ui/CustomHeader.js)",
+      "Bash(node --check src/components/ToolsBottomSheet.js)",
+      "Bash(node --check src/services/storageService.js)",
+      "Bash(node --check widgetTaskHandler.js)",
+      "Bash(node --check src/widgets/UpcomingTasksWidget.jsx)",
+      "Bash(python3 -c \"import json; json.load\\(open\\('app.json'\\)\\)\")",
+      "Bash(python3 -m py_compile server/app/main.py server/app/models.py server/app/schemas.py server/alembic/env.py server/alembic/versions/e7b3ce05e870_initial_schema.py)"
     ]
   }
 }

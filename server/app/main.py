@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import expenses, income, budgets, todos, reminders, meetings, notes, pomodoro, user, finance
+from app.routers import expenses, income, budgets, todos, meetings, notes, pomodoro, user, finance, goals
 
 app = FastAPI(title="d.ai.ly API", version="1.0.0")
 
@@ -16,12 +16,12 @@ app.include_router(expenses.router)
 app.include_router(income.router)
 app.include_router(budgets.router)
 app.include_router(todos.router)
-app.include_router(reminders.router)
 app.include_router(meetings.router)
 app.include_router(notes.router)
 app.include_router(pomodoro.router)
 app.include_router(user.router)
 app.include_router(finance.router)
+app.include_router(goals.router)
 
 
 @app.get("/health")

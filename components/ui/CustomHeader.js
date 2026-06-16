@@ -5,7 +5,8 @@ import { useTheme } from '@/src/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, FlatList, Modal, Platform, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Alert, FlatList, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const TOOLS = [
   { name: 'Hub', route: '/(tabs)/hub', icon: 'grid' },
@@ -17,9 +18,9 @@ const TOOLS = [
   { name: 'Income Tracker', route: '/(tabs)/income-tracker', icon: 'cash' },
   { name: 'To-Do List', route: '/(tabs)/todo-list', icon: 'checkbox' },
   { name: 'Quick Notes', route: '/(tabs)/quick-notes', icon: 'document-text' },
-  { name: 'Reminders', route: '/(tabs)/reminders', icon: 'notifications' },
   { name: 'Calculator', route: '/(tabs)/calculator', icon: 'calculator' },
   { name: 'Meetings Scheduler', route: '/(tabs)/meetings-scheduler', icon: 'calendar' },
+  { name: 'Goals', route: '/(tabs)/goals', icon: 'flag-outline' },
 ];
 
 const PAGE_TITLES = {
@@ -48,6 +49,7 @@ export default function CustomHeader() {
   const { theme } = useTheme();
   const { signOut } = useAuth();
   const { rightAction } = useHeaderAction();
+  const insets = useSafeAreaInsets();
 
   // Close modal when route changes
   useEffect(() => {
@@ -78,10 +80,9 @@ export default function CustomHeader() {
     ]);
   };
 
-  const statusBarHeight = Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0;
   return (
-    <SafeAreaView style={{ backgroundColor: theme.colors.surface }}>
-      <View style={[styles.header, { paddingTop: statusBarHeight, backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
+    <View style={{ backgroundColor: theme.colors.surface }}>
+      <View style={[styles.header, { paddingTop: insets.top, backgroundColor: theme.colors.surface, borderBottomColor: theme.colors.border }]}>
         <TouchableOpacity
           style={[styles.dropdown, { backgroundColor: theme.colors.primary }]}
           onPress={() => currentTool && setModalVisible(true)}
@@ -149,7 +150,7 @@ export default function CustomHeader() {
           </TouchableOpacity>
         </Modal>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

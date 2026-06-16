@@ -1,5 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiClient } from '@/src/services/apiClient';
+import { updateTodosWidget } from '@/src/services/widgetService';
 import { createContext, useEffect, useState } from 'react';
 
 export const TodoContext = createContext();
@@ -12,7 +12,7 @@ export const TodoProvider = ({ children }) => {
       .then(data => {
         const normalized = data.map(normalizeTodo);
         setTodos(normalized);
-        cacheTodosForWidget(normalized);
+        updateTodosWidget(normalized).catch(() => {});
       })
       .catch(() => setTodos([]));
   }, []);
@@ -26,7 +26,10 @@ export const TodoProvider = ({ children }) => {
       category: todo.category || 'general',
       due_date: todo.dueDate || null,
     });
-    setTodos(prev => [normalizeTodo(created), ...prev]);
+    const newTodo = normalizeTodo(created);
+    const newTodos = [newTodo, ...todos];
+    setTodos(newTodos);
+    updateTodosWidget(newTodos).catch(() => {});
   };
 
   const updateTodo = async (id, updates) => {
@@ -34,12 +37,16 @@ export const TodoProvider = ({ children }) => {
     if (updates.dueDate !== undefined) { payload.due_date = updates.dueDate; delete payload.dueDate; }
     if (updates.completedAt !== undefined) { payload.completed_at = updates.completedAt; delete payload.completedAt; }
     const updated = await apiClient.put(`/api/todos/${id}`, payload);
-    setTodos(prev => prev.map(t => t.id === id ? normalizeTodo(updated) : t));
+    const newTodos = todos.map(t => t.id === id ? normalizeTodo(updated) : t);
+    setTodos(newTodos);
+    updateTodosWidget(newTodos).catch(() => {});
   };
 
   const deleteTodo = async (id) => {
     await apiClient.delete(`/api/todos/${id}`);
-    setTodos(prev => prev.filter(t => t.id !== id));
+    const newTodos = todos.filter(t => t.id !== id);
+    setTodos(newTodos);
+    updateTodosWidget(newTodos).catch(() => {});
   };
 
   const toggleComplete = async (id) => {
@@ -50,13 +57,17 @@ export const TodoProvider = ({ children }) => {
       completed: nowCompleted,
       completed_at: nowCompleted ? new Date().toISOString() : null,
     });
-    setTodos(prev => prev.map(t => t.id === id ? normalizeTodo(updated) : t));
+    const newTodos = todos.map(t => t.id === id ? normalizeTodo(updated) : t);
+    setTodos(newTodos);
+    updateTodosWidget(newTodos).catch(() => {});
   };
 
   const clearCompleted = async () => {
     const completed = todos.filter(t => t.completed);
     await Promise.all(completed.map(t => apiClient.delete(`/api/todos/${t.id}`)));
-    setTodos(prev => prev.filter(t => !t.completed));
+    const newTodos = todos.filter(t => !t.completed);
+    setTodos(newTodos);
+    updateTodosWidget(newTodos).catch(() => {});
   };
 
   const getTotalTodos = () => todos.length;
@@ -91,14 +102,6 @@ export const TodoProvider = ({ children }) => {
   );
 };
 
-function cacheTodosForWidget(todos) {
-  const slim = todos
-    .filter(t => !t.completed)
-    .map(t => ({ id: t.id, title: t.title, priority: t.priority, dueDate: t.dueDate }));
-  AsyncStorage.setItem('widget_todos', JSON.stringify(slim)).catch(() => {});
-}
-
-// Map server snake_case to app camelCase
 function normalizeTodo(t) {
   return {
     ...t,

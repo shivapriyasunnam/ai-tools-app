@@ -66,22 +66,6 @@ class TodoUpdate(BaseModel):
     completed_at: Optional[datetime] = None
 
 
-class ReminderCreate(BaseModel):
-    title: str
-    description: Optional[str] = None
-    completed: bool = False
-    due_date: Optional[str] = None
-    priority: Optional[str] = None
-
-
-class ReminderUpdate(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
-    completed: Optional[bool] = None
-    due_date: Optional[str] = None
-    priority: Optional[str] = None
-
-
 class MeetingCreate(BaseModel):
     title: str
     start: str
@@ -121,3 +105,39 @@ class PomodoroSessionUpdate(BaseModel):
 
 class UserProfileUpdate(BaseModel):
     name: Optional[str] = None
+
+
+class PlanCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    duration: str
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+
+
+class PlanUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    duration: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+
+
+class GoalCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    period: str
+    category: str
+    plan_id: Optional[str] = None
+    linked_todo_ids: Optional[list[str]] = None
+
+
+class GoalUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    period: Optional[str] = None
+    category: Optional[str] = None
+    plan_id: Optional[str] = None
+    completed: Optional[bool] = None
+    completed_at: Optional[datetime] = None
+    linked_todo_ids: Optional[list[str]] = None

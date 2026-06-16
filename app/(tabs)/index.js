@@ -14,10 +14,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BudgetContext } from '@/src/context/BudgetContext';
 import { ExpenseContext } from '@/src/context/ExpenseContext';
+import { GoalsContext } from '@/src/context/GoalsContext';
 import { IncomeContext } from '@/src/context/IncomeContext';
 import { useMeetings } from '@/src/context/MeetingsContext';
 import { useQuickNotes } from '@/src/context/QuickNotesContext';
-import { useReminders } from '@/src/context/RemindersContext';
 import { TodoContext } from '@/src/context/TodoContext';
 import { useAuth } from '@/src/context/AuthContext';
 import { useUser } from '@/src/context/UserContext';
@@ -48,12 +48,12 @@ function HomeScreen() {
   const { expenses, getTotal } = useContext(ExpenseContext);
   const { incomes, getTotalIncome } = useContext(IncomeContext);
   const { todos, getTotalTodos, getCompletedCount, getPendingCount } = useContext(TodoContext);
+  const { getActiveGoalsCount } = useContext(GoalsContext);
   const { getTotalBudget, getTotalSpent, getTotalRemaining, getBudgetStatus } = useContext(BudgetContext);
   const { notes } = useQuickNotes();
   const { userName } = useUser();
   const { session } = useAuth();
   const { getTodayMeetings, getWeekMeetings } = useMeetings();
-  const { getActiveReminders } = useReminders();
   const total = getTotal();
   const income = getTotalIncome();
   const { totalSessions, totalFocusedHours } = usePomodoroStats();
@@ -66,11 +66,7 @@ function HomeScreen() {
   const weekMeetings = getWeekMeetings();
   const todayMeetingsCount = todayMeetings.length;
   const remainingWeekMeetings = weekMeetings.length - todayMeetingsCount;
-  
-  // Get reminders data
-  const activeReminders = getActiveReminders();
-  const totalReminders = activeReminders.length;
-  
+
   // Combine all activities and get last 3
   // Budgeting activities: creation, edit, delete (using createdAt for now)
   const { budgets } = useContext(BudgetContext);
@@ -318,18 +314,15 @@ function HomeScreen() {
             </Text>
           </TouchableOpacity>
 
-          {/* Reminders Card */}
-          <TouchableOpacity style={[styles.statCardLarge, { backgroundColor: theme.colors.surface }]} onPress={() => router.push('/(tabs)/reminders')} activeOpacity={0.7}>
+          <TouchableOpacity style={[styles.statCardLarge, { backgroundColor: theme.colors.surface }]} onPress={() => router.push('/(tabs)/goals')} activeOpacity={0.7}>
             <View style={styles.statCardHeader}>
-              <View style={[styles.statIconCircle, { backgroundColor: '#FEF3C7' }]}>
-                <Text style={styles.statCardIcon}>⏰</Text>
+              <View style={[styles.statIconCircle, { backgroundColor: '#EDE9FE' }]}>
+                <Ionicons name="flag-outline" size={22} color="#7C3AED" />
               </View>
             </View>
-            <Text style={[styles.statCardValue, { color: theme.colors.text }]}>{totalReminders}</Text>
-            <Text style={[styles.statCardLabel, { color: theme.colors.text }]}>Reminders</Text>
-            <Text style={styles.statCardSubtext}>
-              {totalReminders === 0 ? 'No active reminders' : 'Don\'t forget!'}
-            </Text>
+            <Text style={[styles.statCardValue, { color: theme.colors.text }]}>{getActiveGoalsCount()}</Text>
+            <Text style={[styles.statCardLabel, { color: theme.colors.text }]}>Active Goals</Text>
+            <Text style={styles.statCardSubtext}>Tap to manage goals</Text>
           </TouchableOpacity>
         </View>
 

@@ -6,12 +6,11 @@ export const apiService = {
       const res = await fetch(`${API_BASE_URL}/api/finance/indices`);
       if (!res.ok) throw new Error(`Status ${res.status}`);
       const data = await res.json();
-      // Normalize server response to the shape the UI expects
       return Object.entries(data).map(([symbol, quote]) => ({
         symbol,
         label: symbol === 'SPY' ? 'S&P 500' : 'NASDAQ',
-        price: parseFloat(quote['05. price'] || quote.price || 0),
-        changesPercentage: parseFloat(quote['10. change percent'] || quote.changesPercentage || 0),
+        price: parseFloat(quote.price || 0),
+        changesPercentage: parseFloat(quote.changesPercentage || 0),
       }));
     } catch (e) {
       console.warn('[Finance] Error fetching indices:', e);

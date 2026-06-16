@@ -186,13 +186,6 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
-          name="reminders"
-          options={{
-            title: 'Reminders',
-            href: null, // Hidden tab - doesn't appear in tab bar
-          }}
-        />
-        <Tabs.Screen
           name="calculator"
           options={{
             title: 'Calculator',
@@ -211,6 +204,13 @@ export default function TabsLayout() {
           options={{
             title: 'Logo Demo',
             href: null, // Hidden tab - doesn't appear in tab bar
+          }}
+        />
+        <Tabs.Screen
+          name="goals"
+          options={{
+            title: 'Goals',
+            href: null, // Hidden tab - accessible via bottom sheet
           }}
         />
         <Tabs.Screen

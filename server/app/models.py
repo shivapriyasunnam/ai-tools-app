@@ -56,17 +56,6 @@ class Todo(SQLModel, table=True):
     created_at: datetime = Field(default_factory=now)
 
 
-class Reminder(SQLModel, table=True):
-    id: str = Field(default_factory=new_uuid, primary_key=True)
-    user_id: str = Field(index=True)
-    title: str
-    description: Optional[str] = None
-    completed: bool = False
-    due_date: Optional[str] = None
-    priority: Optional[str] = None
-    created_at: datetime = Field(default_factory=now)
-
-
 class Meeting(SQLModel, table=True):
     id: str = Field(default_factory=new_uuid, primary_key=True)
     user_id: str = Field(index=True)
@@ -103,4 +92,29 @@ class UserProfile(SQLModel, table=True):
     id: str = Field(default_factory=new_uuid, primary_key=True)
     user_id: str = Field(index=True, unique=True)
     name: Optional[str] = None
+    created_at: datetime = Field(default_factory=now)
+
+
+class Plan(SQLModel, table=True):
+    id: str = Field(default_factory=new_uuid, primary_key=True)
+    user_id: str = Field(index=True)
+    title: str
+    description: Optional[str] = None
+    duration: str                        # 5_year | 10_year | custom
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    created_at: datetime = Field(default_factory=now)
+
+
+class Goal(SQLModel, table=True):
+    id: str = Field(default_factory=new_uuid, primary_key=True)
+    user_id: str = Field(index=True)
+    title: str
+    description: Optional[str] = None
+    period: str                          # weekly | monthly | quarterly | half_yearly | yearly
+    category: str                        # finance | education | career | family | wellbeing | health
+    plan_id: Optional[str] = None
+    completed: bool = False
+    completed_at: Optional[datetime] = None
+    linked_todo_ids: Optional[str] = None  # JSON-serialised list of todo IDs
     created_at: datetime = Field(default_factory=now)
