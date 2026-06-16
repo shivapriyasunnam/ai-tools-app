@@ -51,6 +51,13 @@ export const IncomeProvider = ({ children }) => {
     return incomes.reduce((sum, i) => sum + i.amount, 0);
   }, [incomes]);
 
+  const getIncomesByMonth = useCallback((monthKey) => {
+    return incomes.filter(i => {
+      const dateStr = typeof i.date === 'string' ? i.date : new Date(i.date).toISOString();
+      return dateStr.substring(0, 7) === monthKey;
+    });
+  }, [incomes]);
+
   const clearIncomes = useCallback(async () => {
     await Promise.all(incomes.map(i => apiClient.delete(`/api/income/${i.id}`)));
     setIncomes([]);
@@ -64,6 +71,7 @@ export const IncomeProvider = ({ children }) => {
         deleteIncome,
         updateIncome,
         getTotalIncome,
+        getIncomesByMonth,
         clearIncomes,
         isLoading,
       }}

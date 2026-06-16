@@ -1,0 +1,16 @@
+export const DEFAULT_CATEGORIES = [
+  { name: 'Groceries',     color: '#10b981' },
+  { name: 'Dining',        color: '#f97316' },
+  { name: 'Transport',     color: '#3b82f6' },
+  { name: 'Housing',       color: '#6366f1' },
+  { name: 'Utilities',     color: '#6b7280' },
+  { name: 'Healthcare',    color: '#ef4444' },
+  { name: 'Shopping',      color: '#ec4899' },
+  { name: 'Entertainment', color: '#8b5cf6' },
+  { name: 'Education',     color: '#0ea5e9' },
+  { name: 'Personal Care', color: '#f43f5e' },
+  { name: 'Fitness',       color: '#14b8a6' },
+  { name: 'Travel',        color: '#f59e0b' },
+  { name: 'Subscriptions', color: '#a855f7' },
+  { name: 'Other',         color: '#9ca3af' },
+];

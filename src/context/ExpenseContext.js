@@ -92,6 +92,13 @@ export const ExpenseProvider = ({ children }) => {
     return expenses.reduce((sum, exp) => sum + exp.amount, 0);
   }, [expenses]);
 
+  const getExpensesByMonth = useCallback((monthKey) => {
+    return expenses.filter(e => {
+      const dateStr = typeof e.date === 'string' ? e.date : new Date(e.date).toISOString();
+      return dateStr.substring(0, 7) === monthKey;
+    });
+  }, [expenses]);
+
   const clearExpenses = useCallback(async () => {
     await Promise.all(expenses.map(e => apiClient.delete(`/api/expenses/${e.id}`)));
     setExpenses([]);
@@ -113,6 +120,7 @@ export const ExpenseProvider = ({ children }) => {
         getTotalByCategory,
         getTotalByMonth,
         getTotal,
+        getExpensesByMonth,
         clearExpenses,
         isLoading,
       }}

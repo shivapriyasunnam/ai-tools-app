@@ -1,6 +1,7 @@
 import { createContext, useState } from 'react';
 import { BudgetProvider } from './BudgetContext';
 import { ExpenseProvider } from './ExpenseContext';
+import { HeaderProvider } from './HeaderContext';
 import { IncomeProvider } from './IncomeContext';
 
 import { MeetingsProvider } from './MeetingsContext';
@@ -22,6 +23,7 @@ export const AppProvider = ({ children }) => {
   };
 
   return (
+    <HeaderProvider>
     <ThemeProvider>
       <UserProvider>
         <MeetingsProvider>
@@ -43,5 +45,6 @@ export const AppProvider = ({ children }) => {
         </MeetingsProvider>
       </UserProvider>
     </ThemeProvider>
+    </HeaderProvider>
   );
 };

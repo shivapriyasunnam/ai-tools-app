@@ -1,5 +1,6 @@
 import { colors } from '@/src/constants';
 import { useAuth } from '@/src/context/AuthContext';
+import { useHeaderAction } from '@/src/context/HeaderContext';
 import { useTheme } from '@/src/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { usePathname, useRouter } from 'expo-router';
@@ -46,6 +47,7 @@ export default function CustomHeader() {
   const [modalVisible, setModalVisible] = useState(false);
   const { theme } = useTheme();
   const { signOut } = useAuth();
+  const { rightAction } = useHeaderAction();
 
   // Close modal when route changes
   useEffect(() => {
@@ -89,6 +91,11 @@ export default function CustomHeader() {
           {currentTool && <Ionicons name="chevron-down" size={15} color="#fff" />}
         </TouchableOpacity>
         <View style={{ flex: 1 }} />
+        {rightAction && (
+          <TouchableOpacity onPress={rightAction.onPress} style={styles.settingsBtn}>
+            {rightAction.element}
+          </TouchableOpacity>
+        )}
         {isSettingsPage ? (
           <TouchableOpacity onPress={handleLogout} style={styles.settingsBtn}>
             <Ionicons name="log-out-outline" size={24} color={theme.colors.textSecondary} />

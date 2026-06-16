@@ -34,26 +34,34 @@ function RecentActivityScreen() {
     sessions = [];
   }
 
+  const safeDate = (dateStr) => {
+    if (!dateStr) return new Date();
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? new Date() : d;
+  };
+
   // Combine and sort all activities by date
   const allActivities = [
-    ...expenses.map(exp => ({
-      id: `exp-${exp.id}`,
-      type: 'expense',
-      title: exp.description,
-      subtitle: exp.category,
-      amount: -exp.amount,
-      date: new Date(exp.date),
-      icon: 'wallet',
-      iconColor: '#EF4444',
-      iconBg: '#FEE2E2',
-    })),
+    ...expenses
+      .filter(exp => exp && exp.id)
+      .map(exp => ({
+        id: `exp-${exp.id}`,
+        type: 'expense',
+        title: exp.description,
+        subtitle: exp.category,
+        amount: -exp.amount,
+        date: safeDate(exp.date),
+        icon: 'wallet',
+        iconColor: '#EF4444',
+        iconBg: '#FEE2E2',
+      })),
     ...incomes.map(inc => ({
       id: `inc-${inc.id}`,
       type: 'income',
       title: inc.description || inc.source || 'Income',
       subtitle: inc.category || 'Income',
       amount: inc.amount,
-      date: new Date(inc.date),
+      date: safeDate(inc.date),
       icon: 'cash',
       iconColor: '#10B981',
       iconBg: '#D1FAE5',
@@ -68,7 +76,7 @@ function RecentActivityScreen() {
           title: todo.title || todo.text || '(No Title)',
           subtitle: 'Task added',
           amount: null,
-          date: new Date(todo.createdAt),
+          date: safeDate(todo.createdAt),
           icon: 'add-circle',
           iconColor: '#3B82F6',
           iconBg: '#DBEAFE',
@@ -81,7 +89,7 @@ function RecentActivityScreen() {
           title: todo.title || todo.text || '(No Title)',
           subtitle: 'Task completed',
           amount: null,
-          date: new Date(todo.completedAt),
+          date: safeDate(todo.completedAt),
           icon: 'checkmark-circle',
           iconColor: '#8B5CF6',
           iconBg: '#EDE9FE',

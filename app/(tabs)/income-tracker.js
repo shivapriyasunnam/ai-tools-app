@@ -4,8 +4,8 @@ import { useTheme } from '@/src/context/ThemeContext';
 import { useContext, useState } from 'react';
 import {
     Alert,
+    FlatList,
     SafeAreaView,
-    ScrollView,
     StyleSheet,
     Text,
     TextInput,
@@ -13,7 +13,21 @@ import {
     View,
 } from 'react-native';
 
-// Simple form for adding/editing income
+function getCurrentMonthKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function shiftMonth(monthKey, delta) {
+  const [year, month] = monthKey.split('-').map(Number);
+  const d = new Date(year, month - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function formatMonthLabel(monthKey) {
+  const [year, month] = monthKey.split('-').map(Number);
+  return new Date(year, month - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
 
 function IncomeForm({ onSubmit, onCancel, initialValues = {}, loading, isEdit }) {
   const [description, setDescription] = useState(initialValues.description || '');
@@ -26,7 +40,6 @@ function IncomeForm({ onSubmit, onCancel, initialValues = {}, loading, isEdit })
   const localDay = pad(initialDateObj.getDate());
   const [date, setDate] = useState(`${localYear}-${localMonth}-${localDay}`);
   const [notes, setNotes] = useState(initialValues.notes || '');
-
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
@@ -38,7 +51,8 @@ function IncomeForm({ onSubmit, onCancel, initialValues = {}, loading, isEdit })
       Alert.alert('Error', 'Please enter a valid amount');
       return;
     }
-    const isoDate = new Date().toISOString();
+    const [y, m, d] = date.split('-').map(Number);
+    const isoDate = new Date(y, m - 1, d).toISOString();
     setSubmitting(true);
     try {
       await onSubmit({
@@ -55,7 +69,7 @@ function IncomeForm({ onSubmit, onCancel, initialValues = {}, loading, isEdit })
 
   return (
     <View style={formStyles.formContainer}>
-      <Text style={formStyles.formTitle}>{isEdit ? '✎ Edit Income' : '➕ Add Income'}</Text>
+      <Text style={formStyles.formTitle}>{isEdit ? 'Edit Income' : 'Add Income'}</Text>
       <TextInput
         placeholder="Description *"
         value={description}
@@ -77,7 +91,6 @@ function IncomeForm({ onSubmit, onCancel, initialValues = {}, loading, isEdit })
         onChangeText={setDate}
         style={formStyles.input}
         placeholderTextColor="#aaa"
-        editable={true}
       />
       <TextInput
         placeholder="Notes (optional)"
@@ -108,42 +121,42 @@ function IncomeForm({ onSubmit, onCancel, initialValues = {}, loading, isEdit })
 }
 
 const formStyles = StyleSheet.create({
-  formContainer: { 
-    backgroundColor: colors.white, 
-    borderRadius: 12, 
-    padding: spacing.md, 
-    marginBottom: spacing.lg, 
+  formContainer: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: spacing.md,
+    margin: spacing.md,
   },
-  formTitle: { 
-    fontSize: 18, 
-    fontWeight: '700', 
-    marginBottom: spacing.md, 
+  formTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: spacing.md,
     color: colors.gray[900],
   },
-  input: { 
-    borderWidth: 1, 
-    borderColor: colors.gray[200], 
-    borderRadius: 8, 
-    padding: spacing.md, 
-    marginBottom: spacing.md, 
-    fontSize: 14, 
-    color: colors.text, 
+  input: {
+    borderWidth: 1,
+    borderColor: colors.gray[200],
+    borderRadius: 8,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    fontSize: 14,
+    color: colors.text,
     backgroundColor: colors.gray[50],
   },
-  buttonRow: { 
-    flexDirection: 'row', 
+  buttonRow: {
+    flexDirection: 'row',
     marginTop: spacing.sm,
   },
-  button: { 
-    flex: 1, 
-    padding: spacing.md, 
-    borderRadius: 8, 
-    alignItems: 'center', 
+  button: {
+    flex: 1,
+    padding: spacing.md,
+    borderRadius: 8,
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  buttonText: { 
-    color: colors.white, 
-    fontWeight: '600', 
+  buttonText: {
+    color: colors.white,
+    fontWeight: '600',
     fontSize: 14,
   },
 });
@@ -151,18 +164,16 @@ const formStyles = StyleSheet.create({
 export default function IncomeTrackerScreen() {
   const { theme } = useTheme();
   const [mode, setMode] = useState('view'); // 'view', 'add', 'edit'
-  const [filter, setFilter] = useState('');
   const [editIncome, setEditIncome] = useState(null);
-  const { incomes, addIncome, deleteIncome, updateIncome, getTotalIncome } = useContext(IncomeContext);
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthKey());
 
-  const total = getTotalIncome();
+  const { incomes, addIncome, deleteIncome, updateIncome, getIncomesByMonth } = useContext(IncomeContext);
 
-  const filteredIncomes = filter
-    ? incomes.filter(i =>
-        i.description.toLowerCase().includes(filter.toLowerCase()) ||
-        (i.date && i.date.includes(filter))
-      )
-    : incomes;
+  const isCurrentMonth = selectedMonth === getCurrentMonthKey();
+  const monthIncomes = [...(getIncomesByMonth(selectedMonth) || [])].sort(
+    (a, b) => new Date(b.date) - new Date(a.date)
+  );
+  const monthTotal = monthIncomes.reduce((sum, i) => sum + i.amount, 0);
 
   const handleAddIncome = async (income) => {
     try {
@@ -172,11 +183,6 @@ export default function IncomeTrackerScreen() {
     } catch (err) {
       Alert.alert('Error', 'Failed to add income: ' + err.message);
     }
-  };
-
-  const handleEditIncome = (income) => {
-    setEditIncome(income);
-    setMode('edit');
   };
 
   const handleUpdateIncome = async (updated) => {
@@ -190,230 +196,186 @@ export default function IncomeTrackerScreen() {
     }
   };
 
+  if (mode === 'add' || mode === 'edit') {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <IncomeForm
+          onSubmit={mode === 'edit' ? handleUpdateIncome : handleAddIncome}
+          onCancel={() => { setEditIncome(null); setMode('view'); }}
+          loading={false}
+          initialValues={editIncome}
+          isEdit={mode === 'edit'}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  const renderIncome = ({ item }) => (
+    <View style={[styles.incomeRow, { backgroundColor: theme.colors.surface }]}>
+      <View style={{ flex: 1 }}>
+        <Text style={[styles.description, { color: theme.colors.text }]}>{item.description}</Text>
+        <Text style={[styles.meta, { color: theme.colors.textSecondary }]}>
+          {new Date(item.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+        </Text>
+        {item.notes ? <Text style={[styles.notes, { color: theme.colors.textSecondary }]}>{item.notes}</Text> : null}
+      </View>
+      <View style={{ alignItems: 'flex-end' }}>
+        <Text style={styles.amount}>${item.amount.toFixed(2)}</Text>
+        <View style={{ flexDirection: 'row', marginTop: spacing.xs }}>
+          <TouchableOpacity onPress={() => { setEditIncome(item); setMode('edit'); }} style={styles.actionButton}>
+            <Text style={[styles.editText, { color: theme.colors.primary }]}>Edit</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() =>
+              Alert.alert('Delete Income', 'Are you sure you want to delete this income record?', [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Delete', style: 'destructive', onPress: () => deleteIncome(item.id) },
+              ])
+            }
+            style={styles.actionButton}
+          >
+            <Text style={styles.deleteText}>Delete</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  );
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
-        {mode === 'view' && (
-          <View>
+      {/* Month Navigation */}
+      <View style={[styles.monthBar, { backgroundColor: theme.colors.surface }]}>
+        <TouchableOpacity onPress={() => setSelectedMonth(shiftMonth(selectedMonth, -1))} style={styles.monthArrow}>
+          <Text style={[styles.monthArrowText, { color: theme.colors.primary }]}>‹</Text>
+        </TouchableOpacity>
+        <Text style={[styles.monthLabel, { color: theme.colors.text }]}>{formatMonthLabel(selectedMonth)}</Text>
+        <TouchableOpacity
+          onPress={() => !isCurrentMonth && setSelectedMonth(shiftMonth(selectedMonth, 1))}
+          style={[styles.monthArrow, isCurrentMonth && styles.monthArrowDisabled]}
+          disabled={isCurrentMonth}
+        >
+          <Text style={[styles.monthArrowText, { color: isCurrentMonth ? theme.colors.textSecondary : theme.colors.primary }]}>›</Text>
+        </TouchableOpacity>
+      </View>
 
+      {/* Monthly Total Card */}
+      <View style={styles.totalCard}>
+        <Text style={styles.totalLabel}>Total Income</Text>
+        <Text style={styles.totalAmount}>${monthTotal.toFixed(2)}</Text>
+      </View>
 
-            {/* Summary Card */}
-            <View style={styles.summaryCard}>
-              <Text style={styles.summaryLabel}>Total Income</Text>
-              <Text style={styles.summaryAmount}>${total.toFixed(2)}</Text>
-            </View>
+      {/* Income List */}
+      {monthIncomes.length === 0 ? (
+        <View style={styles.centeredState}>
+          <Text style={styles.emptyIcon}>💵</Text>
+          <Text style={[styles.emptyText, { color: theme.colors.text }]}>No income records</Text>
+          <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>
+            No income recorded for {formatMonthLabel(selectedMonth)}.
+          </Text>
+          <TouchableOpacity
+            style={[styles.emptyAddButton, { backgroundColor: colors.accent }]}
+            onPress={() => { setEditIncome(null); setMode('add'); }}
+          >
+            <Text style={styles.emptyAddButtonText}>Add Income</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <FlatList
+          data={monthIncomes}
+          keyExtractor={item => item.id.toString()}
+          renderItem={renderIncome}
+          contentContainerStyle={styles.list}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
 
-            {/* Add Button */}
-            <TouchableOpacity
-              onPress={() => setMode('add')}
-              style={[styles.modeButton, { backgroundColor: colors.accent }]}
-            >
-              <Text style={styles.modeButtonText}>➕ Add Income</Text>
-            </TouchableOpacity>
-
-            {/* Filter/Search Bar */}
-            <View style={{ marginBottom: spacing.md }}>
-              <TextInput
-                placeholder="Search by description or date..."
-                value={filter}
-                onChangeText={setFilter}
-                style={{
-                  backgroundColor: theme.colors.gray[100],
-                  borderRadius: 8,
-                  padding: spacing.md,
-                  fontSize: 14,
-                  color: theme.colors.text,
-                }}
-                placeholderTextColor={theme.colors.textSecondary}
-              />
-            </View>
-
-            {/* Income List */}
-            {filteredIncomes.length > 0 ? (
-              <View>
-                <Text style={[styles.listTitle, { color: theme.colors.text }]}>📝 Income Records ({filteredIncomes.length})</Text>
-                {filteredIncomes.map(income => (
-                  <View key={income.id} style={[styles.incomeItem, { backgroundColor: theme.colors.surface }]}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={[styles.description, { color: theme.colors.text }]}>{income.description}</Text>
-                      <Text style={[styles.meta, { color: theme.colors.textSecondary }]}>{income.date}</Text>
-                      {income.notes ? <Text style={styles.notes}>{income.notes}</Text> : null}
-                    </View>
-                    <View style={{ alignItems: 'flex-end' }}>
-                      <Text style={styles.amount}>${income.amount.toFixed(2)}</Text>
-                      <View style={{ flexDirection: 'row', marginTop: spacing.xs }}>
-                        <TouchableOpacity onPress={() => handleEditIncome(income)} style={styles.actionButton}>
-                          <Text style={[styles.editText, { color: theme.colors.primary }]}>Edit</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity 
-                          onPress={() => {
-                            Alert.alert(
-                              'Delete Income',
-                              'Are you sure you want to delete this income record?',
-                              [
-                                { text: 'Cancel', style: 'cancel' },
-                                { text: 'Delete', style: 'destructive', onPress: () => deleteIncome(income.id) },
-                              ]
-                            );
-                          }} 
-                          style={styles.actionButton}
-                        >
-                          <Text style={styles.deleteText}>Delete</Text>
-                        </TouchableOpacity>
-                      </View>
-                    </View>
-                  </View>
-                ))}
-              </View>
-            ) : (
-              <View style={[styles.emptyState, { backgroundColor: theme.colors.surface }]}>
-                <Text style={styles.emptyIcon}>💵</Text>
-                <Text style={[styles.emptyText, { color: theme.colors.text }]}>No income records yet</Text>
-                <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>Add your first income to start tracking</Text>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Add Income Form */}
-        {mode === 'add' && (
-          <IncomeForm
-            onSubmit={handleAddIncome}
-            onCancel={() => setMode('view')}
-            loading={false}
-          />
-        )}
-
-        {/* Edit Income Form */}
-        {mode === 'edit' && editIncome && (
-          <IncomeForm
-            onSubmit={handleUpdateIncome}
-            onCancel={() => { setEditIncome(null); setMode('view'); }}
-            loading={false}
-            initialValues={editIncome}
-            isEdit
-          />
-        )}
-      </ScrollView>
+      {/* FAB */}
+      <TouchableOpacity
+        style={[styles.fab, { backgroundColor: colors.accent }]}
+        onPress={() => { setEditIncome(null); setMode('add'); }}
+        activeOpacity={0.85}
+      >
+        <Text style={styles.fabIcon}>+</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: colors.gray[50],
-  },
-  scrollContent: { 
-    padding: spacing.md,
-  },
-  title: { 
-    fontSize: 28, 
-    fontWeight: '700', 
-    color: colors.gray[900], 
-    marginBottom: spacing.lg,
-  },
-  summaryCard: {
-    backgroundColor: colors.accent,
-    padding: spacing.lg,
-    borderRadius: 12,
-    marginBottom: spacing.lg,
-    alignItems: 'center',
-  },
-  summaryLabel: {
-    fontSize: 14,
-    color: colors.gray[100],
-    marginBottom: spacing.sm,
-  },
-  summaryAmount: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: colors.white,
-  },
-  modeButton: {
-    padding: spacing.md,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  modeButtonText: {
-    color: colors.white,
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  listTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.gray[900],
-    marginBottom: spacing.md,
-  },
-  incomeItem: {
-    backgroundColor: colors.white,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
-    borderRadius: 8,
+  container: { flex: 1 },
+  monthBar: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  monthArrow: { padding: spacing.sm },
+  monthArrowDisabled: { opacity: 0.3 },
+  monthArrowText: { fontSize: 28, fontWeight: '600' },
+  monthLabel: { fontSize: 17, fontWeight: '600' },
+  totalCard: {
+    backgroundColor: colors.accent,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
+    borderRadius: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  totalLabel: { fontSize: 14, color: 'rgba(255,255,255,0.85)', fontWeight: '500' },
+  totalAmount: { fontSize: 24, fontWeight: '700', color: '#fff' },
+  list: { paddingHorizontal: spacing.md, paddingBottom: 90 },
+  separator: { height: spacing.sm },
+  incomeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 10,
+    padding: spacing.md,
     borderLeftWidth: 4,
     borderLeftColor: colors.accent,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  description: { 
-    fontSize: 15, 
-    fontWeight: '600', 
-    color: colors.gray[900],
-    marginBottom: 4,
-  },
-  meta: { 
-    fontSize: 13, 
-    color: colors.gray[600],
-  },
-  notes: {
-    fontSize: 12,
-    color: colors.gray[500],
-    marginTop: 4,
-    fontStyle: 'italic',
-  },
-  amount: { 
-    fontSize: 16, 
-    fontWeight: '700', 
-    color: colors.accent,
-  },
-  actionButton: { 
-    marginLeft: spacing.sm,
-    padding: 4,
-  },
-  editText: { 
-    fontSize: 13, 
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  deleteText: { 
-    fontSize: 13, 
-    color: colors.error,
-    fontWeight: '600',
-  },
-  emptyState: {
+  description: { fontSize: 15, fontWeight: '600', marginBottom: 4 },
+  meta: { fontSize: 12 },
+  notes: { fontSize: 11, marginTop: 2, fontStyle: 'italic' },
+  amount: { fontSize: 16, fontWeight: '700', color: colors.accent },
+  actionButton: { marginLeft: spacing.sm, padding: 4 },
+  editText: { fontSize: 13, fontWeight: '600' },
+  deleteText: { fontSize: 13, color: colors.error, fontWeight: '600' },
+  centeredState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
+  emptyIcon: { fontSize: 48, marginBottom: spacing.md },
+  emptyText: { fontSize: 16, fontWeight: '600', marginBottom: spacing.sm },
+  emptySubtext: { fontSize: 13, textAlign: 'center', marginBottom: spacing.lg },
+  emptyAddButton: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderRadius: 8 },
+  emptyAddButtonText: { color: '#fff', fontWeight: '600', fontSize: 14 },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     alignItems: 'center',
-    paddingVertical: spacing.xl,
-    backgroundColor: colors.white,
-    borderRadius: 8,
-    marginTop: spacing.sm,
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 6,
   },
-  emptyIcon: {
-    fontSize: 48,
-    marginBottom: spacing.md,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.gray[900],
-    marginBottom: spacing.sm,
-  },
-  emptySubtext: {
-    fontSize: 13,
-    color: colors.gray[500],
-    textAlign: 'center',
-    paddingHorizontal: spacing.lg,
-  },
+  fabIcon: { color: '#fff', fontSize: 32, fontWeight: '300', lineHeight: 36 },
 });

@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiClient } from '@/src/services/apiClient';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { DEFAULT_CATEGORIES } from '@/src/constants/categories';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { ExpenseContext } from './ExpenseContext';
 
 export const BudgetContext = createContext();
@@ -10,10 +11,37 @@ export const BudgetProvider = ({ children }) => {
   const { expenses } = useContext(ExpenseContext);
   const [availableCategories, setAvailableCategories] = useState([]);
   const [unbudgetedCategories, setUnbudgetedCategories] = useState([]);
+  const seeded = useRef(false);
 
   useEffect(() => {
     apiClient.get('/api/budgets')
-      .then(setBudgets)
+      .then(async (fetched) => {
+        if (seeded.current) {
+          setBudgets(fetched);
+          return;
+        }
+        seeded.current = true;
+
+        const existingLower = new Set(fetched.map(b => b.category.toLowerCase()));
+        const missing = DEFAULT_CATEGORIES.filter(cat => !existingLower.has(cat.name.toLowerCase()));
+
+        if (missing.length === 0) {
+          setBudgets(fetched);
+          return;
+        }
+
+        const created = await Promise.all(
+          missing.map(cat =>
+            apiClient.post('/api/budgets', {
+              category: cat.name,
+              limit: 0,
+              period: 'monthly',
+              color: cat.color,
+            })
+          )
+        );
+        setBudgets([...fetched, ...created]);
+      })
       .catch(() => setBudgets([]));
   }, []);
 
@@ -93,6 +121,52 @@ export const BudgetProvider = ({ children }) => {
     });
   };
 
+  const getCategorySpendForMonth = (category, month) => {
+    return expenses
+      .filter(e =>
+        e.category?.toLowerCase() === category.toLowerCase() &&
+        e.date?.substring(0, 7) === month
+      )
+      .reduce((sum, e) => sum + e.amount, 0);
+  };
+
+  const getTotalSpentForMonth = (month) => {
+    const budgetCats = new Set(budgets.map(b => b.category.toLowerCase()));
+    return expenses
+      .filter(e =>
+        budgetCats.has(e.category?.toLowerCase()) &&
+        e.date?.substring(0, 7) === month
+      )
+      .reduce((sum, e) => sum + e.amount, 0);
+  };
+
+  const getBudgetStatusForMonth = (month) => {
+    return budgets.map(budget => {
+      const spent = getCategorySpendForMonth(budget.category, month);
+      const percentage = budget.limit > 0 ? (spent / budget.limit) * 100 : 0;
+      return {
+        ...budget,
+        spent,
+        remaining: budget.limit - spent,
+        percentage: Math.min(percentage, 100),
+        status: percentage >= 100 ? 'exceeded' : percentage >= 80 ? 'warning' : 'good',
+      };
+    });
+  };
+
+  const getUnbudgetedForMonth = (month) => {
+    const budgetCatLower = new Set(budgets.map(b => b.category.toLowerCase()));
+    return expenses
+      .filter(e => e.date?.substring(0, 7) === month && e.category?.trim())
+      .map(e => e.category.trim())
+      .filter(cat => !budgetCatLower.has(cat.toLowerCase()))
+      .reduce((acc, cat) => {
+        if (!acc.some(x => x.toLowerCase() === cat.toLowerCase())) acc.push(cat);
+        return acc;
+      }, [])
+      .sort((a, b) => a.localeCompare(b));
+  };
+
   const getTotalBudget = () => budgets.reduce((sum, b) => sum + b.limit, 0);
 
   const getTotalSpent = () => {
@@ -131,6 +205,10 @@ export const BudgetProvider = ({ children }) => {
         deleteBudget,
         getBudgetStatus,
         getCategorySpending,
+        getCategorySpendForMonth,
+        getTotalSpentForMonth,
+        getBudgetStatusForMonth,
+        getUnbudgetedForMonth,
         getTotalBudget,
         getTotalSpent,
         getTotalRemaining,

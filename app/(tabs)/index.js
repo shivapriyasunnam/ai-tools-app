@@ -402,7 +402,11 @@ function HomeScreen() {
               {budgetStatus.length > 0 && (
                 <View style={styles.topCategoriesContainer}>
                   <Text style={[styles.topCategoriesTitle, { color: theme.colors.text }]}>Top Categories</Text>
-                  {budgetStatus.slice(0, 3).map((budget) => (
+                  {[...budgetStatus]
+                    .filter(b => b.spent > 0)
+                    .sort((a, b) => b.spent - a.spent)
+                    .slice(0, 3)
+                    .map((budget) => (
                     <View key={budget.id} style={[styles.categoryBudgetRow, { backgroundColor: theme.colors.gray[50] }]}>
                       <View style={styles.categoryBudgetInfo}>
                         <View style={[styles.categoryColorDot, { backgroundColor: budget.color }]} />
@@ -413,7 +417,7 @@ function HomeScreen() {
                           styles.categoryBudgetPercentage,
                           { color: budget.status === 'exceeded' ? '#EF4444' : budget.status === 'warning' ? '#F59E0B' : '#6B7280' }
                         ]}>
-                          {budget.percentage.toFixed(0)}%
+                          {budget.limit > 0 ? `${budget.percentage.toFixed(0)}%` : `$${budget.spent.toFixed(2)}`}
                         </Text>
                       </View>
                     </View>

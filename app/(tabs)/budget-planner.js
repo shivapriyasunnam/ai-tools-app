@@ -1,745 +1,606 @@
 import { colors, spacing } from '@/src/constants';
 import { BudgetContext } from '@/src/context/BudgetContext';
+import { useHeaderAction } from '@/src/context/HeaderContext';
 import { useTheme } from '@/src/context/ThemeContext';
-import { useContext, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useContext, useRef, useState } from 'react';
 import {
-    Alert,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
-// Form component for adding/editing budgets
-function BudgetForm({ onSubmit, onCancel, initialValues = {}, isEdit }) {
+const COLOR_OPTIONS = [
+  '#6366F1', '#8B5CF6', '#EC4899', '#EF4444',
+  '#F59E0B', '#10B981', '#3B82F6', '#14B8A6',
+  '#F97316', '#06B6D4', '#84CC16', '#A855F7',
+];
+
+function currentMonth() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function addMonths(yyyyMM, n) {
+  const [year, month] = yyyyMM.split('-').map(Number);
+  const d = new Date(year, month - 1 + n, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function formatMonth(yyyyMM) {
+  const [year, month] = yyyyMM.split('-').map(Number);
+  return new Date(year, month - 1, 1).toLocaleString('default', { month: 'long', year: 'numeric' });
+}
+
+function ColorPicker({ selected, onSelect }) {
   const { theme } = useTheme();
-  const [category, setCategory] = useState(initialValues.category || '');
-  const [limit, setLimit] = useState(initialValues.limit ? initialValues.limit.toString() : '');
-  const [period, setPeriod] = useState(initialValues.period || 'monthly');
-  const [selectedColor, setSelectedColor] = useState(initialValues.color || '#6366F1');
-  const { availableCategories } = useContext(BudgetContext);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-
-  const colorOptions = [
-    '#6366F1', // Indigo
-    '#8B5CF6', // Purple
-    '#EC4899', // Pink
-    '#EF4444', // Red
-    '#F59E0B', // Amber
-    '#10B981', // Green
-    '#3B82F6', // Blue
-    '#14B8A6', // Teal
-  ];
-
-  const handleSubmit = () => {
-    if (!category.trim()) {
-      Alert.alert('Error', 'Please enter a category name');
-      return;
-    }
-    if (!limit.trim() || isNaN(parseFloat(limit)) || parseFloat(limit) <= 0) {
-      Alert.alert('Error', 'Please enter a valid budget limit');
-      return;
-    }
-
-    onSubmit({
-      ...initialValues,
-      category: category.trim(),
-      limit: parseFloat(limit),
-      period,
-      color: selectedColor,
-    });
-
-    if (!isEdit) {
-      setCategory('');
-      setLimit('');
-      setPeriod('monthly');
-      setSelectedColor('#6366F1');
-    }
-  };
-
   return (
-    <View style={formStyles.formContainer}>
-      <Text style={formStyles.formTitle}>{isEdit ? '✎ Edit Budget' : '➕ Add New Budget'}</Text>
-      
-      <View style={{ marginBottom: spacing.md }}>
-        <TextInput
-          placeholder="Category (e.g., Food, Transport) *"
-          value={category}
-          onChangeText={(text) => { setCategory(text); setShowSuggestions(true); }}
-          onFocus={() => setShowSuggestions(true)}
-          style={formStyles.input}
-          placeholderTextColor={colors.gray[400]}
-          autoCorrect={false}
-        />
-        {showSuggestions && category.length >= 0 && availableCategories.length > 0 && (
-          <View style={formStyles.suggestionsContainer}>
-            {availableCategories
-              .filter(c => c.toLowerCase().includes(category.toLowerCase()) && c.toLowerCase() !== category.toLowerCase())
-              .slice(0, 6)
-              .map(c => (
-                <TouchableOpacity
-                  key={c}
-                  style={formStyles.suggestionItem}
-                  onPress={() => { setCategory(c); setShowSuggestions(false); }}
-                >
-                  <Text style={formStyles.suggestionText}>{c}</Text>
-                </TouchableOpacity>
-              ))}
-            {availableCategories.length === 0 && (
-              <Text style={formStyles.noSuggestionsText}>No categories yet</Text>
-            )}
-            <TouchableOpacity onPress={() => setShowSuggestions(false)} style={formStyles.dismissSuggestionsButton}>
-              <Text style={[formStyles.dismissSuggestionsText, { color: theme.colors.primary }]}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-
-      <TextInput
-        placeholder="Budget Limit ($) *"
-        value={limit}
-        onChangeText={setLimit}
-        keyboardType="decimal-pad"
-        style={formStyles.input}
-        placeholderTextColor={colors.gray[400]}
-      />
-
-      {/* Period Selection */}
-      <Text style={formStyles.label}>Period</Text>
-      <View style={formStyles.optionsRow}>
+    <View style={pickerStyles.row}>
+      {COLOR_OPTIONS.map(c => (
         <TouchableOpacity
-          style={[formStyles.optionButton, period === 'daily' && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
-          onPress={() => setPeriod('daily')}
-        >
-          <Text style={[formStyles.optionText, period === 'daily' && { color: colors.white }]}>Daily</Text>
+          key={c}
+          style={[pickerStyles.swatch, { backgroundColor: c }, selected === c && pickerStyles.swatchSelected]}
+          onPress={() => onSelect(c)}>
+          {selected === c && <Text style={pickerStyles.checkmark}>✓</Text>}
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[formStyles.optionButton, period === 'weekly' && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
-          onPress={() => setPeriod('weekly')}
-        >
-          <Text style={[formStyles.optionText, period === 'weekly' && { color: colors.white }]}>Weekly</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[formStyles.optionButton, period === 'monthly' && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
-          onPress={() => setPeriod('monthly')}
-        >
-          <Text style={[formStyles.optionText, period === 'monthly' && { color: colors.white }]}>Monthly</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Color Selection */}
-      <Text style={formStyles.label}>Color</Text>
-      <View style={formStyles.colorRow}>
-        {colorOptions.map(color => (
-          <TouchableOpacity
-            key={color}
-            style={[
-              formStyles.colorOption,
-              { backgroundColor: color },
-              selectedColor === color && formStyles.colorOptionSelected
-            ]}
-            onPress={() => setSelectedColor(color)}
-          >
-            {selectedColor === color && <Text style={formStyles.checkmark}>✓</Text>}
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <View style={formStyles.buttonRow}>
-        <TouchableOpacity
-          onPress={handleSubmit}
-          style={[formStyles.button, { backgroundColor: theme.colors.primary }]}
-        >
-          <Text style={formStyles.buttonText}>{isEdit ? 'Save Changes' : 'Add Budget'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={onCancel}
-          style={[formStyles.button, { backgroundColor: colors.gray[300], marginLeft: spacing.sm }]}
-        >
-          <Text style={[formStyles.buttonText, { color: colors.gray[700] }]}>Cancel</Text>
-        </TouchableOpacity>
-      </View>
+      ))}
     </View>
   );
 }
 
-const formStyles = StyleSheet.create({
-  formContainer: {
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    padding: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  formTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: spacing.md,
-    color: colors.gray[900],
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.gray[200],
-    borderRadius: 8,
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    fontSize: 14,
-    color: colors.text,
-    backgroundColor: colors.gray[50],
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.gray[700],
-    marginBottom: spacing.sm,
-    marginTop: spacing.sm,
-  },
-  optionsRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  optionButton: {
-    flex: 1,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.xs,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: colors.gray[300],
-    alignItems: 'center',
-    backgroundColor: colors.white,
-  },
-  optionText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.gray[700],
-  },
-  colorRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm,
-    marginBottom: spacing.md,
-  },
-  colorOption: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'transparent',
-  },
-  colorOptionSelected: {
-    borderColor: colors.gray[900],
-  },
-  checkmark: {
-    color: colors.white,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    marginTop: spacing.sm,
-  },
-  button: {
-    flex: 1,
-    padding: spacing.md,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: colors.white,
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  suggestionsContainer: {
-    position: 'absolute',
-    top: 54,
-    left: 0,
-    right: 0,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.gray[200],
-    borderRadius: 8,
-    zIndex: 20,
-    paddingVertical: 4,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  suggestionItem: {
-    paddingVertical: 8,
-    paddingHorizontal: spacing.md,
-  },
-  suggestionText: {
-    fontSize: 14,
-    color: colors.gray[800],
-  },
-  noSuggestionsText: {
-    fontSize: 12,
-    color: colors.gray[500],
-    paddingHorizontal: spacing.md,
-    paddingVertical: 6,
-  },
-  dismissSuggestionsButton: {
-    paddingVertical: 6,
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: colors.gray[100],
-    marginTop: 4,
-  },
-  dismissSuggestionsText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.primary,
-  },
+const pickerStyles = StyleSheet.create({
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
+  swatch: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: 'transparent' },
+  swatchSelected: { borderColor: colors.gray[900] },
+  checkmark: { color: colors.white, fontSize: 16, fontWeight: '700' },
 });
 
 export default function BudgetPlannerScreen() {
   const { theme } = useTheme();
-  const [mode, setMode] = useState('view'); // 'view', 'add', 'edit'
-  const [editBudget, setEditBudget] = useState(null);
-
+  const { setRightAction } = useHeaderAction();
   const {
     budgets,
     addBudget,
     updateBudget,
     deleteBudget,
-    getBudgetStatus,
     getTotalBudget,
-    getTotalSpent,
-    getTotalRemaining,
-    unbudgetedCategories,
-    getCategorySpending,
+    getBudgetStatusForMonth,
+    getCategorySpendForMonth,
+    getTotalSpentForMonth,
+    getUnbudgetedForMonth,
   } = useContext(BudgetContext);
 
-  const budgetStatus = getBudgetStatus();
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth());
+  const [editingBudget, setEditingBudget] = useState(null);
+  const [creatingCategory, setCreatingCategory] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editAmount, setEditAmount] = useState('');
+  const [editCategoryName, setEditCategoryName] = useState('');
+  const [editColor, setEditColor] = useState(COLOR_OPTIONS[0]);
+  const [editPeriod, setEditPeriod] = useState('monthly');
+
+  // Keep a stable ref so the header action always calls the latest openNewCategory
+  const openNewCategoryRef = useRef(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      setRightAction({
+        onPress: () => openNewCategoryRef.current?.(),
+        element: <Ionicons name="add-circle-outline" size={24} color={theme.colors.primary} />,
+      });
+      return () => setRightAction(null);
+    }, [theme.colors.primary])
+  );
+
+  const isCurrentMonth = selectedMonth === currentMonth();
+  const budgetStatus = [...getBudgetStatusForMonth(selectedMonth)].sort((a, b) => {
+    const tier = (row) => row.limit > 0 ? 0 : row.spent > 0 ? 1 : 2;
+    return tier(a) - tier(b);
+  });
   const totalBudget = getTotalBudget();
-  const totalSpent = getTotalSpent();
-  const totalRemaining = getTotalRemaining();
+  const totalSpent = getTotalSpentForMonth(selectedMonth);
+  const remaining = totalBudget - totalSpent;
+  const unbudgetedCategories = getUnbudgetedForMonth(selectedMonth);
 
-  const handleAddBudget = (budget) => {
-    addBudget(budget);
-    setMode('view');
-    Alert.alert('Success', 'Budget added successfully!');
-  };
+  function openEdit(row) {
+    setEditingBudget(row);
+    setEditAmount(row.limit > 0 ? row.limit.toString() : '');
+    setEditCategoryName(row.category);
+    setEditColor(row.color || COLOR_OPTIONS[0]);
+    setEditPeriod(row.period || 'monthly');
+  }
 
-  const [prefillCategory, setPrefillCategory] = useState(null);
+  function openNewCategory(prefillName = '') {
+    setCreatingCategory(true);
+    setEditCategoryName(prefillName);
+    setEditAmount('');
+    setEditColor(COLOR_OPTIONS[0]);
+    setEditPeriod('monthly');
+  }
 
-  const startAddForCategory = (cat) => {
-    setPrefillCategory(cat);
-    setMode('add');
-  };
+  async function saveEdit() {
+    if (!editingBudget) return;
+    if (!editCategoryName.trim()) {
+      Alert.alert('Required', 'Please enter a category name.');
+      return;
+    }
+    const limit = parseFloat(editAmount);
+    if (isNaN(limit) || limit <= 0) {
+      Alert.alert('Invalid', 'Enter a valid budget amount.');
+      return;
+    }
+    setSaving(true);
+    try {
+      await updateBudget(editingBudget.id, {
+        category: editCategoryName.trim(),
+        limit,
+        color: editColor,
+        period: editPeriod,
+      });
+      setEditingBudget(null);
+    } finally {
+      setSaving(false);
+    }
+  }
 
-  const handleEditBudget = (budget) => {
-    setEditBudget(budget);
-    setMode('edit');
-  };
-
-  const handleUpdateBudget = (updated) => {
-    updateBudget(updated.id, updated);
-    setEditBudget(null);
-    setMode('view');
-    Alert.alert('Success', 'Budget updated!');
-  };
-
-  const handleDeleteBudget = (id) => {
+  async function handleDelete() {
+    if (!editingBudget) return;
     Alert.alert(
-      'Delete Budget',
-      'Are you sure you want to delete this budget?',
+      'Delete Category',
+      `Delete budget for "${editingBudget.category}"? This will not remove existing expenses.`,
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => deleteBudget(id) },
+        {
+          text: 'Delete', style: 'destructive', onPress: async () => {
+            setSaving(true);
+            try {
+              await deleteBudget(editingBudget.id);
+              setEditingBudget(null);
+            } finally {
+              setSaving(false);
+            }
+          },
+        },
       ]
     );
-  };
+  }
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'exceeded': return colors.error;
-      case 'warning': return '#F59E0B';
-      case 'good': return colors.success;
-      default: return colors.gray[400];
+  async function saveNewCategory() {
+    if (!editCategoryName.trim()) {
+      Alert.alert('Required', 'Please enter a category name.');
+      return;
     }
-  };
+    const limit = parseFloat(editAmount);
+    if (isNaN(limit) || limit <= 0) {
+      Alert.alert('Invalid', 'Enter a valid budget amount.');
+      return;
+    }
+    setSaving(true);
+    try {
+      await addBudget({
+        category: editCategoryName.trim(),
+        limit,
+        period: editPeriod,
+        color: editColor,
+      });
+      setCreatingCategory(false);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  // Keep ref in sync so the header button always calls the latest function
+  openNewCategoryRef.current = openNewCategory;
+
+  function getStatusColor(status) {
+    if (status === 'exceeded') return colors.error;
+    if (status === 'warning') return colors.warning;
+    return colors.success;
+  }
+
+  const s = makeStyles(theme);
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
-        {mode === 'view' && (
-          <View>
-            {/* Summary Card */}
-            <View style={styles.summaryCard}>
-              <Text style={styles.summaryLabel}>Total Budget (Monthly)</Text>
-              <Text style={styles.summaryAmount}>${totalBudget.toFixed(2)}</Text>
-              <View style={styles.summaryStats}>
-                <View style={styles.summaryStatItem}>
-                  <Text style={styles.summaryStatLabel}>Spent</Text>
-                  <Text style={styles.summaryStatValue}>${totalSpent.toFixed(2)}</Text>
+    <SafeAreaView style={s.container}>
+      {/* Month Navigation Bar */}
+      <View style={s.monthBar}>
+        <TouchableOpacity onPress={() => setSelectedMonth(m => addMonths(m, -1))} style={s.monthArrow}>
+          <Text style={s.monthArrowText}>‹</Text>
+        </TouchableOpacity>
+        <Text style={s.monthLabel}>{formatMonth(selectedMonth)}</Text>
+        <TouchableOpacity
+          onPress={() => !isCurrentMonth && setSelectedMonth(m => addMonths(m, 1))}
+          style={s.monthArrow}
+          disabled={isCurrentMonth}>
+          <Text style={[s.monthArrowText, isCurrentMonth && s.monthArrowDisabled]}>›</Text>
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView contentContainerStyle={s.content}>
+        {/* Summary Cards */}
+        <View style={s.summaryRow}>
+          <View style={s.summaryCard}>
+            <Text style={s.summaryLabel}>Total Budget</Text>
+            <Text style={s.summaryAmount}>${totalBudget.toFixed(2)}</Text>
+          </View>
+          <View style={s.summaryCard}>
+            <Text style={s.summaryLabel}>Spent</Text>
+            <Text style={[s.summaryAmount, { color: colors.error }]}>${totalSpent.toFixed(2)}</Text>
+          </View>
+          <View style={s.summaryCard}>
+            <Text style={s.summaryLabel}>Remaining</Text>
+            <Text style={[s.summaryAmount, { color: remaining >= 0 ? colors.success : colors.error }]}>
+              ${Math.abs(remaining).toFixed(2)}{remaining < 0 ? ' over' : ''}
+            </Text>
+          </View>
+        </View>
+
+        {/* Budget Rows */}
+        {budgetStatus.length === 0 ? (
+          <View style={s.emptyState}>
+            <Text style={s.emptyIcon}>💰</Text>
+            <Text style={s.emptyText}>No budgets set yet</Text>
+            <Text style={s.emptySubtext}>Tap + to add a budget category</Text>
+          </View>
+        ) : (
+          budgetStatus.map(row => (
+            <TouchableOpacity key={row.id} onPress={() => openEdit(row)} activeOpacity={0.7}>
+              <View style={[s.budgetCard, row.status === 'exceeded' && s.overBudgetCard]}>
+                <View style={s.budgetHeader}>
+                  <View style={s.budgetLeft}>
+                    <View style={[s.catDot, { backgroundColor: row.color || theme.colors.primary }]} />
+                    <Text style={s.budgetCatName}>{row.category}</Text>
+                  </View>
+                  <View style={s.budgetRight}>
+                    {row.limit > 0 ? (
+                      <>
+                        <Text style={s.budgetSpent}>${row.spent.toFixed(2)}</Text>
+                        <Text style={s.budgetOf}> / ${row.limit.toFixed(2)}</Text>
+                      </>
+                    ) : row.spent > 0 ? (
+                      <Text style={s.budgetSpent}>${row.spent.toFixed(2)} spent</Text>
+                    ) : (
+                      <Text style={s.noBudget}>No budget set</Text>
+                    )}
+                  </View>
                 </View>
-                <View style={styles.summaryDivider} />
-                <View style={styles.summaryStatItem}>
-                  <Text style={styles.summaryStatLabel}>Remaining</Text>
-                  <Text style={[styles.summaryStatValue, totalRemaining < 0 && { color: '#FCA5A5' }]}>
-                    ${totalRemaining.toFixed(2)}
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Add Button */}
-            <TouchableOpacity
-              onPress={() => setMode('add')}
-              style={[styles.addButton, { backgroundColor: theme.colors.primary }]}
-            >
-              <Text style={styles.addButtonText}>➕ Add Budget Category</Text>
-            </TouchableOpacity>
-
-            {/* Unbudgeted Categories */}
-            {unbudgetedCategories.length > 0 && (
-              <View style={styles.unbudgetedContainer}>
-                <Text style={styles.unbudgetedTitle}>🟡 Categories With Expenses But No Budget</Text>
-                {unbudgetedCategories.map(cat => {
-                  const spent = getCategorySpending(cat, 'monthly');
-                  return (
-                    <View key={cat} style={styles.unbudgetedItem}>
-                      <View style={{ flex: 1 }}>
-                        <Text style={styles.unbudgetedCategory}>{cat}</Text>
-                        <Text style={styles.unbudgetedMessage}>Expenses present for the category but budget not set.</Text>
+                {row.limit > 0 ? (
+                  <>
+                    <View style={s.progressRow}>
+                      <View style={s.progressBarContainer}>
+                        <View style={[s.progressBar, { width: `${row.percentage}%`, backgroundColor: getStatusColor(row.status) }]} />
                       </View>
-                      <View style={styles.unbudgetedRight}>
-                        <Text style={styles.unbudgetedSpent}>${spent.toFixed(2)}</Text>
-                        <TouchableOpacity
-                          style={[styles.setBudgetButton, { backgroundColor: theme.colors.primary }]}
-                          onPress={() => startAddForCategory(cat)}
-                        >
-                          <Text style={styles.setBudgetButtonText}>Set Budget</Text>
-                        </TouchableOpacity>
-                      </View>
+                      <Text style={s.percentText}>{Math.round(row.percentage)}%</Text>
                     </View>
-                  );
-                })}
-              </View>
-            )}
-
-            {/* Budget List */}
-            {budgetStatus.length > 0 ? (
-              <View>
-                <Text style={[styles.listTitle, { color: theme.colors.text }]}>📋 Budget Categories ({budgetStatus.length})</Text>
-                {budgetStatus.map(budget => (
-                  <View key={budget.id} style={[styles.budgetItem, { backgroundColor: theme.colors.surface }]}>
-                    <View style={styles.budgetHeader}>
-                      <View style={styles.budgetInfo}>
-                        <View style={[styles.categoryDot, { backgroundColor: budget.color }]} />
-                        <Text style={[styles.budgetCategory, { color: theme.colors.text }]}>{budget.category}</Text>
-                      </View>
-                      <Text style={[styles.budgetPercentage, { color: getStatusColor(budget.status) }]}>
-                        {budget.percentage.toFixed(0)}%
-                      </Text>
-                    </View>
-                    
-                    {/* Progress Bar */}
-                    <View style={styles.progressBarContainer}>
-                      <View 
-                        style={[
-                          styles.progressBar, 
-                          { 
-                            width: `${budget.percentage}%`,
-                            backgroundColor: getStatusColor(budget.status)
-                          }
-                        ]} 
-                      />
-                    </View>
-
-                    <View style={styles.budgetDetails}>
-                      <Text style={[styles.budgetDetailText, { color: theme.colors.text }]}>
-                        ${budget.spent.toFixed(2)} of ${budget.limit.toFixed(2)}
-                      </Text>
-                      <Text style={[styles.budgetPeriod, { color: theme.colors.textSecondary }]}>{budget.period}</Text>
-                    </View>
-
-                    {budget.remaining < 0 && (
-                      <Text style={styles.exceededText}>
-                        Over budget by ${Math.abs(budget.remaining).toFixed(2)}
+                    {row.status === 'exceeded' && (
+                      <Text style={s.overBudgetText}>
+                        Over budget by ${Math.abs(row.remaining).toFixed(2)}
                       </Text>
                     )}
+                  </>
+                ) : row.spent > 0 && (
+                  <Text style={s.noBudget}>No budget set — tap to add a limit</Text>
+                )}
+              </View>
+            </TouchableOpacity>
+          ))
+        )}
 
-                    <View style={styles.budgetActions}>
-                      <TouchableOpacity onPress={() => handleEditBudget(budget)} style={styles.actionButton}>
-                        <Text style={[styles.editText, { color: theme.colors.primary }]}>Edit</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity onPress={() => handleDeleteBudget(budget.id)} style={styles.actionButton}>
-                        <Text style={styles.deleteText}>Delete</Text>
-                      </TouchableOpacity>
-                    </View>
+        {/* Unbudgeted Categories */}
+        {unbudgetedCategories.length > 0 && (
+          <View style={s.unbudgetedContainer}>
+            <Text style={s.unbudgetedTitle}>No Budget Set</Text>
+            {unbudgetedCategories.map(cat => {
+              const spent = getCategorySpendForMonth(cat, selectedMonth);
+              return (
+                <View key={cat} style={s.unbudgetedItem}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={s.unbudgetedCategory}>{cat}</Text>
+                    <Text style={s.unbudgetedMessage}>Expenses present but no budget set</Text>
                   </View>
-                ))}
-              </View>
-            ) : (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyIcon}>💰</Text>
-                <Text style={[styles.emptyText, { color: theme.colors.text }]}>No budgets set yet</Text>
-                <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>Add your first budget category to start tracking</Text>
-              </View>
-            )}
+                  <View style={s.unbudgetedRight}>
+                    <Text style={s.unbudgetedSpent}>${spent.toFixed(2)}</Text>
+                    <TouchableOpacity
+                      style={[s.setBudgetButton, { backgroundColor: theme.colors.primary }]}
+                      onPress={() => openNewCategory(cat)}>
+                      <Text style={s.setBudgetButtonText}>Set Budget</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              );
+            })}
           </View>
         )}
-
-        {/* Add Budget Form */}
-        {mode === 'add' && (
-          <BudgetForm
-            onSubmit={handleAddBudget}
-            onCancel={() => { setMode('view'); setPrefillCategory(null); }}
-            initialValues={prefillCategory ? { category: prefillCategory } : {}}
-          />
-        )}
-
-        {/* Edit Budget Form */}
-        {mode === 'edit' && editBudget && (
-          <BudgetForm
-            onSubmit={handleUpdateBudget}
-            onCancel={() => { setEditBudget(null); setMode('view'); }}
-            initialValues={editBudget}
-            isEdit
-          />
-        )}
       </ScrollView>
+
+      {/* Edit Budget Modal */}
+      <Modal
+        visible={!!editingBudget}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setEditingBudget(null)}>
+        <KeyboardAvoidingView style={s.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          <View style={s.modalBox}>
+            <View style={s.modalHeader}>
+              <View style={[s.catDot, { backgroundColor: editingBudget?.color || theme.colors.primary }]} />
+              <Text style={s.modalTitle}>{editingBudget?.category}</Text>
+            </View>
+            <Text style={s.modalSubtitle}>Set budget for {formatMonth(selectedMonth)}</Text>
+            <View style={s.divider} />
+
+            <Text style={s.inputLabel}>Budget Amount</Text>
+            <TextInput
+              style={s.input}
+              value={editAmount}
+              onChangeText={setEditAmount}
+              keyboardType="decimal-pad"
+              placeholder="0.00"
+              placeholderTextColor={colors.gray[400]}
+              autoFocus
+            />
+
+            <Text style={s.inputLabel}>Category Name</Text>
+            <TextInput
+              style={s.input}
+              value={editCategoryName}
+              onChangeText={setEditCategoryName}
+              placeholder="Category name"
+              placeholderTextColor={colors.gray[400]}
+            />
+
+            <Text style={s.inputLabel}>Period</Text>
+            <View style={s.periodRow}>
+              {['daily', 'weekly', 'monthly'].map(p => (
+                <TouchableOpacity
+                  key={p}
+                  style={[s.periodBtn, editPeriod === p && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
+                  onPress={() => setEditPeriod(p)}>
+                  <Text style={[s.periodBtnText, editPeriod === p && { color: colors.white }]}>
+                    {p.charAt(0).toUpperCase() + p.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={s.inputLabel}>Category Color</Text>
+            <ColorPicker selected={editColor} onSelect={setEditColor} />
+
+            <View style={s.modalButtons}>
+              <TouchableOpacity onPress={() => setEditingBudget(null)} style={[s.modalBtn, s.cancelBtn]}>
+                <Text style={s.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleDelete} style={[s.modalBtn, s.deleteBtn]} disabled={saving}>
+                <Text style={s.modalBtnText}>Delete</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={saveEdit} style={[s.modalBtn, { backgroundColor: theme.colors.primary }]} disabled={saving}>
+                <Text style={s.modalBtnText}>{saving ? 'Saving…' : 'Save'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
+
+      {/* New Category Modal */}
+      <Modal
+        visible={creatingCategory}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCreatingCategory(false)}>
+        <KeyboardAvoidingView style={s.overlay} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          <View style={s.modalBox}>
+            <Text style={s.modalTitle}>New Category</Text>
+            <Text style={s.modalSubtitle}>Create a new budget category</Text>
+            <View style={s.divider} />
+
+            <Text style={s.inputLabel}>Category Name</Text>
+            <TextInput
+              style={s.input}
+              value={editCategoryName}
+              onChangeText={setEditCategoryName}
+              placeholder="e.g. Groceries, Transport"
+              placeholderTextColor={colors.gray[400]}
+              autoFocus
+            />
+
+            <Text style={s.inputLabel}>Budget Amount</Text>
+            <TextInput
+              style={s.input}
+              value={editAmount}
+              onChangeText={setEditAmount}
+              keyboardType="decimal-pad"
+              placeholder="0.00"
+              placeholderTextColor={colors.gray[400]}
+            />
+
+            <Text style={s.inputLabel}>Period</Text>
+            <View style={s.periodRow}>
+              {['daily', 'weekly', 'monthly'].map(p => (
+                <TouchableOpacity
+                  key={p}
+                  style={[s.periodBtn, editPeriod === p && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
+                  onPress={() => setEditPeriod(p)}>
+                  <Text style={[s.periodBtnText, editPeriod === p && { color: colors.white }]}>
+                    {p.charAt(0).toUpperCase() + p.slice(1)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={s.inputLabel}>Category Color</Text>
+            <ColorPicker selected={editColor} onSelect={setEditColor} />
+
+            <View style={s.modalButtons}>
+              <TouchableOpacity onPress={() => setCreatingCategory(false)} style={[s.modalBtn, s.cancelBtn]}>
+                <Text style={s.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={saveNewCategory} style={[s.modalBtn, { backgroundColor: theme.colors.primary }]} disabled={saving}>
+                <Text style={s.modalBtnText}>{saving ? 'Saving…' : 'Save'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.gray[50],
-  },
-  scrollContent: {
-    padding: spacing.md,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.gray[900],
-    marginBottom: spacing.lg,
-  },
-  summaryCard: {
-    backgroundColor: colors.accent,
-    padding: spacing.lg,
-    borderRadius: 12,
-    marginBottom: spacing.lg,
-    alignItems: 'center',
-  },
-  summaryLabel: {
-    fontSize: 14,
-    color: colors.gray[100],
-    marginBottom: spacing.sm,
-  },
-  summaryAmount: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: colors.white,
-    marginBottom: spacing.md,
-  },
-  summaryStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.lg,
-  },
-  summaryStatItem: {
-    alignItems: 'center',
-  },
-  summaryStatLabel: {
-    fontSize: 12,
-    color: colors.gray[100],
-    marginBottom: 4,
-  },
-  summaryStatValue: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.white,
-  },
-  summaryDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  addButton: {
-    padding: spacing.md,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  addButtonText: {
-    color: colors.white,
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  listTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.gray[900],
-    marginBottom: spacing.md,
-  },
-  budgetItem: {
-    backgroundColor: colors.white,
-    padding: spacing.md,
-    borderRadius: 8,
-    marginBottom: spacing.sm,
-  },
-  budgetHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  budgetInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  categoryDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: spacing.sm,
-  },
-  budgetCategory: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.gray[900],
-  },
-  budgetPercentage: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  progressBarContainer: {
-    height: 8,
-    backgroundColor: colors.gray[200],
-    borderRadius: 4,
-    overflow: 'hidden',
-    marginBottom: spacing.sm,
-  },
-  progressBar: {
-    height: '100%',
-    borderRadius: 4,
-  },
-  budgetDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.xs,
-  },
-  budgetDetailText: {
-    fontSize: 13,
-    color: colors.gray[600],
-  },
-  budgetPeriod: {
-    fontSize: 12,
-    color: colors.gray[500],
-    textTransform: 'capitalize',
-  },
-  exceededText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.error,
-    marginBottom: spacing.xs,
-  },
-  budgetActions: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.gray[100],
-    paddingTop: spacing.sm,
-  },
-  actionButton: {
-    paddingVertical: 4,
-  },
-  editText: {
-    fontSize: 13,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  deleteText: {
-    fontSize: 13,
-    color: colors.error,
-    fontWeight: '600',
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-    backgroundColor: colors.white,
-    borderRadius: 8,
-    marginTop: spacing.sm,
-  },
-  emptyIcon: {
-    fontSize: 48,
-    marginBottom: spacing.md,
-  },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.gray[900],
-    marginBottom: spacing.sm,
-  },
-  emptySubtext: {
-    fontSize: 13,
-    color: colors.gray[500],
-    textAlign: 'center',
-    paddingHorizontal: spacing.lg,
-  },
-  unbudgetedContainer: {
-    backgroundColor: colors.white,
-    padding: spacing.md,
-    borderRadius: 8,
-    marginBottom: spacing.lg,
-  },
-  unbudgetedTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.gray[900],
-    marginBottom: spacing.sm,
-  },
-  unbudgetedItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    borderTopWidth: 1,
-    borderTopColor: colors.gray[100],
-    paddingVertical: spacing.sm,
-    gap: spacing.md,
-  },
-  unbudgetedCategory: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.gray[800],
-    marginBottom: 4,
-  },
-  unbudgetedMessage: {
-    fontSize: 12,
-    color: colors.gray[500],
-  },
-  unbudgetedRight: {
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-  },
-  unbudgetedSpent: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.gray[700],
-    marginBottom: 6,
-  },
-  setBudgetButton: {
-    backgroundColor: colors.primary,
-    paddingVertical: 6,
-    paddingHorizontal: spacing.md,
-    borderRadius: 6,
-  },
-  setBudgetButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.white,
-  },
-});
+function makeStyles(theme) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: theme.colors.background },
+
+    // Month bar
+    monthBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      backgroundColor: theme.colors.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.gray[200],
+    },
+    monthArrow: { padding: spacing.sm },
+    monthArrowText: { fontSize: 26, color: theme.colors.primary, fontWeight: '600' },
+    monthArrowDisabled: { color: colors.gray[300] },
+    monthLabel: { fontSize: 17, fontWeight: '600', color: theme.colors.text },
+
+    content: { padding: spacing.md, paddingBottom: spacing.xl },
+
+    // Summary
+    summaryRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
+    summaryCard: {
+      flex: 1,
+      backgroundColor: theme.colors.surface,
+      borderRadius: 10,
+      padding: spacing.sm,
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOpacity: 0.06,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 2 },
+      elevation: 2,
+    },
+    summaryLabel: { fontSize: 11, color: theme.colors.textSecondary, marginBottom: 4, textAlign: 'center' },
+    summaryAmount: { fontSize: 15, fontWeight: '700', color: theme.colors.text, textAlign: 'center' },
+
+    // Budget cards
+    budgetCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 10,
+      padding: spacing.md,
+      marginBottom: spacing.sm,
+      shadowColor: '#000',
+      shadowOpacity: 0.06,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 2 },
+      elevation: 2,
+    },
+    overBudgetCard: { borderLeftWidth: 3, borderLeftColor: colors.error },
+    budgetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
+    budgetLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+    catDot: { width: 10, height: 10, borderRadius: 5, marginRight: spacing.sm },
+    budgetCatName: { fontSize: 15, fontWeight: '600', color: theme.colors.text },
+    budgetRight: { flexDirection: 'row', alignItems: 'center' },
+    budgetSpent: { fontSize: 14, fontWeight: '600', color: theme.colors.text },
+    budgetOf: { fontSize: 13, color: theme.colors.textSecondary },
+    noBudget: { fontSize: 13, color: theme.colors.textSecondary, fontStyle: 'italic' },
+    progressRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+    progressBarContainer: { flex: 1, height: 8, backgroundColor: colors.gray[200], borderRadius: 4, overflow: 'hidden' },
+    progressBar: { height: '100%', borderRadius: 4 },
+    percentText: { fontSize: 12, color: theme.colors.textSecondary, width: 34, textAlign: 'right' },
+    overBudgetText: { fontSize: 12, fontWeight: '600', color: colors.error, marginTop: spacing.xs },
+
+    // Empty state
+    emptyState: {
+      alignItems: 'center',
+      paddingVertical: spacing.xl,
+      backgroundColor: theme.colors.surface,
+      borderRadius: 10,
+    },
+    emptyIcon: { fontSize: 48, marginBottom: spacing.md },
+    emptyText: { fontSize: 16, fontWeight: '600', color: theme.colors.text, marginBottom: spacing.xs },
+    emptySubtext: { fontSize: 13, color: theme.colors.textSecondary },
+
+    // Unbudgeted
+    unbudgetedContainer: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 10,
+      padding: spacing.md,
+      marginTop: spacing.sm,
+      shadowColor: '#000',
+      shadowOpacity: 0.06,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 2 },
+      elevation: 2,
+    },
+    unbudgetedTitle: { fontSize: 14, fontWeight: '600', color: theme.colors.text, marginBottom: spacing.sm },
+    unbudgetedItem: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      borderTopWidth: 1,
+      borderTopColor: colors.gray[100],
+      paddingVertical: spacing.sm,
+      gap: spacing.md,
+    },
+    unbudgetedCategory: { fontSize: 13, fontWeight: '600', color: theme.colors.text, marginBottom: 2 },
+    unbudgetedMessage: { fontSize: 12, color: theme.colors.textSecondary },
+    unbudgetedRight: { alignItems: 'flex-end', gap: spacing.xs },
+    unbudgetedSpent: { fontSize: 13, fontWeight: '600', color: theme.colors.text },
+    setBudgetButton: { paddingVertical: 5, paddingHorizontal: spacing.sm, borderRadius: 6 },
+    setBudgetButtonText: { fontSize: 12, fontWeight: '600', color: colors.white },
+
+    // Modal
+    overlay: {
+      flex: 1,
+      backgroundColor: colors.overlay,
+      justifyContent: 'center',
+      padding: spacing.lg,
+    },
+    modalBox: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
+      padding: spacing.lg,
+    },
+    modalHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.xs },
+    modalTitle: { fontSize: 18, fontWeight: '700', color: theme.colors.text },
+    modalSubtitle: { fontSize: 13, color: theme.colors.textSecondary, marginBottom: spacing.xs },
+    divider: { height: 1, backgroundColor: colors.gray[200], marginVertical: spacing.sm },
+    inputLabel: { fontSize: 13, fontWeight: '600', color: theme.colors.text, marginBottom: spacing.xs },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.gray[200],
+      borderRadius: 8,
+      padding: spacing.sm,
+      marginBottom: spacing.md,
+      fontSize: 14,
+      color: theme.colors.text,
+      backgroundColor: colors.gray[50],
+    },
+    periodRow: { flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.md },
+    periodBtn: {
+      flex: 1,
+      paddingVertical: spacing.sm,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: colors.gray[300],
+      alignItems: 'center',
+      backgroundColor: theme.colors.surface,
+    },
+    periodBtnText: { fontSize: 13, fontWeight: '600', color: theme.colors.text },
+    modalButtons: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.xs },
+    modalBtn: { flex: 1, padding: spacing.sm, borderRadius: 8, alignItems: 'center' },
+    cancelBtn: { backgroundColor: colors.gray[200] },
+    cancelBtnText: { fontSize: 14, fontWeight: '600', color: colors.gray[700] },
+    deleteBtn: { backgroundColor: colors.error },
+    modalBtnText: { fontSize: 14, fontWeight: '600', color: colors.white },
+  });
+}

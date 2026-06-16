@@ -1,57 +1,103 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useCallback, useRef } from 'react';
 import {
   View,
   Text,
-  ScrollView,
+  FlatList,
   SafeAreaView,
   TouchableOpacity,
-  TextInput,
   Alert,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import { colors, spacing } from '@/src/constants';
 import { ExpenseContext } from '@/src/context/ExpenseContext';
+import { useHeaderAction } from '@/src/context/HeaderContext';
 import { useTheme } from '@/src/context/ThemeContext';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useFocusEffect } from 'expo-router';
 import { useCSVParser } from '@/src/hooks/useCSVParser';
 import { CSVUpload } from '@/src/components/CSVUpload';
 import { ManualExpenseForm } from '@/src/components/ManualExpenseForm';
-import { ExpensesList } from '@/src/components/ExpensesList';
+
+const CATEGORY_COLORS = {
+  Groceries: '#10b981',
+  Transport: '#3b82f6',
+  Entertainment: '#8b5cf6',
+  Dining: '#f97316',
+  Utilities: '#6b7280',
+  Healthcare: '#ef4444',
+  Shopping: '#ec4899',
+  Other: '#9ca3af',
+};
+
+function getCurrentMonthKey() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function shiftMonth(monthKey, delta) {
+  const [year, month] = monthKey.split('-').map(Number);
+  const d = new Date(year, month - 1 + delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function formatMonthLabel(monthKey) {
+  const [year, month] = monthKey.split('-').map(Number);
+  return new Date(year, month - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
+function formatAmount(amount) {
+  return `$${amount.toFixed(2)}`;
+}
+
+function formatDateShort(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+}
 
 export default function ExpenseTrackerScreen() {
   const { theme } = useTheme();
-  const [mode, setMode] = useState('view'); // 'view', 'manual', 'csv', 'edit'
-  const [processingCSV, setProcessingCSV] = useState(false);
-  const [filter, setFilter] = useState('');
+  const { setRightAction } = useHeaderAction();
+  const [mode, setMode] = useState('view'); // 'view' | 'add' | 'edit' | 'csv'
   const [editExpense, setEditExpense] = useState(null);
+  const [processingCSV, setProcessingCSV] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthKey());
 
-  const { expenses, addExpense, addMultipleExpenses, deleteExpense, updateExpense, getTotal, getTotalByCategory } = useContext(ExpenseContext);
-  const { parseCSV, error: parseError } = useCSVParser();
+  const {
+    addExpense,
+    addMultipleExpenses,
+    deleteExpense,
+    updateExpense,
+    getExpensesByMonth,
+    isLoading,
+  } = useContext(ExpenseContext);
+  const { parseCSV } = useCSVParser();
 
-  const total = getTotal();
-  const categoryTotals = getTotalByCategory();
+  const setModeRef = useRef(null);
+  setModeRef.current = () => setMode('csv');
 
-  // Filtering logic
-  const filteredExpenses = filter
-    ? expenses.filter(e =>
-        e.description.toLowerCase().includes(filter.toLowerCase()) ||
-        e.category.toLowerCase().includes(filter.toLowerCase()) ||
-        (e.date && e.date.includes(filter))
-      )
-    : expenses;
+  useFocusEffect(
+    useCallback(() => {
+      setRightAction({
+        onPress: () => setModeRef.current?.(),
+        element: <MaterialCommunityIcons name="file-delimited-outline" size={24} color={theme.colors.textSecondary} />,
+      });
+      return () => setRightAction(null);
+    }, [theme.colors.textSecondary])
+  );
 
-  const handleAddManualExpense = async (expense) => {
+  const monthExpenses = [...(getExpensesByMonth(selectedMonth) || [])]
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+  const monthTotal = monthExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const isCurrentMonth = selectedMonth === getCurrentMonthKey();
+
+  const handleAddExpense = async (expense) => {
     try {
       await addExpense(expense);
       setMode('view');
-      Alert.alert('Success', 'Expense added successfully!');
     } catch (err) {
       Alert.alert('Error', 'Failed to add expense: ' + err.message);
     }
-  };
-
-  const handleEditExpense = (expense) => {
-    setEditExpense(expense);
-    setMode('edit');
   };
 
   const handleUpdateExpense = async (updated) => {
@@ -59,7 +105,6 @@ export default function ExpenseTrackerScreen() {
       await updateExpense(updated.id, updated);
       setEditExpense(null);
       setMode('view');
-      Alert.alert('Success', 'Expense updated!');
     } catch (err) {
       Alert.alert('Error', 'Failed to update expense: ' + err.message);
     }
@@ -69,10 +114,6 @@ export default function ExpenseTrackerScreen() {
     setProcessingCSV(true);
     try {
       const parsedExpenses = parseCSV(csvText);
-      if (parseError) {
-        Alert.alert('Error', parseError);
-        return;
-      }
       if (!parsedExpenses || parsedExpenses.length === 0) {
         Alert.alert('Error', 'No valid expenses found in CSV');
         return;
@@ -87,220 +128,215 @@ export default function ExpenseTrackerScreen() {
     }
   };
 
+  function confirmDelete(expense) {
+    Alert.alert('Delete Expense', `Delete "${expense.description}"?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () => deleteExpense(expense.id),
+      },
+    ]);
+  }
+
+  const renderExpense = ({ item }) => {
+    const catColor = CATEGORY_COLORS[item.category] || CATEGORY_COLORS.Other;
+    return (
+      <TouchableOpacity
+        style={[styles.expenseRow, { backgroundColor: theme.colors.surface }]}
+        onPress={() => { setEditExpense(item); setMode('edit'); }}
+        onLongPress={() => confirmDelete(item)}
+        activeOpacity={0.7}
+      >
+        <View style={[styles.catDot, { backgroundColor: catColor }]} />
+        <View style={styles.expenseInfo}>
+          <Text style={[styles.expenseTitle, { color: theme.colors.text }]} numberOfLines={1}>
+            {item.description}
+          </Text>
+          <Text style={[styles.expenseMeta, { color: theme.colors.textSecondary }]}>
+            {item.category} · {formatDateShort(item.date)}
+          </Text>
+          {item.notes ? (
+            <Text style={[styles.expenseNotes, { color: theme.colors.textSecondary }]} numberOfLines={1}>
+              {item.notes}
+            </Text>
+          ) : null}
+        </View>
+        <Text style={[styles.expenseAmount, { color: theme.colors.primary }]}>
+          {formatAmount(item.amount)}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
+  if (mode === 'add' || mode === 'edit') {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <ManualExpenseForm
+          onExpenseAdded={mode === 'edit' ? handleUpdateExpense : handleAddExpense}
+          onCancel={() => { setEditExpense(null); setMode('view'); }}
+          loading={false}
+          initialValues={editExpense}
+          isEdit={mode === 'edit'}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  if (mode === 'csv') {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <CSVUpload
+          onExpensesLoaded={handleCSVImport}
+          onCancel={() => setMode('view')}
+          loading={processingCSV}
+        />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
-        {mode === 'view' && (
-          <View>
-            {/* Summary Cards */}
-            <View style={styles.summaryCard}>
-              <Text style={styles.summaryLabel}>Total Spent</Text>
-              <Text style={styles.summaryAmount}>${total.toFixed(2)}</Text>
-            </View>
+      {/* Month Navigation */}
+      <View style={[styles.monthBar, { backgroundColor: theme.colors.surface }]}>
+        <TouchableOpacity
+          onPress={() => setSelectedMonth(shiftMonth(selectedMonth, -1))}
+          style={styles.monthArrow}
+        >
+          <Text style={[styles.monthArrowText, { color: theme.colors.primary }]}>‹</Text>
+        </TouchableOpacity>
+        <Text style={[styles.monthLabel, { color: theme.colors.text }]}>
+          {formatMonthLabel(selectedMonth)}
+        </Text>
+        <TouchableOpacity
+          onPress={() => !isCurrentMonth && setSelectedMonth(shiftMonth(selectedMonth, 1))}
+          style={[styles.monthArrow, isCurrentMonth && styles.monthArrowDisabled]}
+          disabled={isCurrentMonth}
+        >
+          <Text style={[styles.monthArrowText, { color: isCurrentMonth ? theme.colors.textSecondary : theme.colors.primary }]}>
+            ›
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-            {/* Mode Selection */}
-            <View style={styles.modeSelector}>
-              <TouchableOpacity
-                onPress={() => setMode('manual')}
-                style={[styles.modeButton, { backgroundColor: theme.colors.primary }]}
-              >
-                <Text style={styles.modeButtonText}>➕ Add Manual</Text>
-              </TouchableOpacity>
+      {/* Monthly Total Card */}
+      <View style={[styles.totalCard, { backgroundColor: theme.colors.primary }]}>
+        <Text style={styles.totalLabel}>Total this month</Text>
+        <Text style={styles.totalAmount}>{formatAmount(monthTotal)}</Text>
+      </View>
 
-              <TouchableOpacity
-                onPress={() => setMode('csv')}
-                style={[styles.modeButton, { backgroundColor: colors.accent }]}
-              >
-                <Text style={styles.modeButtonText}>� Upload CSV</Text>
-              </TouchableOpacity>
-            </View>
+      {/* Content */}
+      {isLoading ? (
+        <View style={styles.centeredState}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      ) : monthExpenses.length === 0 ? (
+        <View style={styles.centeredState}>
+          <Text style={styles.emptyIcon}>💸</Text>
+          <Text style={[styles.emptyText, { color: theme.colors.text }]}>No expenses</Text>
+          <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>
+            No expenses recorded for {formatMonthLabel(selectedMonth)}.
+          </Text>
+          <TouchableOpacity
+            style={[styles.emptyAddButton, { backgroundColor: theme.colors.primary }]}
+            onPress={() => { setEditExpense(null); setMode('add'); }}
+          >
+            <Text style={styles.emptyAddButtonText}>Add Expense</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <FlatList
+          data={monthExpenses}
+          keyExtractor={e => e.id.toString()}
+          renderItem={renderExpense}
+          contentContainerStyle={styles.list}
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
 
-            {/* Category Summary */}
-            {Object.keys(categoryTotals).length > 0 && (
-              <View style={[styles.categorySummary, { backgroundColor: theme.colors.surface }]}>
-                <Text style={[styles.categoryTitle, { color: theme.colors.text }]}>📊 By Category</Text>
-                {Object.entries(categoryTotals).map(([category, total]) => (
-                  <View key={category} style={[styles.categoryItem, { borderBottomColor: theme.colors.border }]}>
-                    <Text style={[styles.categoryName, { color: theme.colors.text }]}>{category}</Text>
-                    <Text style={styles.categoryAmount}>${total.toFixed(2)}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
-
-            {/* Filter/Search Bar */}
-            <View style={{ marginBottom: spacing.md }}>
-              <TextInput
-                placeholder="Search by description, category, or date..."
-                value={filter}
-                onChangeText={setFilter}
-                style={{
-                  backgroundColor: theme.colors.gray[100],
-                  borderRadius: 8,
-                  padding: spacing.md,
-                  fontSize: 14,
-                  color: theme.colors.text,
-                }}
-                placeholderTextColor={theme.colors.textSecondary}
-              />
-            </View>
-
-            {/* Expenses List */}
-            {filteredExpenses.length > 0 && (
-              <View>
-                <Text style={[styles.expensesTitle, { color: theme.colors.text }]}>📝 Recent Expenses ({filteredExpenses.length})</Text>
-                <ExpensesList
-                  expenses={filteredExpenses}
-                  onDeleteExpense={deleteExpense}
-                  onEditExpense={handleEditExpense}
-                />
-              </View>
-            )}
-
-            {/* Empty State */}
-            {filteredExpenses.length === 0 && (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyIcon}>💸</Text>
-                <Text style={[styles.emptyText, { color: theme.colors.text }]}>No expenses found</Text>
-                <Text style={[styles.emptySubtext, { color: theme.colors.textSecondary }]}>Try a different search or add a new expense</Text>
-              </View>
-            )}
-          </View>
-        )}
-
-
-        {/* Manual Entry Mode */}
-        {mode === 'manual' && (
-          <ManualExpenseForm
-            onExpenseAdded={handleAddManualExpense}
-            onCancel={() => setMode('view')}
-            loading={false}
-          />
-        )}
-
-        {/* Edit Expense Mode */}
-        {mode === 'edit' && editExpense && (
-          <ManualExpenseForm
-            onExpenseAdded={handleUpdateExpense}
-            onCancel={() => { setEditExpense(null); setMode('view'); }}
-            loading={false}
-            initialValues={editExpense}
-            isEdit
-          />
-        )}
-
-        {/* CSV Upload Mode */}
-        {mode === 'csv' && (
-          <CSVUpload
-            onExpensesLoaded={handleCSVImport}
-            onCancel={() => setMode('view')}
-            loading={processingCSV}
-          />
-        )}
-      </ScrollView>
+      {/* FAB */}
+      <TouchableOpacity
+        style={[styles.fab, { backgroundColor: theme.colors.primary }]}
+        onPress={() => { setEditExpense(null); setMode('add'); }}
+        activeOpacity={0.85}
+      >
+        <Text style={styles.fabIcon}>+</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.gray[50],
-  },
-  scrollContent: {
-    padding: spacing.md,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.gray[900],
-    marginBottom: spacing.lg,
-  },
-  summaryCard: {
-    backgroundColor: colors.primary,
-    padding: spacing.lg,
-    borderRadius: 12,
-    marginBottom: spacing.lg,
-    alignItems: 'center',
-  },
-  summaryLabel: {
-    fontSize: 14,
-    color: colors.gray[100],
-    marginBottom: spacing.sm,
-  },
-  summaryAmount: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: colors.white,
-  },
-  modeSelector: {
+  container: { flex: 1 },
+  monthBar: {
     flexDirection: 'row',
-    gap: spacing.md,
-    marginBottom: spacing.lg,
-  },
-  modeButton: {
-    flex: 1,
-    padding: spacing.md,
-    borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
-  modeButtonText: {
-    color: colors.white,
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  categorySummary: {
-    backgroundColor: colors.white,
-    padding: spacing.md,
-    borderRadius: 8,
-    marginBottom: spacing.lg,
-  },
-  categoryTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.gray[900],
-    marginBottom: spacing.md,
-  },
-  categoryItem: {
+  monthArrow: { padding: spacing.sm },
+  monthArrowDisabled: { opacity: 0.3 },
+  monthArrowText: { fontSize: 28, fontWeight: '600' },
+  monthLabel: { fontSize: 17, fontWeight: '600' },
+  totalCard: {
+    marginHorizontal: spacing.md,
+    marginTop: spacing.sm,
+    marginBottom: spacing.sm,
+    borderRadius: 12,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.gray[200],
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  categoryName: {
-    fontSize: 13,
-    color: colors.gray[700],
-  },
-  categoryAmount: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.primary,
-  },
-  expensesTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.gray[900],
-    marginBottom: spacing.md,
-  },
-  emptyState: {
+  totalLabel: { fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: '500' },
+  totalAmount: { fontSize: 24, fontWeight: '700', color: '#fff' },
+  list: { paddingHorizontal: spacing.md, paddingBottom: 90 },
+  separator: { height: spacing.sm },
+  expenseRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.xl,
+    borderRadius: 10,
+    padding: spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  emptyIcon: {
-    fontSize: 48,
-    marginBottom: spacing.md,
+  catDot: { width: 10, height: 10, borderRadius: 5, marginRight: spacing.sm, flexShrink: 0 },
+  expenseInfo: { flex: 1 },
+  expenseTitle: { fontSize: 15, fontWeight: '600' },
+  expenseMeta: { fontSize: 12, marginTop: 2 },
+  expenseNotes: { fontSize: 11, marginTop: 2, fontStyle: 'italic' },
+  expenseAmount: { fontSize: 15, fontWeight: '700', marginLeft: spacing.sm },
+  centeredState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
+  emptyIcon: { fontSize: 48, marginBottom: spacing.md },
+  emptyText: { fontSize: 16, fontWeight: '600', marginBottom: spacing.sm },
+  emptySubtext: { fontSize: 13, textAlign: 'center', marginBottom: spacing.lg },
+  emptyAddButton: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderRadius: 8 },
+  emptyAddButtonText: { color: '#fff', fontWeight: '600', fontSize: 14 },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 6,
   },
-  emptyText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.gray[900],
-    marginBottom: spacing.sm,
-  },
-  emptySubtext: {
-    fontSize: 13,
-    color: colors.gray[500],
-  },
+  fabIcon: { color: '#fff', fontSize: 32, fontWeight: '300', lineHeight: 36 },
 });
