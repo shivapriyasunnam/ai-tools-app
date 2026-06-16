@@ -126,7 +126,7 @@ function RecentActivityScreen() {
       title: note.text,
       subtitle: 'Quick Note added',
       amount: null,
-      date: note.id ? new Date(Number(note.id)) : new Date(),
+      date: note.created_at ? new Date(note.created_at) : new Date(),
       icon: 'document-text',
       iconColor: '#6366F1',
       iconBg: '#E0E7FF',

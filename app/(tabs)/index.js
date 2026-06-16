@@ -167,7 +167,7 @@ function HomeScreen() {
       title: note.text,
       subtitle: 'Quick Note added',
       amount: null,
-      date: note.id ? new Date(Number(note.id)) : new Date(),
+      date: note.created_at ? new Date(note.created_at) : new Date(),
       icon: 'document-text',
       iconColor: '#6366F1',
       iconBg: '#E0E7FF',
@@ -191,6 +191,7 @@ function HomeScreen() {
   };
   
   const [financialMenuVisible, setFinancialMenuVisible] = useState(false);
+  const [widgetsTooltipVisible, setWidgetsTooltipVisible] = useState(false);
 
   const handleAddExpense = () => {
     router.push('/(tabs)/expense-tracker');
@@ -207,6 +208,15 @@ function HomeScreen() {
   const handlePomodoro = () => {
     router.push('/(tabs)/pomodoro-timer');
   };
+
+  const getGreetingFontSize = () => {
+    const greetingLength = `${getGreeting()}${userName ? `, ${userName}` : ''}!`.length;
+    if (greetingLength > 28) return 22;
+    if (greetingLength > 22) return 26;
+    if (greetingLength > 16) return 28;
+    return 32;
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['top', 'left', 'right']}>
       <ScrollView
@@ -216,8 +226,8 @@ function HomeScreen() {
 
         {/* Header */}
         <View style={styles.header}>
-          <View>
-            <Text style={[styles.title, { color: theme.colors.text }]}>
+          <View style={styles.greetingContainer}>
+            <Text style={[styles.title, { color: theme.colors.text, fontSize: getGreetingFontSize() }]} numberOfLines={1} adjustsFontSizeToFit>
               {getGreeting()}{userName ? `, ${userName}` : ''}!
             </Text>
           </View>
@@ -233,7 +243,31 @@ function HomeScreen() {
         {/* Stats Overview */}
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Today's Overview</Text>
+          <TouchableOpacity
+            style={styles.sparkleButton}
+            onPress={() => setWidgetsTooltipVisible(true)}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="sparkles" size={20} color={theme.colors.primary} />
+          </TouchableOpacity>
         </View>
+
+        <Modal
+          transparent
+          visible={widgetsTooltipVisible}
+          animationType="fade"
+          onRequestClose={() => setWidgetsTooltipVisible(false)}
+        >
+          <Pressable style={styles.tooltipOverlay} onPress={() => setWidgetsTooltipVisible(false)}>
+            <View style={[styles.tooltipBubble, { backgroundColor: theme.colors.surface }]}>
+              <Ionicons name="sparkles" size={18} color={theme.colors.primary} style={{ marginBottom: 6 }} />
+              <Text style={[styles.tooltipText, { color: theme.colors.text }]}>
+                Did you know you can add widgets of d.ai.ly functions to your home screen?
+              </Text>
+            </View>
+          </Pressable>
+        </Modal>
+
         <View style={styles.statsContainer}>
           <TouchableOpacity style={[styles.statCardLarge, { backgroundColor: theme.colors.surface }]} onPress={() => router.push('/(tabs)/meetings-scheduler')} activeOpacity={0.7}>
             <View style={styles.statCardHeader}>
@@ -371,7 +405,9 @@ function HomeScreen() {
                   />
                 </View>
                 <Text style={styles.budgetProgressText}>
-                  {budgetUtilization.toFixed(0)}% of budget used
+                  {budgetUtilization >= 100
+                    ? `${(budgetUtilization - 100).toFixed(0)}% over budget`
+                    : `${budgetUtilization.toFixed(0)}% of budget used`}
                 </Text>
               </View>
 
@@ -607,6 +643,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
+  greetingContainer: {
+    flex: 1,
+    minWidth: 0,
+    marginRight: 12,
+  },
   greeting: {
     fontSize: 16,
     color: '#6B7280',
@@ -728,6 +769,34 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#111827',
     letterSpacing: -0.3,
+  },
+  sparkleButton: {
+    padding: 4,
+  },
+  tooltipOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  tooltipBubble: {
+    borderRadius: 16,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    maxWidth: 300,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  tooltipText: {
+    fontSize: 15,
+    fontWeight: '500',
+    textAlign: 'center',
+    lineHeight: 21,
   },
   sectionLink: {
     fontSize: 14,

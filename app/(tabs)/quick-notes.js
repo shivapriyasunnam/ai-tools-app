@@ -40,7 +40,7 @@ export default function QuickNotesScreen() {
 
   const handleAddNote = () => {
     if (!input.trim()) return;
-    addNote(input);
+    addNote(input.trim());
     setInput('');
   };
 
@@ -134,6 +134,11 @@ export default function QuickNotesScreen() {
       ) : (
         <>
           <Text style={[styles.noteText, { color: theme.colors.text }]}>{item.text}</Text>
+          {item.created_at && (
+            <Text style={[styles.noteDate, { color: theme.colors.textSecondary }]}>
+              {new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            </Text>
+          )}
           <View style={styles.noteActions}>
             <TouchableOpacity onPress={() => startEdit(item.id, item.text)}>
               <Text style={styles.editBtn}>Edit</Text>
@@ -370,6 +375,7 @@ const styles = StyleSheet.create({
   noteItem: { backgroundColor: '#f4f4f4', borderRadius: 8, padding: 12, marginBottom: 12 },
   noteItemEditing: { backgroundColor: '#fff', borderWidth: 1, borderColor: PRIMARY },
   noteText: { fontSize: 16, color: '#222' },
+  noteDate: { fontSize: 12, marginTop: 4 },
   noteActions: { flexDirection: 'row', marginTop: 8 },
   editBtn: { color: PRIMARY, fontWeight: 'bold', marginRight: 16, fontSize: 15 },
   deleteBtn: { color: '#E53935', fontWeight: 'bold', fontSize: 15 },

@@ -1,22 +1,45 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiClient } from '@/src/services/apiClient';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 export const PomodoroContext = createContext();
 
+const DEFAULT_DURATIONS_KEY = '@pomodoro_default_durations';
+const DEFAULT_DURATIONS = { work: 1500, shortBreak: 300, longBreak: 900 };
+
 export function PomodoroProvider({ children }) {
   const [sessions, setSessions] = useState([]);
+  const [defaultDurations, setDefaultDurations] = useState(DEFAULT_DURATIONS);
   const [timer, setTimer] = useState({
     isRunning: false,
     secondsLeft: 1500,
+    totalSeconds: 1500,
     type: 'work',
     startedAt: null,
     pausedAt: null,
+    sessionStart: null,
   });
 
   useEffect(() => {
     apiClient.get('/api/pomodoro')
       .then(setSessions)
       .catch(() => setSessions([]));
+  }, []);
+
+  useEffect(() => {
+    AsyncStorage.getItem(DEFAULT_DURATIONS_KEY)
+      .then(saved => {
+        if (saved) setDefaultDurations(prev => ({ ...prev, ...JSON.parse(saved) }));
+      })
+      .catch(() => {});
+  }, []);
+
+  const updateDefaultDurations = useCallback(async (durations) => {
+    setDefaultDurations(prev => {
+      const next = { ...prev, ...durations };
+      AsyncStorage.setItem(DEFAULT_DURATIONS_KEY, JSON.stringify(next)).catch(() => {});
+      return next;
+    });
   }, []);
 
   const addSession = useCallback(async (session) => {
@@ -27,6 +50,11 @@ export function PomodoroProvider({ children }) {
       completed: session.completed,
     });
     setSessions(prev => [...prev, created]);
+  }, []);
+
+  const updateSession = useCallback(async (id, updates) => {
+    const updated = await apiClient.put(`/api/pomodoro/${id}`, updates);
+    setSessions(prev => prev.map(s => (s.id === id ? updated : s)));
   }, []);
 
   const removeSession = useCallback(async (id) => {
@@ -40,7 +68,7 @@ export function PomodoroProvider({ children }) {
   }, [sessions]);
 
   const startTimer = useCallback((type = 'work', seconds = 1500) => {
-    setTimer({ isRunning: true, secondsLeft: seconds, type, startedAt: Date.now(), pausedAt: null });
+    setTimer({ isRunning: true, secondsLeft: seconds, totalSeconds: seconds, type, startedAt: Date.now(), pausedAt: null, sessionStart: Date.now() });
   }, []);
 
   const pauseTimer = useCallback(() => {
@@ -52,8 +80,22 @@ export function PomodoroProvider({ children }) {
   }, []);
 
   const resetTimer = useCallback(() => {
-    setTimer({ isRunning: false, secondsLeft: 1500, type: 'work', startedAt: null, pausedAt: null });
-  }, []);
+    setTimer(t => {
+      const seconds = defaultDurations[t.type] ?? defaultDurations.work;
+      return { isRunning: false, secondsLeft: seconds, totalSeconds: seconds, type: t.type, startedAt: null, pausedAt: null, sessionStart: null };
+    });
+  }, [defaultDurations]);
+
+  const logPartialSession = useCallback(() => {
+    setTimer(t => {
+      const elapsed = t.totalSeconds - t.secondsLeft;
+      if (t.sessionStart && elapsed > 0) {
+        addSession({ start: t.sessionStart, end: Date.now(), type: t.type, completed: false });
+      }
+      const seconds = defaultDurations.work;
+      return { isRunning: false, secondsLeft: seconds, totalSeconds: seconds, type: 'work', startedAt: null, pausedAt: null, sessionStart: null };
+    });
+  }, [addSession, defaultDurations]);
 
   useEffect(() => {
     let interval;
@@ -71,14 +113,14 @@ export function PomodoroProvider({ children }) {
 
   useEffect(() => {
     if (timer.secondsLeft === 0 && timer.isRunning) {
-      addSession({ id: Date.now().toString(), start: timer.startedAt, end: Date.now(), type: timer.type, completed: true });
-      setTimer(t => ({ ...t, isRunning: false }));
+      addSession({ id: Date.now().toString(), start: timer.sessionStart, end: Date.now(), type: timer.type, completed: true });
+      setTimer(t => ({ ...t, isRunning: false, secondsLeft: t.totalSeconds, startedAt: null, sessionStart: null }));
     }
-  }, [timer.secondsLeft, timer.isRunning, timer.type, timer.startedAt, addSession]);
+  }, [timer.secondsLeft, timer.isRunning, timer.type, timer.sessionStart, addSession]);
 
   return (
     <PomodoroContext.Provider
-      value={{ sessions, addSession, removeSession, resetSessions, timer, isRunning: timer.isRunning, setTimer, startTimer, pauseTimer, resumeTimer, resetTimer }}
+      value={{ sessions, addSession, updateSession, removeSession, resetSessions, timer, isRunning: timer.isRunning, setTimer, startTimer, pauseTimer, resumeTimer, resetTimer, logPartialSession, defaultDurations, updateDefaultDurations }}
     >
       {children}
     </PomodoroContext.Provider>

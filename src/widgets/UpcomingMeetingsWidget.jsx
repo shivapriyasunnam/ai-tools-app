@@ -38,7 +38,7 @@ export function UpcomingMeetingsWidget({ meetings = [] }) {
       clickActionData={{ uri: 'daily://meetings-scheduler' }}
     >
       {/* Header */}
-      <FlexWidget style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14 }}>
+      <FlexWidget style={{ flexDirection: 'row', alignItems: 'center', width: 'match_parent', marginBottom: 14 }}>
         <TextWidget
           text="📅"
           style={{ fontSize: 16, marginRight: 7 }}

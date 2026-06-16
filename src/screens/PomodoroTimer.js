@@ -1,17 +1,75 @@
-import { useContext, useState } from 'react';
-import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { Alert, Animated, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import colors from '../constants/colors';
 import spacing from '../constants/spacing';
 import { PomodoroContext } from '../context/PomodoroContext';
+import { useHeaderAction } from '../context/HeaderContext';
 import { useTheme } from '../context/ThemeContext';
 
 export default function PomodoroTimerScreen() {
   const { theme } = useTheme();
-  const { timer, isRunning, startTimer, resetTimer, sessions, resetSessions } = useContext(PomodoroContext);
+  const { setRightAction } = useHeaderAction();
+  const { timer, isRunning, startTimer, pauseTimer, resumeTimer, resetTimer, logPartialSession, sessions, updateSession, removeSession, resetSessions, defaultDurations, updateDefaultDurations } = useContext(PomodoroContext);
   const [mode, setMode] = useState(timer.type || 'work');
   const [customMinutes, setCustomMinutes] = useState('25');
   const [customSeconds, setCustomSeconds] = useState('0');
   const [isEditingTime, setIsEditingTime] = useState(false);
+  const [editingSessionId, setEditingSessionId] = useState(null);
+  const [cardHeight, setCardHeight] = useState(0);
+  const [isDefaultsModalVisible, setIsDefaultsModalVisible] = useState(false);
+  const [defaultWorkMinutes, setDefaultWorkMinutes] = useState(String(defaultDurations.work / 60));
+  const [defaultShortBreakMinutes, setDefaultShortBreakMinutes] = useState(String(defaultDurations.shortBreak / 60));
+  const [defaultLongBreakMinutes, setDefaultLongBreakMinutes] = useState(String(defaultDurations.longBreak / 60));
+  const fillAnim = useRef(new Animated.Value(0)).current;
+
+  useFocusEffect(
+    useCallback(() => {
+      setRightAction({
+        onPress: () => {
+          setDefaultWorkMinutes(String(defaultDurations.work / 60));
+          setDefaultShortBreakMinutes(String(defaultDurations.shortBreak / 60));
+          setDefaultLongBreakMinutes(String(defaultDurations.longBreak / 60));
+          setIsDefaultsModalVisible(true);
+        },
+        element: <Ionicons name="time-outline" size={24} color={theme.colors.textSecondary} />,
+      });
+      return () => setRightAction(null);
+    }, [theme.colors.textSecondary, defaultDurations])
+  );
+
+  const handleSaveDefaultDurations = () => {
+    const work = parseInt(defaultWorkMinutes) || 0;
+    const shortBreak = parseInt(defaultShortBreakMinutes) || 0;
+    const longBreak = parseInt(defaultLongBreakMinutes) || 0;
+
+    if (work <= 0 || shortBreak <= 0 || longBreak <= 0) {
+      Alert.alert('Invalid Time', 'Please enter a valid number of minutes greater than 0 for each session type');
+      return;
+    }
+
+    updateDefaultDurations({ work: work * 60, shortBreak: shortBreak * 60, longBreak: longBreak * 60 });
+    setIsDefaultsModalVisible(false);
+  };
+
+  // Animate the fill to track elapsed time as the timer ticks down.
+  // Drives a translateY transform (native driver) instead of a percentage
+  // height, since percentage-height animations inside an overflow:hidden +
+  // borderRadius view don't reliably repaint to 100% on Android.
+  useEffect(() => {
+    const progress = timer.totalSeconds > 0 ? 1 - timer.secondsLeft / timer.totalSeconds : 0;
+    if (isRunning) {
+      Animated.timing(fillAnim, {
+        toValue: 1,
+        duration: timer.secondsLeft * 1000,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      fillAnim.stopAnimation();
+      fillAnim.setValue(progress);
+    }
+  }, [timer.secondsLeft, timer.totalSeconds, isRunning, fillAnim]);
 
   // Format secondsLeft as mm:ss
   const formatTime = (seconds) => {
@@ -22,7 +80,7 @@ export default function PomodoroTimerScreen() {
 
   // Format duration for session history (e.g., "25 min 30 sec")
   const formatDuration = (startTime, endTime) => {
-    const durationMs = endTime - startTime;
+    const durationMs = new Date(endTime).getTime() - new Date(startTime).getTime();
     const totalSeconds = Math.floor(durationMs / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
@@ -34,6 +92,36 @@ export default function PomodoroTimerScreen() {
     } else {
       return `${minutes} min ${seconds} sec`;
     }
+  };
+
+  // Label a date as Today, Yesterday, or a formatted date
+  const getDateLabel = (dateValue) => {
+    const date = new Date(dateValue);
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(today.getDate() - 1);
+
+    const isSameDay = (a, b) =>
+      a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+    if (isSameDay(date, today)) return 'Today';
+    if (isSameDay(date, yesterday)) return 'Yesterday';
+    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  };
+
+  // Group sessions (most recent first) into sections by date label
+  const groupSessionsByDate = (sessionList) => {
+    const groups = [];
+    const groupsByLabel = {};
+    [...sessionList].reverse().forEach((item) => {
+      const label = getDateLabel(item.start);
+      if (!groupsByLabel[label]) {
+        groupsByLabel[label] = { label, items: [] };
+        groups.push(groupsByLabel[label]);
+      }
+      groupsByLabel[label].items.push(item);
+    });
+    return groups;
   };
 
   // Get session type label
@@ -53,25 +141,11 @@ export default function PomodoroTimerScreen() {
   // Switch mode handler
   const switchMode = (newMode) => {
     setMode(newMode);
-    let defaultMinutes, defaultSeconds;
-    if (newMode === 'work') {
-      defaultMinutes = '25';
-      defaultSeconds = '0';
-      resetTimer();
-      startTimer('work', 1500);
-    } else if (newMode === 'shortBreak') {
-      defaultMinutes = '5';
-      defaultSeconds = '0';
-      resetTimer();
-      startTimer('shortBreak', 300);
-    } else if (newMode === 'longBreak') {
-      defaultMinutes = '15';
-      defaultSeconds = '0';
-      resetTimer();
-      startTimer('longBreak', 900);
-    }
-    setCustomMinutes(defaultMinutes);
-    setCustomSeconds(defaultSeconds);
+    const totalSeconds = defaultDurations[newMode];
+    resetTimer();
+    startTimer(newMode, totalSeconds);
+    setCustomMinutes(String(Math.floor(totalSeconds / 60)));
+    setCustomSeconds(String(totalSeconds % 60));
     setIsEditingTime(false);
   };
 
@@ -99,23 +173,57 @@ export default function PomodoroTimerScreen() {
   const handleDeleteSession = (id) => {
     Alert.alert('Delete Session', 'Are you sure you want to delete this session?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => resetSessions(id) },
+      { text: 'Delete', style: 'destructive', onPress: () => removeSession(id) },
     ]);
   };
 
+  const handleEditSessionType = (id, newType) => {
+    updateSession(id, { type: newType });
+    setEditingSessionId(null);
+  };
+
   const handleStart = () => {
-    if (!isRunning) {
-      startTimer();
+    if (isRunning) {
+      pauseTimer();
+    } else if (timer.startedAt) {
+      resumeTimer();
     } else {
-      resetTimer();
+      startTimer(mode, timer.secondsLeft);
     }
+  };
+
+  const handleLog = () => {
+    if (!timer.sessionStart || timer.totalSeconds === timer.secondsLeft) {
+      Alert.alert('Nothing to Log', 'Start the timer before logging a session.');
+      return;
+    }
+    logPartialSession();
   };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Timer Display Card */}
-        <View style={styles.summaryCard}>
+        <View
+          style={styles.summaryCard}
+          onLayout={(e) => setCardHeight(e.nativeEvent.layout.height)}
+        >
+          {cardHeight > 0 && (
+            <Animated.View
+              style={[
+                styles.summaryFill,
+                {
+                  height: cardHeight,
+                  transform: [{
+                    translateY: fillAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [cardHeight, 0],
+                    }),
+                  }],
+                },
+              ]}
+            />
+          )}
           <Text style={styles.summaryLabel}>
             {mode === 'work' ? 'Work Session' : mode === 'shortBreak' ? 'Short Break' : 'Long Break'}
           </Text>
@@ -198,14 +306,22 @@ export default function PomodoroTimerScreen() {
             style={[styles.actionButton, { backgroundColor: theme.colors.primary }]}
             onPress={handleStart}
           >
-            <Text style={styles.actionButtonText}>{isRunning ? '⏸ Pause' : '▶ Start'}</Text>
+            <Text style={styles.actionButtonText}>{isRunning ? '❙❙ Pause' : timer.startedAt ? '▶︎ Resume' : '▶︎ Start'}</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: colors.accent }]}
-            onPress={resetTimer}
-          >
-            <Text style={styles.actionButtonText}>🔄 Reset</Text>
-          </TouchableOpacity>
+          <View style={styles.actionButtonSplit}>
+            <TouchableOpacity
+              style={[styles.actionButtonHalf, { backgroundColor: colors.accent }]}
+              onPress={resetTimer}
+            >
+              <Text style={styles.actionButtonHalfText} numberOfLines={1}>↻ Reset</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.actionButtonHalf, { backgroundColor: colors.accent }]}
+              onPress={handleLog}
+            >
+              <Text style={styles.actionButtonHalfText} numberOfLines={1}>Log</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Session History */}
@@ -219,15 +335,44 @@ export default function PomodoroTimerScreen() {
             </View>
           ) : (
             <View>
-              {sessions.map((item) => (
-                <View key={item.id} style={[styles.sessionItem, { backgroundColor: theme.colors.surface }]}>
-                  <View style={styles.sessionInfo}>
-                    <Text style={[styles.sessionLabel, { color: theme.colors.text }]}>{getSessionLabel(item.type)}</Text>
-                    <Text style={[styles.sessionDuration, { color: theme.colors.textSecondary }]}>{formatDuration(item.start, item.end)}</Text>
-                  </View>
-                  <TouchableOpacity onPress={() => handleDeleteSession(item.id)}>
-                    <Text style={styles.deleteText}>Delete</Text>
-                  </TouchableOpacity>
+              {groupSessionsByDate(sessions).map((group) => (
+                <View key={group.label} style={styles.dateGroup}>
+                  <Text style={[styles.dateGroupLabel, { color: theme.colors.textSecondary }]}>{group.label}</Text>
+                  {group.items.map((item) => (
+                    <View key={item.id} style={[styles.sessionItem, { backgroundColor: theme.colors.surface }]}>
+                      {editingSessionId === item.id ? (
+                        <View style={styles.sessionEditRow}>
+                          {['work', 'shortBreak', 'longBreak'].map((typeOption) => (
+                            <TouchableOpacity
+                              key={typeOption}
+                              style={[styles.sessionTypeOption, item.type === typeOption && { backgroundColor: theme.colors.primary }]}
+                              onPress={() => handleEditSessionType(item.id, typeOption)}
+                            >
+                              <Text style={styles.sessionTypeOptionText}>{getSessionLabel(typeOption)}</Text>
+                            </TouchableOpacity>
+                          ))}
+                          <TouchableOpacity onPress={() => setEditingSessionId(null)}>
+                            <Text style={styles.cancelText}>✕</Text>
+                          </TouchableOpacity>
+                        </View>
+                      ) : (
+                        <>
+                          <View style={styles.sessionInfo}>
+                            <Text style={[styles.sessionLabel, { color: theme.colors.text }]}>{getSessionLabel(item.type)}</Text>
+                            <Text style={[styles.sessionDuration, { color: theme.colors.textSecondary }]}>{formatDuration(item.start, item.end)}</Text>
+                          </View>
+                          <View style={styles.sessionActions}>
+                            <TouchableOpacity style={styles.iconButtonEdit} onPress={() => setEditingSessionId(item.id)}>
+                              <Ionicons name="pencil-outline" size={16} color={colors.gray[600]} />
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.iconButtonDelete} onPress={() => handleDeleteSession(item.id)}>
+                              <Ionicons name="trash-outline" size={16} color={colors.error} />
+                            </TouchableOpacity>
+                          </View>
+                        </>
+                      )}
+                    </View>
+                  ))}
                 </View>
               ))}
               <TouchableOpacity
@@ -249,6 +394,71 @@ export default function PomodoroTimerScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* Default Durations Modal */}
+      <Modal
+        visible={isDefaultsModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsDefaultsModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { backgroundColor: theme.colors.surface }]}>
+            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>Default Session Lengths</Text>
+
+            <View style={styles.defaultDurationRow}>
+              <Text style={[styles.defaultDurationLabel, { color: theme.colors.text }]}>Work</Text>
+              <TextInput
+                style={[styles.defaultDurationInput, { color: theme.colors.text, borderColor: theme.colors.border }]}
+                value={defaultWorkMinutes}
+                onChangeText={setDefaultWorkMinutes}
+                keyboardType="number-pad"
+                maxLength={3}
+              />
+              <Text style={[styles.defaultDurationUnit, { color: theme.colors.textSecondary }]}>min</Text>
+            </View>
+
+            <View style={styles.defaultDurationRow}>
+              <Text style={[styles.defaultDurationLabel, { color: theme.colors.text }]}>Short Break</Text>
+              <TextInput
+                style={[styles.defaultDurationInput, { color: theme.colors.text, borderColor: theme.colors.border }]}
+                value={defaultShortBreakMinutes}
+                onChangeText={setDefaultShortBreakMinutes}
+                keyboardType="number-pad"
+                maxLength={3}
+              />
+              <Text style={[styles.defaultDurationUnit, { color: theme.colors.textSecondary }]}>min</Text>
+            </View>
+
+            <View style={styles.defaultDurationRow}>
+              <Text style={[styles.defaultDurationLabel, { color: theme.colors.text }]}>Long Break</Text>
+              <TextInput
+                style={[styles.defaultDurationInput, { color: theme.colors.text, borderColor: theme.colors.border }]}
+                value={defaultLongBreakMinutes}
+                onChangeText={setDefaultLongBreakMinutes}
+                keyboardType="number-pad"
+                maxLength={3}
+              />
+              <Text style={[styles.defaultDurationUnit, { color: theme.colors.textSecondary }]}>min</Text>
+            </View>
+
+            <View style={styles.modalButtonRow}>
+              <TouchableOpacity
+                style={[styles.modalButton, { backgroundColor: colors.gray[300] }]}
+                onPress={() => setIsDefaultsModalVisible(false)}
+              >
+                <Text style={styles.modalButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, { backgroundColor: theme.colors.primary }]}
+                onPress={handleSaveDefaultDurations}
+              >
+                <Text style={styles.modalButtonText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -274,6 +484,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: spacing.lg,
     alignItems: 'center',
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  summaryFill: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   summaryLabel: {
     fontSize: 14,
@@ -389,10 +608,27 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
   },
+  actionButtonSplit: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  actionButtonHalf: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xs,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
   actionButtonText: {
     color: colors.white,
     fontWeight: '600',
     fontSize: 14,
+  },
+  actionButtonHalfText: {
+    color: colors.white,
+    fontWeight: '600',
+    fontSize: 13,
   },
   historySection: {
     marginTop: spacing.md,
@@ -402,6 +638,17 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.gray[900],
     marginBottom: spacing.md,
+  },
+  dateGroup: {
+    marginBottom: spacing.sm,
+  },
+  dateGroupLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.gray[500],
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: spacing.sm,
   },
   sessionItem: {
     flexDirection: 'row',
@@ -428,7 +675,57 @@ const styles = StyleSheet.create({
   deleteText: {
     color: colors.error,
     fontWeight: '600',
-    fontSize: 13,
+    fontSize: 16,
+  },
+  sessionActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    alignItems: 'center',
+  },
+  editText: {
+    color: colors.gray[600],
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  iconButtonEdit: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.gray[100],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconButtonDelete: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FDE8E8',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sessionEditRow: {
+    flex: 1,
+    flexDirection: 'row',
+    gap: spacing.sm,
+    alignItems: 'center',
+  },
+  sessionTypeOption: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xs,
+    borderRadius: 6,
+    backgroundColor: colors.gray[300],
+    alignItems: 'center',
+  },
+  sessionTypeOptionText: {
+    color: colors.white,
+    fontWeight: '600',
+    fontSize: 11,
+  },
+  cancelText: {
+    color: colors.gray[600],
+    fontWeight: '600',
+    fontSize: 16,
   },
   emptyState: {
     alignItems: 'center',
@@ -461,6 +758,69 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   clearButtonText: {
+    color: colors.white,
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: spacing.lg,
+  },
+  modalCard: {
+    width: '100%',
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: spacing.lg,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: colors.gray[900],
+    marginBottom: spacing.lg,
+    textAlign: 'center',
+  },
+  defaultDurationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  defaultDurationLabel: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.gray[900],
+  },
+  defaultDurationInput: {
+    width: 64,
+    padding: spacing.sm,
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.gray[900],
+    textAlign: 'center',
+    borderWidth: 1,
+    borderColor: colors.gray[300],
+    borderRadius: 8,
+    marginRight: spacing.sm,
+  },
+  defaultDurationUnit: {
+    fontSize: 13,
+    color: colors.gray[600],
+  },
+  modalButtonRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+    marginTop: spacing.md,
+  },
+  modalButton: {
+    flex: 1,
+    padding: spacing.md,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modalButtonText: {
     color: colors.white,
     fontWeight: '600',
     fontSize: 14,

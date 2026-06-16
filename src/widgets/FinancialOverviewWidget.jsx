@@ -40,7 +40,7 @@ export function FinancialOverviewWidget({ expenses = {}, budgets = {} }) {
       clickActionData={{ uri: 'daily://expense-tracker' }}
     >
       {/* Header */}
-      <FlexWidget style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14 }}>
+      <FlexWidget style={{ flexDirection: 'row', alignItems: 'center', width: 'match_parent', marginBottom: 14 }}>
         <TextWidget
           text="💰"
           style={{ fontSize: 16, marginRight: 7 }}
@@ -55,7 +55,7 @@ export function FinancialOverviewWidget({ expenses = {}, budgets = {} }) {
       </FlexWidget>
 
       {/* Stat Cards */}
-      <FlexWidget style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
+      <FlexWidget style={{ flexDirection: 'row', width: 'match_parent', marginBottom: 12 }}>
         <FlexWidget style={{
           flex: 1,
           flexDirection: 'column',
@@ -105,22 +105,23 @@ export function FinancialOverviewWidget({ expenses = {}, budgets = {} }) {
       </FlexWidget>
 
       {/* Budget Progress */}
-      {totalBudget > 0 && (
-        <FlexWidget style={{ flexDirection: 'column', backgroundColor: '#1E293B', borderRadius: 12, paddingLeft: 12, paddingRight: 12, paddingTop: 10, paddingBottom: 10 }}>
-          <FlexWidget style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-            <TextWidget text="Budget" style={{ fontSize: 11, color: '#94A3B8', fontWeight: '600' }} />
-            <TextWidget
-              text={`${budgetPct}%  •  ${budgetStatus}`}
-              style={{ fontSize: 11, color: budgetColor, fontWeight: '700' }}
-            />
-          </FlexWidget>
-          <FlexWidget style={{ height: 6, backgroundColor: '#334155', borderRadius: 3 }}>
+      <FlexWidget style={{ flexDirection: 'column', backgroundColor: '#1E293B', borderRadius: 12, paddingLeft: 12, paddingRight: 12, paddingTop: 10, paddingBottom: 10 }}>
+        <FlexWidget style={{ flexDirection: 'row', alignItems: 'center', width: 'match_parent', marginBottom: 8 }}>
+          <TextWidget text="Budget" style={{ fontSize: 11, color: '#94A3B8', fontWeight: '600' }} />
+          <FlexWidget style={{ flex: 1, height: 1 }} />
+          <TextWidget
+            text={totalBudget > 0 ? `${budgetPct}%  •  ${budgetStatus}` : 'No budget set'}
+            style={{ fontSize: 11, color: totalBudget > 0 ? budgetColor : '#64748B', fontWeight: '700' }}
+          />
+        </FlexWidget>
+        <FlexWidget style={{ height: 6, backgroundColor: '#334155', borderRadius: 3 }}>
+          {totalBudget > 0 && (
             <FlexWidget
               style={{ height: 6, width: `${budgetPct}%`, backgroundColor: budgetColor, borderRadius: 3 }}
             />
-          </FlexWidget>
+          )}
         </FlexWidget>
-      )}
+      </FlexWidget>
     </FlexWidget>
   );
 }

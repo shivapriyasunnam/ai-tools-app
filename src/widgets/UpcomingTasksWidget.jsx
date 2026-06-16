@@ -58,7 +58,7 @@ export function UpcomingTasksWidget({ todos = [], reminders = [] }) {
       clickActionData={{ uri: 'daily://todo-list' }}
     >
       {/* Header */}
-      <FlexWidget style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14 }}>
+      <FlexWidget style={{ flexDirection: 'row', alignItems: 'center', width: 'match_parent', marginBottom: 14 }}>
         <TextWidget
           text="✓"
           style={{ fontSize: 15, color: '#818CF8', fontWeight: '800', marginRight: 7 }}

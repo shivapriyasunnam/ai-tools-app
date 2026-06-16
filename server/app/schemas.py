@@ -116,6 +116,7 @@ class PomodoroSessionCreate(BaseModel):
 class PomodoroSessionUpdate(BaseModel):
     end: Optional[str] = None
     completed: Optional[bool] = None
+    type: Optional[str] = None
 
 
 class UserProfileUpdate(BaseModel):

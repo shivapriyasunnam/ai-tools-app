@@ -9,15 +9,15 @@ export default function usePomodoroStats() {
 
   // Total focused time in seconds (work sessions only)
   const totalFocusedSeconds = useMemo(() => {
-    const workSessions = sessions.filter(s => s.type === 'work' && s.completed);
-    
+    const workSessions = sessions.filter(s => s.type === 'work' && s.end);
+
     const total = workSessions.reduce((sum, s) => {
-      // Calculate actual duration from start and end timestamps
-      const durationMs = s.end - s.start;
+      // Calculate actual duration from start and end timestamps (stored as ISO strings)
+      const durationMs = new Date(s.end).getTime() - new Date(s.start).getTime();
       const durationSeconds = Math.floor(durationMs / 1000);
       return sum + durationSeconds;
     }, 0);
-    
+
     return total;
   }, [sessions]);
 
