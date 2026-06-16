@@ -1,6 +1,7 @@
 import { colors, spacing } from '@/src/constants';
 import { IncomeContext } from '@/src/context/IncomeContext';
 import { useTheme } from '@/src/context/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 import { useContext, useState } from 'react';
 import {
     Alert,
@@ -29,7 +30,9 @@ function formatMonthLabel(monthKey) {
   return new Date(year, month - 1, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
 
-function IncomeForm({ onSubmit, onCancel, initialValues = {}, loading, isEdit }) {
+function IncomeForm({ onSubmit, onCancel, initialValues, loading, isEdit }) {
+  initialValues = initialValues || {};
+  const { theme } = useTheme();
   const [description, setDescription] = useState(initialValues.description || '');
   const [amount, setAmount] = useState(initialValues.amount ? initialValues.amount.toString() : '');
   const now = new Date();
@@ -68,52 +71,52 @@ function IncomeForm({ onSubmit, onCancel, initialValues = {}, loading, isEdit })
   };
 
   return (
-    <View style={formStyles.formContainer}>
-      <Text style={formStyles.formTitle}>{isEdit ? 'Edit Income' : 'Add Income'}</Text>
+    <View style={[formStyles.formContainer, { backgroundColor: theme.colors.surface }]}>
+      <Text style={[formStyles.formTitle, { color: theme.colors.text }]}>{isEdit ? 'Edit Income' : 'Add Income'}</Text>
       <TextInput
         placeholder="Description *"
         value={description}
         onChangeText={setDescription}
-        style={formStyles.input}
-        placeholderTextColor="#aaa"
+        style={[formStyles.input, { color: theme.colors.text, backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}
+        placeholderTextColor={theme.colors.textSecondary}
       />
       <TextInput
         placeholder="Amount ($) *"
         value={amount}
         onChangeText={setAmount}
         keyboardType="decimal-pad"
-        style={formStyles.input}
-        placeholderTextColor="#aaa"
+        style={[formStyles.input, { color: theme.colors.text, backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}
+        placeholderTextColor={theme.colors.textSecondary}
       />
       <TextInput
         placeholder="Date (YYYY-MM-DD)"
         value={date}
         onChangeText={setDate}
-        style={formStyles.input}
-        placeholderTextColor="#aaa"
+        style={[formStyles.input, { color: theme.colors.text, backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}
+        placeholderTextColor={theme.colors.textSecondary}
       />
       <TextInput
         placeholder="Notes (optional)"
         value={notes}
         onChangeText={setNotes}
-        style={[formStyles.input, { minHeight: 60 }]}
-        placeholderTextColor="#aaa"
+        style={[formStyles.input, { minHeight: 60, color: theme.colors.text, backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}
+        placeholderTextColor={theme.colors.textSecondary}
         multiline
       />
       <View style={formStyles.buttonRow}>
         <TouchableOpacity
-          onPress={handleSubmit}
-          disabled={submitting || loading}
-          style={[formStyles.button, { backgroundColor: colors.accent, opacity: (submitting || loading) ? 0.6 : 1 }]}
-        >
-          <Text style={formStyles.buttonText}>{submitting ? 'Saving...' : isEdit ? 'Save Changes' : 'Add Income'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
           onPress={onCancel}
           disabled={submitting || loading}
-          style={[formStyles.button, { backgroundColor: colors.gray[300], marginLeft: 8 }]}
+          style={[formStyles.iconButton, { backgroundColor: theme.colors.border }]}
         >
-          <Text style={[formStyles.buttonText, { color: colors.gray[700] }]}>Cancel</Text>
+          <Ionicons name="arrow-back" size={20} color={theme.colors.text} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleSubmit}
+          disabled={submitting || loading}
+          style={[formStyles.iconButton, { backgroundColor: theme.colors.primary, opacity: (submitting || loading) ? 0.6 : 1, marginLeft: 8 }]}
+        >
+          <Ionicons name="checkmark" size={20} color={colors.white} />
         </TouchableOpacity>
       </View>
     </View>
@@ -122,7 +125,6 @@ function IncomeForm({ onSubmit, onCancel, initialValues = {}, loading, isEdit })
 
 const formStyles = StyleSheet.create({
   formContainer: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     padding: spacing.md,
     margin: spacing.md,
@@ -131,33 +133,25 @@ const formStyles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     marginBottom: spacing.md,
-    color: colors.gray[900],
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.gray[200],
     borderRadius: 8,
     padding: spacing.md,
     marginBottom: spacing.md,
     fontSize: 14,
-    color: colors.text,
-    backgroundColor: colors.gray[50],
   },
   buttonRow: {
     flexDirection: 'row',
+    justifyContent: 'center',
     marginTop: spacing.sm,
   },
-  button: {
-    flex: 1,
-    padding: spacing.md,
-    borderRadius: 8,
+  iconButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  buttonText: {
-    color: colors.white,
-    fontWeight: '600',
-    fontSize: 14,
   },
 });
 

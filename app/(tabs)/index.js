@@ -318,7 +318,7 @@ function HomeScreen() {
             </View>
             <TouchableOpacity
               style={[styles.addExpenseButton, { backgroundColor: theme.colors.primary }]}
-              onPress={() => router.push('/add-expense')}
+              onPress={() => router.push('/(tabs)/expense-tracker?mode=add')}
               activeOpacity={0.7}
             >
               <Ionicons name="add" size={20} color="#FFFFFF" />

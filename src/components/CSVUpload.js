@@ -9,6 +9,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '../constants';
 import { useTheme } from '../context/ThemeContext';
 
@@ -64,21 +65,21 @@ export const CSVUpload = ({ onExpensesLoaded, onCancel, loading }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>📤 Upload Bank Statement (CSV)</Text>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Text style={[styles.title, { color: theme.colors.text }]}>📤 Upload Bank Statement (CSV)</Text>
 
       {/* Info */}
       <View style={[styles.infoBox, { backgroundColor: colors.secondary + '20' }]}>
         <Text style={{ fontSize: 12, fontWeight: 'bold', color: colors.secondary, marginBottom: spacing.sm }}>
           📝 Expected CSV Format
         </Text>
-        <Text style={{ fontSize: 11, color: colors.gray[700], marginBottom: spacing.xs }}>
+        <Text style={{ fontSize: 11, color: theme.colors.text, marginBottom: spacing.xs }}>
           Your CSV must have these columns:
         </Text>
-        <Text style={{ fontSize: 11, color: colors.gray[600], fontFamily: 'monospace', marginBottom: spacing.xs }}>
+        <Text style={{ fontSize: 11, color: theme.colors.textSecondary, fontFamily: 'monospace', marginBottom: spacing.xs }}>
           Date, Description, Amount
         </Text>
-        <Text style={{ fontSize: 10, color: colors.gray[500], fontStyle: 'italic' }}>
+        <Text style={{ fontSize: 10, color: theme.colors.textSecondary, fontStyle: 'italic' }}>
           Example: 2025-01-15, Coffee Shop, 5.50
         </Text>
       </View>
@@ -93,7 +94,7 @@ export const CSVUpload = ({ onExpensesLoaded, onCancel, loading }) => {
 
       {fileName && (
         <View style={[styles.fileNameBox, { backgroundColor: colors.accent + '20' }]}>
-          <Text style={{ fontSize: 12, color: colors.text }}>
+          <Text style={{ fontSize: 12, color: theme.colors.text }}>
             ✓ <Text style={{ fontWeight: 'bold' }}>{fileName}</Text>
           </Text>
         </View>
@@ -103,7 +104,7 @@ export const CSVUpload = ({ onExpensesLoaded, onCancel, loading }) => {
       {csvText && (
         <TouchableOpacity
           onPress={() => previewCSV(csvText)}
-          style={[styles.button, { backgroundColor: colors.primary, marginTop: spacing.lg }]}
+          style={[styles.button, { backgroundColor: theme.colors.primary, marginTop: spacing.lg }]}
         >
           <Text style={styles.buttonText}>👁️ Preview</Text>
         </TouchableOpacity>
@@ -111,8 +112,8 @@ export const CSVUpload = ({ onExpensesLoaded, onCancel, loading }) => {
 
       {/* Preview */}
       {preview && (
-        <View style={[styles.previewBox, { backgroundColor: colors.gray[100], marginTop: spacing.lg }]}>
-          <Text style={{ fontSize: 12, fontWeight: 'bold', color: colors.text, marginBottom: spacing.sm }}>
+        <View style={[styles.previewBox, { backgroundColor: theme.colors.surface, marginTop: spacing.lg }]}>
+          <Text style={{ fontSize: 12, fontWeight: 'bold', color: theme.colors.text, marginBottom: spacing.sm }}>
             📋 Preview ({preview.length} rows)
           </Text>
           {preview.map((line, idx) => (
@@ -120,7 +121,7 @@ export const CSVUpload = ({ onExpensesLoaded, onCancel, loading }) => {
               key={idx}
               style={{
                 fontSize: 10,
-                color: colors.text,
+                color: theme.colors.text,
                 fontFamily: 'monospace',
                 marginBottom: spacing.xs,
               }}
@@ -134,23 +135,23 @@ export const CSVUpload = ({ onExpensesLoaded, onCancel, loading }) => {
       {/* Action Buttons */}
       <View style={[styles.buttonRow, { marginTop: spacing.lg }]}>
         <TouchableOpacity
+          onPress={onCancel}
+          disabled={loading}
+          style={[styles.iconButton, { backgroundColor: theme.colors.border }]}
+        >
+          <Ionicons name="arrow-back" size={20} color={theme.colors.text} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
           onPress={handleImport}
           disabled={loading}
-          style={[styles.button, { backgroundColor: colors.accent, flex: 1, opacity: loading ? 0.6 : 1 }]}
+          style={[styles.iconButton, { backgroundColor: colors.accent, opacity: loading ? 0.6 : 1, marginLeft: spacing.md }]}
         >
           {loading ? (
             <ActivityIndicator color={colors.white} />
           ) : (
-            <Text style={styles.buttonText}>✓ Import</Text>
+            <Ionicons name="checkmark" size={20} color={colors.white} />
           )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={onCancel}
-          disabled={loading}
-          style={[styles.button, { backgroundColor: colors.gray[300], flex: 1, marginLeft: spacing.md }]}
-        >
-          <Text style={[styles.buttonText, { color: colors.text }]}>Cancel</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -160,12 +161,10 @@ export const CSVUpload = ({ onExpensesLoaded, onCancel, loading }) => {
 const styles = StyleSheet.create({
   container: {
     padding: spacing.md,
-    backgroundColor: colors.gray[50],
   },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: colors.text,
     marginBottom: spacing.md,
   },
   infoBox: {
@@ -235,7 +234,14 @@ const styles = StyleSheet.create({
   },
   buttonRow: {
     flexDirection: 'row',
-    gap: spacing.md,
+    justifyContent: 'center',
+  },
+  iconButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   buttonText: {
     color: colors.white,

@@ -14,7 +14,7 @@ import { ExpenseContext } from '@/src/context/ExpenseContext';
 import { useHeaderAction } from '@/src/context/HeaderContext';
 import { useTheme } from '@/src/context/ThemeContext';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCSVParser } from '@/src/hooks/useCSVParser';
 import { CSVUpload } from '@/src/components/CSVUpload';
 import { ManualExpenseForm } from '@/src/components/ManualExpenseForm';
@@ -58,7 +58,8 @@ function formatDateShort(dateStr) {
 export default function ExpenseTrackerScreen() {
   const { theme } = useTheme();
   const { setRightAction } = useHeaderAction();
-  const [mode, setMode] = useState('view'); // 'view' | 'add' | 'edit' | 'csv'
+  const params = useLocalSearchParams();
+  const [mode, setMode] = useState(params.mode === 'add' ? 'add' : 'view'); // 'view' | 'add' | 'edit' | 'csv'
   const [editExpense, setEditExpense] = useState(null);
   const [processingCSV, setProcessingCSV] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthKey());

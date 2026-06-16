@@ -1,59 +1,51 @@
 import { useUser } from '@/src/context/UserContext';
 import { useAuth } from '@/src/context/AuthContext';
 import { useTheme } from '@/src/context/ThemeContext';
-import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
+import { Ionicons } from '@expo/vector-icons';
 
 const BANNER_AD_UNIT_ID = __DEV__
   ? TestIds.ADAPTIVE_BANNER
   : 'ca-app-pub-7933176628735047/5587939995';
 
 export default function ProfileScreen() {
-  const router = useRouter();
   const { theme } = useTheme();
   const { userName, saveUserName } = useUser();
-  const { session, signOut } = useAuth();
+  const { session } = useAuth();
   const [name, setName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const inputRef = useRef(null);
+  const isDirty = name.trim() !== (userName || '').trim();
 
   useEffect(() => {
     setName(userName);
   }, [userName]);
+
+  const handleEditPress = () => {
+    setIsEditing(true);
+    requestAnimationFrame(() => inputRef.current?.focus());
+  };
 
   const handleSaveName = async () => {
     if (!name.trim()) {
       Alert.alert('Error', 'Please enter your name');
       return;
     }
+    if (!isDirty) {
+      Alert.alert('No changes', 'You have not changed your name.');
+      return;
+    }
     setIsSaving(true);
     const success = await saveUserName(name.trim());
     setIsSaving(false);
     if (success) {
-      Alert.alert('Success', 'Your name has been saved!', [
-        { text: 'OK', onPress: () => router.push('/(tabs)/') },
-      ]);
+      setIsEditing(false);
     } else {
       Alert.alert('Error', 'Failed to save your name. Please try again.');
     }
-  };
-
-  const handleSignOut = async () => {
-    Alert.alert('Sign out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign out',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await signOut();
-          } catch (e) {
-            Alert.alert('Error', e.message);
-          }
-        },
-      },
-    ]);
   };
 
   return (
@@ -66,28 +58,41 @@ export default function ProfileScreen() {
 
         <View style={[styles.inputContainer, { backgroundColor: theme.colors.surface }]}>
           <Text style={[styles.label, { color: theme.colors.text }]}>Display Name</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: theme.colors.gray[100], color: theme.colors.text, borderColor: theme.colors.border }]}
-            placeholder="Enter your name"
-            placeholderTextColor={theme.colors.textSecondary}
-            value={name}
-            onChangeText={setName}
-            autoCapitalize="words"
-          />
-          <TouchableOpacity
-            style={styles.saveButton}
-            onPress={handleSaveName}
-            disabled={isSaving}
-          >
-            <Text style={styles.saveButtonText}>
-              {isSaving ? 'Saving...' : 'Save Name'}
-            </Text>
-          </TouchableOpacity>
+          <View style={styles.inputRow}>
+            <TextInput
+              ref={inputRef}
+              style={[styles.input, { backgroundColor: theme.colors.gray[100], color: theme.colors.text, borderColor: theme.colors.border }]}
+              placeholder="Enter your name"
+              placeholderTextColor={theme.colors.textSecondary}
+              value={name}
+              onChangeText={setName}
+              autoCapitalize="words"
+              editable={isEditing}
+              onSubmitEditing={handleSaveName}
+              returnKeyType="done"
+            />
+            {isSaving ? (
+              <View style={[styles.iconButton, { backgroundColor: theme.colors.gray[100] }]}>
+                <ActivityIndicator size="small" color={theme.colors.textSecondary} />
+              </View>
+            ) : isEditing ? (
+              <TouchableOpacity
+                style={[styles.iconButton, styles.saveIconButton]}
+                onPress={handleSaveName}
+                disabled={!name.trim()}
+              >
+                <Ionicons name="checkmark" size={22} color="#FFFFFF" />
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.iconButton, { backgroundColor: theme.colors.gray[100] }]}
+                onPress={handleEditPress}
+              >
+                <Ionicons name="pencil" size={18} color={theme.colors.textSecondary} />
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
-
-        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-          <Text style={styles.signOutButtonText}>Sign Out</Text>
-        </TouchableOpacity>
       </View>
       <BannerAd
         unitId={BANNER_AD_UNIT_ID}
@@ -143,7 +148,13 @@ const styles = StyleSheet.create({
     color: '#334155',
     marginBottom: 8,
   },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
   input: {
+    flex: 1,
     backgroundColor: '#F1F5F9',
     borderRadius: 12,
     padding: 14,
@@ -151,29 +162,15 @@ const styles = StyleSheet.create({
     color: '#1E293B',
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    marginBottom: 16,
   },
-  saveButton: {
+  iconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveIconButton: {
     backgroundColor: '#10B981',
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  saveButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  signOutButton: {
-    backgroundColor: '#FEE2E2',
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  signOutButtonText: {
-    color: '#DC2626',
-    fontSize: 16,
-    fontWeight: '600',
   },
 });

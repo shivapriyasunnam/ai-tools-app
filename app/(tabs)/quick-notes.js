@@ -157,8 +157,8 @@ export default function QuickNotesScreen() {
         if (note) { clearSearch(); startEdit(note.id, note.text); }
       }}
     >
-      <Text style={styles.searchResultText}>{hit.text}</Text>
-      <Text style={styles.searchResultScore}>{(hit.score * 100).toFixed(0)}% match</Text>
+      <Text style={[styles.searchResultText, { color: theme.colors.text }]}>{hit.text}</Text>
+      <Text style={[styles.searchResultScore, { color: theme.colors.textSecondary }]}>{(hit.score * 100).toFixed(0)}% match</Text>
     </TouchableOpacity>
   );
 
@@ -168,75 +168,13 @@ export default function QuickNotesScreen() {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
 
-        {/* Search / Ask bar */}
-        <View style={[styles.searchBar, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
-          <TextInput
-            style={[styles.searchInput, { color: theme.colors.text }]}
-            placeholder="Search or ask your notes…"
-            placeholderTextColor={theme.colors.textSecondary}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onSubmitEditing={handleSemanticSearch}
-            returnKeyType="search"
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={clearSearch} style={styles.clearBtn}>
-              <Ionicons name="close-circle" size={18} color="#aaa" />
-            </TouchableOpacity>
-          )}
-        </View>
-
-        <View style={styles.searchActions}>
-          <TouchableOpacity style={[styles.searchBtn, styles.askBtn]} onPress={handleAskAI} disabled={loading}>
-            <Ionicons name="sparkles" size={15} color="#fff" />
-            <Text style={styles.searchBtnText}>Ask AI</Text>
-          </TouchableOpacity>
-        </View>
-
-        {loading && (
-          <View style={styles.loadingRow}>
-            <ActivityIndicator size="small" color={PRIMARY} />
-            <Text style={styles.loadingText}>{loadingMsg}</Text>
-          </View>
-        )}
-
         {/* Search results */}
         {mode === 'search' && !loading && (
           <View style={styles.resultsSection}>
-            <Text style={styles.sectionLabel}>RESULTS FOR "{searchQuery}"</Text>
+            <Text style={[styles.sectionLabel, { color: theme.colors.textSecondary }]}>RESULTS FOR "{searchQuery}"</Text>
             {searchResults.length === 0
-              ? <Text style={styles.noResults}>No matching notes found.</Text>
+              ? <Text style={[styles.noResults, { color: theme.colors.textSecondary }]}>No matching notes found.</Text>
               : searchResults.map(renderSearchResult)}
-          </View>
-        )}
-
-        {/* AI answer */}
-        {mode === 'ai' && (aiAnswer || loading) && (
-          <View style={styles.aiSection}>
-            {aiAnswer ? (
-              <>
-                <Text style={styles.aiAnswer} numberOfLines={4}>{aiAnswer}</Text>
-                {aiSources.length > 0 && (
-                  <View style={styles.sourcesRow}>
-                    <Text style={styles.sourcesLabel}>SOURCES</Text>
-                    <View style={styles.sourcesChips}>
-                      {aiSources.slice(0, 4).map((s, i) => (
-                        <TouchableOpacity
-                          key={i}
-                          style={styles.sourceChip}
-                          onPress={() => {
-                            const note = notes.find(n => n.id === s.id);
-                            if (note) { clearSearch(); startEdit(note.id, note.text); }
-                          }}
-                        >
-                          <Text style={styles.sourceChipText} numberOfLines={1}>{s.text}</Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </View>
-                )}
-              </>
-            ) : null}
           </View>
         )}
 
@@ -257,25 +195,99 @@ export default function QuickNotesScreen() {
         </View>
 
         {/* Notes list */}
-        {mode === 'notes' && (
+        {mode !== 'search' && (
           notes.length === 0
-            ? <Text style={styles.placeholder}>No notes yet. Add your first note!</Text>
+            ? <Text style={[styles.placeholder, { color: theme.colors.textSecondary }]}>No notes yet. Add your first note!</Text>
             : <FlatList
+                style={{ flex: 1 }}
                 data={notes}
                 keyExtractor={item => item.id}
                 renderItem={renderNote}
                 contentContainerStyle={{ paddingBottom: 40 }}
               />
         )}
+
+        {/* AI section, visually separated from notes, pinned to the bottom */}
+        <View style={[styles.aiBottomGroup, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+          <Text style={[styles.aiSectionLabel, { color: theme.colors.textSecondary }]}>ASK AI</Text>
+
+          {loading && (
+            <View style={styles.loadingRow}>
+              <ActivityIndicator size="small" color={PRIMARY} />
+              <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>{loadingMsg}</Text>
+            </View>
+          )}
+
+          {mode === 'ai' && aiAnswer && (
+            <View style={styles.aiSection}>
+              <View style={[styles.aiBubble, { backgroundColor: theme.colors.background }]}>
+                <Text style={[styles.aiAnswer, { color: theme.colors.text }]} numberOfLines={4}>{aiAnswer}</Text>
+              </View>
+              {aiSources.length > 0 && (
+                <View style={styles.sourcesRow}>
+                  <Text style={[styles.sourcesLabel, { color: theme.colors.textSecondary }]}>SOURCES</Text>
+                  <View style={styles.sourcesChips}>
+                    {aiSources.slice(0, 4).map((s, i) => (
+                      <TouchableOpacity
+                        key={i}
+                        style={styles.sourceChip}
+                        onPress={() => {
+                          const note = notes.find(n => n.id === s.id);
+                          if (note) { clearSearch(); startEdit(note.id, note.text); }
+                        }}
+                      >
+                        <Text style={styles.sourceChipText} numberOfLines={1}>{s.text}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
+
+          <View style={styles.searchRow}>
+            <View style={[styles.searchBar, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}>
+              <TextInput
+                style={[styles.searchInput, { color: theme.colors.text }]}
+                placeholder="Search or ask your notes…"
+                placeholderTextColor={theme.colors.textSecondary}
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                onSubmitEditing={handleSemanticSearch}
+                returnKeyType="search"
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={clearSearch} style={styles.clearBtn}>
+                  <Ionicons name="close-circle" size={18} color="#aaa" />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <TouchableOpacity style={styles.askBtn} onPress={handleAskAI} disabled={loading}>
+              <Ionicons name="sparkles" size={14} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 16 },
+  container: { flex: 1, backgroundColor: '#fff', padding: 16, paddingBottom: 0 },
 
+  aiBottomGroup: {
+    marginTop: 'auto',
+    marginHorizontal: -16,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 12,
+    borderTopWidth: 1,
+  },
+  aiSectionLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5, marginBottom: 8 },
+  searchRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   searchBar: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
@@ -283,24 +295,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: '#f9f9f9',
     paddingHorizontal: 10,
-    marginBottom: 8,
   },
   searchInput: { flex: 1, paddingVertical: 10, fontSize: 15 },
   clearBtn: { padding: 4 },
 
-  searchActions: { flexDirection: 'row', gap: 8, marginBottom: 12 },
-  searchBtn: {
-    flex: 1,
-    flexDirection: 'row',
+  askBtn: {
+    backgroundColor: PRIMARY,
+    borderRadius: 10,
+    width: 38,
+    height: 38,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    backgroundColor: '#555',
-    borderRadius: 8,
-    paddingVertical: 8,
   },
-  askBtn: { backgroundColor: PRIMARY },
-  searchBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
 
   loadingRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
   loadingText: { fontSize: 13, color: '#666' },
@@ -319,7 +325,14 @@ const styles = StyleSheet.create({
   searchResultScore: { fontSize: 11, color: '#888', marginTop: 4 },
   noResults: { fontSize: 14, color: '#999', textAlign: 'center', marginTop: 8 },
 
-  aiSection: { marginBottom: 12 },
+  aiSection: { marginBottom: 4, alignItems: 'flex-start' },
+  aiBubble: {
+    borderRadius: 16,
+    borderTopLeftRadius: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    maxWidth: '85%',
+  },
   aiAnswer: { fontSize: 15, color: '#222', lineHeight: 22 },
   sourcesRow: { marginTop: 8 },
   sourcesLabel: { fontSize: 11, fontWeight: '700', color: '#999', marginBottom: 6, letterSpacing: 0.5 },

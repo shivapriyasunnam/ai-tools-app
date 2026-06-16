@@ -12,6 +12,7 @@ import {
   View,
   Alert,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing } from '../constants';
 import { DEFAULT_CATEGORIES } from '../constants/categories';
 import { BudgetContext } from '../context/BudgetContext';
@@ -117,65 +118,55 @@ export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading, initialVa
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView
-        contentContainerStyle={[styles.container, { backgroundColor: theme.colors.background }]}
+        contentContainerStyle={{ backgroundColor: theme.colors.background }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Text style={[styles.title, { color: theme.colors.text }]}>
-          {isEdit ? 'Edit Expense' : 'Add Expense'}
-        </Text>
+        <View style={[styles.formContainer, { backgroundColor: theme.colors.surface }]}>
+          <Text style={[styles.title, { color: theme.colors.text }]}>
+            {isEdit ? 'Edit Expense' : 'Add Expense'}
+          </Text>
 
-        {/* Description */}
-        <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Description *</Text>
+          {/* Description */}
           <TextInput
-            placeholder="What was this for?"
+            placeholder="Description *"
             value={description}
             onChangeText={t => { setDescription(t); if (errors.description) setErrors(e => ({ ...e, description: undefined })); }}
             placeholderTextColor={theme.colors.textSecondary}
             autoFocus={!isEdit}
             style={[
               styles.input,
-              { color: theme.colors.text, backgroundColor: theme.colors.surface, borderColor: errors.description ? colors.error : theme.colors.border },
+              { color: theme.colors.text, backgroundColor: theme.colors.background, borderColor: errors.description ? colors.error : theme.colors.border },
             ]}
           />
           {errors.description ? <Text style={styles.errorText}>{errors.description}</Text> : null}
-        </View>
 
-        {/* Amount */}
-        <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Amount ($) *</Text>
+          {/* Amount */}
           <TextInput
-            placeholder="0.00"
+            placeholder="Amount ($) *"
             value={amount}
             onChangeText={t => { setAmount(t); if (errors.amount) setErrors(e => ({ ...e, amount: undefined })); }}
             keyboardType="decimal-pad"
             placeholderTextColor={theme.colors.textSecondary}
             style={[
               styles.input,
-              { color: theme.colors.text, backgroundColor: theme.colors.surface, borderColor: errors.amount ? colors.error : theme.colors.border },
+              { color: theme.colors.text, backgroundColor: theme.colors.background, borderColor: errors.amount ? colors.error : theme.colors.border },
             ]}
           />
           {errors.amount ? <Text style={styles.errorText}>{errors.amount}</Text> : null}
-        </View>
 
-        {/* Date */}
-        <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Date</Text>
+          {/* Date */}
           <TouchableOpacity
-            style={[styles.selector, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}
+            style={[styles.selector, { backgroundColor: theme.colors.background, borderColor: theme.colors.border }]}
             onPress={() => setShowDatePicker(true)}
           >
             <Text style={[styles.selectorText, { color: theme.colors.text }]}>{formatDateDisplay(date)}</Text>
             <Text style={[styles.selectorChevron, { color: theme.colors.textSecondary }]}>▼</Text>
           </TouchableOpacity>
-        </View>
 
-        {/* Category */}
-        <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Category</Text>
+          {/* Category */}
           <TouchableOpacity
-            style={[styles.selector, { backgroundColor: theme.colors.surface, borderColor: selectedCategoryObj.color }]}
+            style={[styles.selector, { backgroundColor: theme.colors.background, borderColor: selectedCategoryObj.color }]}
             onPress={() => setShowCategoryPicker(true)}
           >
             <View style={styles.catRow}>
@@ -184,13 +175,10 @@ export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading, initialVa
             </View>
             <Text style={[styles.selectorChevron, { color: theme.colors.textSecondary }]}>▼</Text>
           </TouchableOpacity>
-        </View>
 
-        {/* Notes */}
-        <View style={styles.fieldGroup}>
-          <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Notes (optional)</Text>
+          {/* Notes */}
           <TextInput
-            placeholder="Additional details..."
+            placeholder="Notes (optional)"
             value={notes}
             onChangeText={setNotes}
             multiline
@@ -199,29 +187,27 @@ export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading, initialVa
             style={[
               styles.input,
               styles.multilineInput,
-              { color: theme.colors.text, backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+              { color: theme.colors.text, backgroundColor: theme.colors.background, borderColor: theme.colors.border },
             ]}
           />
-        </View>
 
-        {/* Buttons */}
-        <View style={styles.buttonRow}>
-          <TouchableOpacity
-            onPress={handleSubmit}
-            disabled={submitting || loading}
-            style={[styles.primaryButton, { backgroundColor: theme.colors.primary, opacity: (submitting || loading) ? 0.6 : 1 }]}
-          >
-            <Text style={styles.primaryButtonText}>
-              {submitting ? 'Saving...' : isEdit ? 'Save Changes' : 'Add Expense'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={onCancel}
-            disabled={submitting || loading}
-            style={[styles.cancelButton, { borderColor: theme.colors.border }]}
-          >
-            <Text style={[styles.cancelButtonText, { color: theme.colors.textSecondary }]}>Cancel</Text>
-          </TouchableOpacity>
+          {/* Buttons */}
+          <View style={styles.buttonRow}>
+            <TouchableOpacity
+              onPress={onCancel}
+              disabled={submitting || loading}
+              style={[styles.iconButton, { backgroundColor: theme.colors.border }]}
+            >
+              <Ionicons name="arrow-back" size={20} color={theme.colors.text} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleSubmit}
+              disabled={submitting || loading}
+              style={[styles.iconButton, { backgroundColor: theme.colors.primary, opacity: (submitting || loading) ? 0.6 : 1, marginLeft: 8 }]}
+            >
+              <Ionicons name="checkmark" size={20} color={colors.white} />
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
 
@@ -295,63 +281,54 @@ export const ManualExpenseForm = ({ onExpenseAdded, onCancel, loading, initialVa
 };
 
 const styles = StyleSheet.create({
-  container: {
+  formContainer: {
+    borderRadius: 12,
     padding: spacing.md,
-    paddingBottom: spacing.xl,
+    margin: spacing.md,
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
-    marginBottom: spacing.lg,
-  },
-  fieldGroup: {
     marginBottom: spacing.md,
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: spacing.sm,
   },
   input: {
     borderWidth: 1,
     borderRadius: 8,
     padding: spacing.md,
-    fontSize: 15,
+    marginBottom: spacing.md,
+    fontSize: 14,
   },
   multilineInput: {
     textAlignVertical: 'top',
-    minHeight: 72,
+    minHeight: 60,
   },
   selector: {
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: spacing.md,
     paddingVertical: 12,
+    marginBottom: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  selectorText: { fontSize: 15 },
+  selectorText: { fontSize: 14 },
   selectorChevron: { fontSize: 12 },
   catRow: { flexDirection: 'row', alignItems: 'center' },
   catDot: { width: 10, height: 10, borderRadius: 5 },
-  errorText: { fontSize: 12, color: colors.error, marginTop: 4 },
-  buttonRow: { gap: spacing.sm, marginTop: spacing.lg },
-  primaryButton: {
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
+  errorText: { fontSize: 12, color: colors.error, marginTop: -spacing.sm, marginBottom: spacing.sm },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: spacing.sm,
   },
-  primaryButtonText: { color: '#fff', fontWeight: '700', fontSize: 15 },
-  cancelButton: {
-    borderRadius: 8,
-    paddingVertical: 14,
+  iconButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
-    borderWidth: 1,
+    justifyContent: 'center',
   },
-  cancelButtonText: { fontSize: 15, fontWeight: '500' },
   // Modals
   modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.5)' },
   modalContent: {

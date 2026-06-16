@@ -24,9 +24,9 @@ def _get_jwks():
     return _jwks_cache
 
 
-def get_current_user(
+def get_current_user_payload(
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
-) -> str:
+) -> dict:
     token = credentials.credentials
     keys = _get_jwks()
 
@@ -38,11 +38,16 @@ def get_current_user(
                 algorithms=["ES256", "RS256", "HS256"],
                 options={"verify_aud": False},
             )
-            user_id: str = payload.get("sub")
-            if not user_id:
+            if not payload.get("sub"):
                 raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-            return user_id
+            return payload
         except JWTError:
             continue
 
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+
+
+def get_current_user(
+    payload: dict = Depends(get_current_user_payload),
+) -> str:
+    return payload["sub"]
