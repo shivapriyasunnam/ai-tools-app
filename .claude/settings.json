@@ -11,7 +11,14 @@
       "Bash(node --check widgetTaskHandler.js)",
       "Bash(node --check src/widgets/UpcomingTasksWidget.jsx)",
       "Bash(python3 -c \"import json; json.load\\(open\\('app.json'\\)\\)\")",
-      "Bash(python3 -m py_compile server/app/main.py server/app/models.py server/app/schemas.py server/alembic/env.py server/alembic/versions/e7b3ce05e870_initial_schema.py)"
+      "Bash(python3 -m py_compile server/app/main.py server/app/models.py server/app/schemas.py server/alembic/env.py server/alembic/versions/e7b3ce05e870_initial_schema.py)",
+      "Bash(.venv/bin/pip install *)",
+      "Bash(npm list *)",
+      "Bash(npm uninstall *)",
+      "Bash(git -C /Users/priya/Documents/personal-projects/ai-tools-app diff components/ui/CustomHeader.js)",
+      "Bash(git -C /Users/priya/Documents/personal-projects/ai-tools-app diff src/screens/PomodoroTimer.js)",
+      "Bash(git -C /Users/priya/Documents/personal-projects/ai-tools-app diff src/constants/index.js)",
+      "Bash(git -C /Users/priya/Documents/personal-projects/ai-tools-app diff src/components/ToolsBottomSheet.js)"
     ]
   }
 }

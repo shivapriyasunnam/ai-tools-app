@@ -6,6 +6,8 @@ export const PomodoroContext = createContext();
 
 const DEFAULT_DURATIONS_KEY = '@pomodoro_default_durations';
 const DEFAULT_DURATIONS = { work: 1500, shortBreak: 300, longBreak: 900 };
+const VALID_TYPES = ['work', 'shortBreak', 'longBreak'];
+const sanitizeType = (type) => VALID_TYPES.includes(type) ? type : 'work';
 
 export function PomodoroProvider({ children }) {
   const [sessions, setSessions] = useState([]);
@@ -29,7 +31,17 @@ export function PomodoroProvider({ children }) {
   useEffect(() => {
     AsyncStorage.getItem(DEFAULT_DURATIONS_KEY)
       .then(saved => {
-        if (saved) setDefaultDurations(prev => ({ ...prev, ...JSON.parse(saved) }));
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setDefaultDurations(prev => ({ ...prev, ...parsed }));
+          setTimer(t => {
+            if (!t.startedAt) {
+              const seconds = parsed[t.type] ?? parsed.work ?? DEFAULT_DURATIONS.work;
+              return { ...t, secondsLeft: seconds, totalSeconds: seconds };
+            }
+            return t;
+          });
+        }
       })
       .catch(() => {});
   }, []);
@@ -68,7 +80,7 @@ export function PomodoroProvider({ children }) {
   }, [sessions]);
 
   const startTimer = useCallback((type = 'work', seconds = 1500) => {
-    setTimer({ isRunning: true, secondsLeft: seconds, totalSeconds: seconds, type, startedAt: Date.now(), pausedAt: null, sessionStart: Date.now() });
+    setTimer({ isRunning: true, secondsLeft: seconds, totalSeconds: seconds, type: sanitizeType(type), startedAt: Date.now(), pausedAt: null, sessionStart: Date.now() });
   }, []);
 
   const pauseTimer = useCallback(() => {
@@ -79,10 +91,11 @@ export function PomodoroProvider({ children }) {
     setTimer(t => ({ ...t, isRunning: true, startedAt: Date.now() }));
   }, []);
 
-  const resetTimer = useCallback(() => {
+  const resetTimer = useCallback((type, seconds) => {
     setTimer(t => {
-      const seconds = defaultDurations[t.type] ?? defaultDurations.work;
-      return { isRunning: false, secondsLeft: seconds, totalSeconds: seconds, type: t.type, startedAt: null, pausedAt: null, sessionStart: null };
+      const resolvedType = sanitizeType(type ?? t.type);
+      const resolvedSeconds = seconds ?? defaultDurations[resolvedType] ?? defaultDurations.work;
+      return { isRunning: false, secondsLeft: resolvedSeconds, totalSeconds: resolvedSeconds, type: resolvedType, startedAt: null, pausedAt: null, sessionStart: null };
     });
   }, [defaultDurations]);
 
@@ -90,7 +103,7 @@ export function PomodoroProvider({ children }) {
     setTimer(t => {
       const elapsed = t.totalSeconds - t.secondsLeft;
       if (t.sessionStart && elapsed > 0) {
-        addSession({ start: t.sessionStart, end: Date.now(), type: t.type, completed: false });
+        addSession({ start: t.sessionStart, end: t.sessionStart + elapsed * 1000, type: t.type, completed: false });
       }
       const seconds = defaultDurations.work;
       return { isRunning: false, secondsLeft: seconds, totalSeconds: seconds, type: 'work', startedAt: null, pausedAt: null, sessionStart: null };
@@ -113,7 +126,7 @@ export function PomodoroProvider({ children }) {
 
   useEffect(() => {
     if (timer.secondsLeft === 0 && timer.isRunning) {
-      addSession({ id: Date.now().toString(), start: timer.sessionStart, end: Date.now(), type: timer.type, completed: true });
+      addSession({ id: Date.now().toString(), start: timer.sessionStart, end: timer.sessionStart + timer.totalSeconds * 1000, type: timer.type, completed: true });
       setTimer(t => ({ ...t, isRunning: false, secondsLeft: t.totalSeconds, startedAt: null, sessionStart: null }));
     }
   }, [timer.secondsLeft, timer.isRunning, timer.type, timer.sessionStart, addSession]);

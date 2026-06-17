@@ -12,7 +12,6 @@ export default function PomodoroTimerScreen() {
   const { theme } = useTheme();
   const { setRightAction } = useHeaderAction();
   const { timer, isRunning, startTimer, pauseTimer, resumeTimer, resetTimer, logPartialSession, sessions, updateSession, removeSession, resetSessions, defaultDurations, updateDefaultDurations } = useContext(PomodoroContext);
-  const [mode, setMode] = useState(timer.type || 'work');
   const [customMinutes, setCustomMinutes] = useState('25');
   const [customSeconds, setCustomSeconds] = useState('0');
   const [isEditingTime, setIsEditingTime] = useState(false);
@@ -140,10 +139,8 @@ export default function PomodoroTimerScreen() {
 
   // Switch mode handler
   const switchMode = (newMode) => {
-    setMode(newMode);
     const totalSeconds = defaultDurations[newMode];
-    resetTimer();
-    startTimer(newMode, totalSeconds);
+    resetTimer(newMode, totalSeconds);
     setCustomMinutes(String(Math.floor(totalSeconds / 60)));
     setCustomSeconds(String(totalSeconds % 60));
     setIsEditingTime(false);
@@ -164,10 +161,8 @@ export default function PomodoroTimerScreen() {
     }
     
     const totalSeconds = (minutes * 60) + seconds;
-    resetTimer();
-    startTimer(mode, totalSeconds);
+    resetTimer(timer.type, totalSeconds);
     setIsEditingTime(false);
-    Alert.alert('Success', `Timer set to ${minutes}m ${seconds}s`);
   };
 
   const handleDeleteSession = (id) => {
@@ -188,7 +183,7 @@ export default function PomodoroTimerScreen() {
     } else if (timer.startedAt) {
       resumeTimer();
     } else {
-      startTimer(mode, timer.secondsLeft);
+      startTimer(timer.type, timer.secondsLeft);
     }
   };
 
@@ -225,7 +220,7 @@ export default function PomodoroTimerScreen() {
             />
           )}
           <Text style={styles.summaryLabel}>
-            {mode === 'work' ? 'Work Session' : mode === 'shortBreak' ? 'Short Break' : 'Long Break'}
+            {timer.type === 'shortBreak' ? 'Short Break' : timer.type === 'longBreak' ? 'Long Break' : 'Work Session'}
           </Text>
           <Text style={styles.summaryAmount}>{formatTime(timer.secondsLeft)}</Text>
           <TouchableOpacity 
@@ -281,19 +276,19 @@ export default function PomodoroTimerScreen() {
         {/* Mode Selection Buttons */}
         <View style={styles.modeSelector}>
           <TouchableOpacity
-            style={[styles.modeButton, mode === 'work' && { backgroundColor: theme.colors.primary }]}
+            style={[styles.modeButton, timer.type === 'work' && { backgroundColor: theme.colors.primary }]}
             onPress={() => switchMode('work')}
           >
             <Text style={styles.modeButtonText}>Work</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.modeButton, mode === 'shortBreak' && { backgroundColor: theme.colors.primary }]}
+            style={[styles.modeButton, timer.type === 'shortBreak' && { backgroundColor: theme.colors.primary }]}
             onPress={() => switchMode('shortBreak')}
           >
             <Text style={styles.modeButtonText}>Short Break</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.modeButton, mode === 'longBreak' && { backgroundColor: theme.colors.primary }]}
+            style={[styles.modeButton, timer.type === 'longBreak' && { backgroundColor: theme.colors.primary }]}
             onPress={() => switchMode('longBreak')}
           >
             <Text style={styles.modeButtonText}>Long Break</Text>
@@ -311,7 +306,7 @@ export default function PomodoroTimerScreen() {
           <View style={styles.actionButtonSplit}>
             <TouchableOpacity
               style={[styles.actionButtonHalf, { backgroundColor: colors.accent }]}
-              onPress={resetTimer}
+              onPress={() => resetTimer()}
             >
               <Text style={styles.actionButtonHalfText} numberOfLines={1}>↻ Reset</Text>
             </TouchableOpacity>

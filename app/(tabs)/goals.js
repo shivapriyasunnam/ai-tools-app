@@ -6,7 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useContext, useState } from 'react';
 import {
   Alert,
-  Modal,
+  KeyboardAvoidingView,
+  Platform,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -90,140 +91,155 @@ function GoalForm({ onSubmit, onCancel, initialValues = {}, plans = [], todos = 
   const selectedPlan = plans.find(p => p.id === planId);
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false}>
-      <Text style={[fStyles.formTitle, { color: theme.colors.text }]}>
-        {initialValues.id ? 'Edit Goal' : 'New Goal'}
-      </Text>
-
-      <TextInput
-        placeholder="Goal title *"
-        value={title}
-        onChangeText={setTitle}
-        style={[fStyles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
-        placeholderTextColor={colors.gray[400]}
-      />
-
-      <TextInput
-        placeholder="Description (optional)"
-        value={description}
-        onChangeText={setDescription}
-        style={[fStyles.input, { borderColor: theme.colors.border, color: theme.colors.text, minHeight: 60 }]}
-        placeholderTextColor={colors.gray[400]}
-        multiline
-      />
-
-      <Text style={[fStyles.label, { color: colors.gray[700] }]}>Period</Text>
-      <View style={fStyles.optionsWrap}>
-        {PERIODS.filter(p => p.key !== 'all').map(p => {
-          const active = period === p.key;
-          return (
-            <TouchableOpacity
-              key={p.key}
-              style={[fStyles.optBtn, active && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
-              onPress={() => setPeriod(p.key)}
-            >
-              <Text style={[fStyles.optText, active && { color: colors.white }]}>{p.label}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      <Text style={[fStyles.label, { color: colors.gray[700] }]}>Category</Text>
-      <View style={fStyles.optionsWrap}>
-        {CATEGORIES.filter(c => c.key !== 'all').map(c => {
-          const active = category === c.key;
-          return (
-            <TouchableOpacity
-              key={c.key}
-              style={[fStyles.optBtn, active && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
-              onPress={() => setCategory(c.key)}
-            >
-              <View style={[fStyles.catDotOpt, { backgroundColor: active ? colors.white : c.color }]} />
-              <Text style={[fStyles.optText, active && { color: colors.white }]}>{c.label}</Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      <Text style={[fStyles.label, { color: colors.gray[700] }]}>Attach to Plan (optional)</Text>
-      <TouchableOpacity
-        style={[fStyles.pickerBtn, { borderColor: theme.colors.border }]}
-        onPress={() => setShowPlanPicker(!showPlanPicker)}
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView
+        contentContainerStyle={{ backgroundColor: theme.colors.background }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <Text style={[fStyles.pickerText, { color: selectedPlan ? theme.colors.text : colors.gray[400] }]}>
-          {selectedPlan ? selectedPlan.title : 'Select a plan…'}
-        </Text>
-        <Ionicons name={showPlanPicker ? 'chevron-up' : 'chevron-down'} size={16} color={colors.gray[400]} />
-      </TouchableOpacity>
-      {showPlanPicker && (
-        <View style={[fStyles.pickerDropdown, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}>
-          <TouchableOpacity style={fStyles.pickerItem} onPress={() => { setPlanId(null); setShowPlanPicker(false); }}>
-            <Text style={{ color: colors.gray[500], fontSize: 14 }}>— None —</Text>
-          </TouchableOpacity>
-          {plans.map(p => (
-            <TouchableOpacity
-              key={p.id}
-              style={[fStyles.pickerItem, planId === p.id && { backgroundColor: theme.colors.primary + '15' }]}
-              onPress={() => { setPlanId(p.id); setShowPlanPicker(false); }}
-            >
-              <Ionicons name="map-outline" size={14} color={theme.colors.primary} style={{ marginRight: 6 }} />
-              <Text style={{ color: theme.colors.text, fontSize: 14, flex: 1 }}>{p.title}</Text>
-              {planId === p.id && <Ionicons name="checkmark" size={14} color={theme.colors.primary} />}
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
+        <View style={[fStyles.formContainer, { backgroundColor: theme.colors.surface }]}>
+          <Text style={[fStyles.formTitle, { color: theme.colors.text }]}>
+            {initialValues.id ? 'Edit Goal' : 'New Goal'}
+          </Text>
 
-      <TouchableOpacity style={fStyles.linkToggle} onPress={() => setShowTodos(!showTodos)}>
-        <Ionicons name="link-outline" size={16} color={theme.colors.primary} />
-        <Text style={[fStyles.linkToggleText, { color: theme.colors.primary }]}>
-          Link To-Dos{linkedTodoIds.length > 0 ? ` (${linkedTodoIds.length} selected)` : ' (optional)'}
-        </Text>
-        <Ionicons name={showTodos ? 'chevron-up' : 'chevron-down'} size={14} color={theme.colors.primary} />
-      </TouchableOpacity>
-      {showTodos && (
-        <View style={[fStyles.todoList, { borderColor: theme.colors.border }]}>
-          {pendingTodos.length === 0 ? (
-            <Text style={{ color: colors.gray[400], fontSize: 13, padding: spacing.sm }}>No pending to-dos</Text>
-          ) : (
-            pendingTodos.map(t => {
-              const checked = linkedTodoIds.includes(t.id);
+          <TextInput
+            placeholder="Goal title *"
+            value={title}
+            onChangeText={setTitle}
+            style={[fStyles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.background }]}
+            placeholderTextColor={theme.colors.textSecondary}
+          />
+
+          <TextInput
+            placeholder="Description (optional)"
+            value={description}
+            onChangeText={setDescription}
+            style={[fStyles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.background, minHeight: 60, textAlignVertical: 'top' }]}
+            placeholderTextColor={theme.colors.textSecondary}
+            multiline
+          />
+
+          <Text style={[fStyles.label, { color: theme.colors.textSecondary }]}>Period</Text>
+          <View style={fStyles.optionsWrap}>
+            {PERIODS.filter(p => p.key !== 'all').map(p => {
+              const active = period === p.key;
               return (
-                <TouchableOpacity key={t.id} style={fStyles.todoRow} onPress={() => toggleTodo(t.id)}>
-                  <View style={[fStyles.checkbox, { borderColor: theme.colors.primary, backgroundColor: checked ? theme.colors.primary : 'transparent' }]}>
-                    {checked && <Ionicons name="checkmark" size={12} color={colors.white} />}
-                  </View>
-                  <Text style={[fStyles.todoRowText, { color: theme.colors.text }]} numberOfLines={1}>{t.title}</Text>
+                <TouchableOpacity
+                  key={p.key}
+                  style={[fStyles.optBtn, { borderColor: theme.colors.border }, active && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
+                  onPress={() => setPeriod(p.key)}
+                >
+                  <Text style={[fStyles.optText, { color: theme.colors.text }, active && { color: colors.white }]}>{p.label}</Text>
                 </TouchableOpacity>
               );
-            })
-          )}
-        </View>
-      )}
+            })}
+          </View>
 
-      <View style={fStyles.buttonRow}>
-        <TouchableOpacity style={[fStyles.btn, { backgroundColor: theme.colors.primary }]} onPress={handleSubmit}>
-          <Text style={fStyles.btnText}>{initialValues.id ? 'Save Changes' : 'Add Goal'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[fStyles.btn, { backgroundColor: colors.gray[300], marginLeft: spacing.sm }]}
-          onPress={onCancel}
-        >
-          <Text style={[fStyles.btnText, { color: colors.gray[700] }]}>Cancel</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          <Text style={[fStyles.label, { color: theme.colors.textSecondary }]}>Category</Text>
+          <View style={fStyles.optionsWrap}>
+            {CATEGORIES.filter(c => c.key !== 'all').map(c => {
+              const active = category === c.key;
+              return (
+                <TouchableOpacity
+                  key={c.key}
+                  style={[fStyles.optBtn, { borderColor: theme.colors.border }, active && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
+                  onPress={() => setCategory(c.key)}
+                >
+                  <View style={[fStyles.catDotOpt, { backgroundColor: active ? colors.white : c.color }]} />
+                  <Text style={[fStyles.optText, { color: theme.colors.text }, active && { color: colors.white }]}>{c.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <Text style={[fStyles.label, { color: theme.colors.textSecondary }]}>Attach to Plan (optional)</Text>
+          <TouchableOpacity
+            style={[fStyles.pickerBtn, { borderColor: theme.colors.border, backgroundColor: theme.colors.background }]}
+            onPress={() => setShowPlanPicker(!showPlanPicker)}
+          >
+            <Text style={[fStyles.pickerText, { color: selectedPlan ? theme.colors.text : theme.colors.textSecondary }]}>
+              {selectedPlan ? selectedPlan.title : 'Select a plan…'}
+            </Text>
+            <Ionicons name={showPlanPicker ? 'chevron-up' : 'chevron-down'} size={16} color={theme.colors.textSecondary} />
+          </TouchableOpacity>
+          {showPlanPicker && (
+            <View style={[fStyles.pickerDropdown, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface }]}>
+              <TouchableOpacity style={fStyles.pickerItem} onPress={() => { setPlanId(null); setShowPlanPicker(false); }}>
+                <Text style={{ color: theme.colors.textSecondary, fontSize: 14 }}>— None —</Text>
+              </TouchableOpacity>
+              {plans.map(p => (
+                <TouchableOpacity
+                  key={p.id}
+                  style={[fStyles.pickerItem, planId === p.id && { backgroundColor: theme.colors.primary + '15' }]}
+                  onPress={() => { setPlanId(p.id); setShowPlanPicker(false); }}
+                >
+                  <Ionicons name="map-outline" size={14} color={theme.colors.primary} style={{ marginRight: 6 }} />
+                  <Text style={{ color: theme.colors.text, fontSize: 14, flex: 1 }}>{p.title}</Text>
+                  {planId === p.id && <Ionicons name="checkmark" size={14} color={theme.colors.primary} />}
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+
+          <TouchableOpacity style={fStyles.linkToggle} onPress={() => setShowTodos(!showTodos)}>
+            <Ionicons name="link-outline" size={16} color={theme.colors.primary} />
+            <Text style={[fStyles.linkToggleText, { color: theme.colors.primary }]}>
+              Link To-Dos{linkedTodoIds.length > 0 ? ` (${linkedTodoIds.length} selected)` : ' (optional)'}
+            </Text>
+            <Ionicons name={showTodos ? 'chevron-up' : 'chevron-down'} size={14} color={theme.colors.primary} />
+          </TouchableOpacity>
+          {showTodos && (
+            <View style={[fStyles.todoList, { borderColor: theme.colors.border }]}>
+              {pendingTodos.length === 0 ? (
+                <Text style={{ color: theme.colors.textSecondary, fontSize: 13, padding: spacing.sm }}>No pending to-dos</Text>
+              ) : (
+                pendingTodos.map(t => {
+                  const checked = linkedTodoIds.includes(t.id);
+                  return (
+                    <TouchableOpacity key={t.id} style={fStyles.todoRow} onPress={() => toggleTodo(t.id)}>
+                      <View style={[fStyles.checkbox, { borderColor: theme.colors.primary, backgroundColor: checked ? theme.colors.primary : 'transparent' }]}>
+                        {checked && <Ionicons name="checkmark" size={12} color={colors.white} />}
+                      </View>
+                      <Text style={[fStyles.todoRowText, { color: theme.colors.text }]} numberOfLines={1}>{t.title}</Text>
+                    </TouchableOpacity>
+                  );
+                })
+              )}
+            </View>
+          )}
+
+          <View style={fStyles.buttonRow}>
+            <TouchableOpacity
+              style={[fStyles.iconButton, { backgroundColor: theme.colors.border }]}
+              onPress={onCancel}
+            >
+              <Ionicons name="arrow-back" size={20} color={theme.colors.text} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[fStyles.iconButton, { backgroundColor: theme.colors.primary, marginLeft: spacing.sm }]}
+              onPress={handleSubmit}
+            >
+              <Ionicons name="checkmark" size={20} color={colors.white} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 // ── Plan Form ────────────────────────────────────────────────────────────────
 
-function PlanForm({ onSubmit, onCancel, initialValues = {}, theme }) {
+function PlanForm({ onSubmit, onCancel, initialValues = {}, theme, goals = [], onAttachGoal, onDetachGoal }) {
   const [title, setTitle] = useState(initialValues.title || '');
   const [description, setDescription] = useState(initialValues.description || '');
   const [duration, setDuration] = useState(initialValues.duration || '5_year');
   const [startDate, setStartDate] = useState(initialValues.start_date || '');
   const [endDate, setEndDate] = useState(initialValues.end_date || '');
+  const [showAttachPicker, setShowAttachPicker] = useState(false);
+
+  const planGoals = goals.filter(g => g.plan_id === initialValues.id);
+  const attachable = goals.filter(g => g.plan_id !== initialValues.id);
 
   const handleSubmit = () => {
     if (!title.trim()) {
@@ -240,74 +256,131 @@ function PlanForm({ onSubmit, onCancel, initialValues = {}, theme }) {
   };
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false}>
-      <Text style={[fStyles.formTitle, { color: theme.colors.text }]}>
-        {initialValues.id ? 'Edit Plan' : 'New Plan'}
-      </Text>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView
+        contentContainerStyle={{ backgroundColor: theme.colors.background }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[fStyles.formContainer, { backgroundColor: theme.colors.surface }]}>
+          <Text style={[fStyles.formTitle, { color: theme.colors.text }]}>
+            {initialValues.id ? 'Edit Plan' : 'New Plan'}
+          </Text>
 
-      <TextInput
-        placeholder="Plan title *"
-        value={title}
-        onChangeText={setTitle}
-        style={[fStyles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
-        placeholderTextColor={colors.gray[400]}
-      />
+          <TextInput
+            placeholder="Plan title *"
+            value={title}
+            onChangeText={setTitle}
+            style={[fStyles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.background }]}
+            placeholderTextColor={theme.colors.textSecondary}
+          />
 
-      <TextInput
-        placeholder="Description (optional)"
-        value={description}
-        onChangeText={setDescription}
-        style={[fStyles.input, { borderColor: theme.colors.border, color: theme.colors.text, minHeight: 60 }]}
-        placeholderTextColor={colors.gray[400]}
-        multiline
-      />
+          <TextInput
+            placeholder="Description (optional)"
+            value={description}
+            onChangeText={setDescription}
+            style={[fStyles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.background, minHeight: 60, textAlignVertical: 'top' }]}
+            placeholderTextColor={theme.colors.textSecondary}
+            multiline
+          />
 
-      <Text style={[fStyles.label, { color: colors.gray[700] }]}>Duration</Text>
-      <View style={fStyles.optionsWrap}>
-        {DURATIONS.map(d => {
-          const active = duration === d.key;
-          return (
+          <Text style={[fStyles.label, { color: theme.colors.textSecondary }]}>Duration</Text>
+          <View style={fStyles.optionsWrap}>
+            {DURATIONS.map(d => {
+              const active = duration === d.key;
+              return (
+                <TouchableOpacity
+                  key={d.key}
+                  style={[fStyles.optBtn, { borderColor: theme.colors.border }, active && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
+                  onPress={() => setDuration(d.key)}
+                >
+                  <Text style={[fStyles.optText, { color: theme.colors.text }, active && { color: colors.white }]}>{d.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <Text style={[fStyles.label, { color: theme.colors.textSecondary }]}>Start Date (optional)</Text>
+          <TextInput
+            placeholder="YYYY-MM-DD"
+            value={startDate}
+            onChangeText={setStartDate}
+            style={[fStyles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.background }]}
+            placeholderTextColor={theme.colors.textSecondary}
+          />
+
+          <Text style={[fStyles.label, { color: theme.colors.textSecondary }]}>End Date (optional)</Text>
+          <TextInput
+            placeholder="YYYY-MM-DD"
+            value={endDate}
+            onChangeText={setEndDate}
+            style={[fStyles.input, { borderColor: theme.colors.border, color: theme.colors.text, backgroundColor: theme.colors.background }]}
+            placeholderTextColor={theme.colors.textSecondary}
+          />
+
+          {/* Goals section — only shown when editing an existing plan */}
+          {initialValues.id && (
+            <>
+              <Text style={[fStyles.label, { color: theme.colors.textSecondary, marginTop: spacing.sm }]}>Goals</Text>
+
+              {planGoals.map(g => (
+                <View key={g.id} style={[fStyles.goalRow, { borderColor: theme.colors.border, backgroundColor: theme.colors.background }]}>
+                  <View style={[fStyles.catDotOpt, { backgroundColor: getCategoryColor(g.category), marginRight: 6 }]} />
+                  <Text style={{ flex: 1, fontSize: 14, color: theme.colors.text }} numberOfLines={1}>{g.title}</Text>
+                  <TouchableOpacity onPress={() => onDetachGoal(g)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                    <Ionicons name="close-circle" size={18} color={colors.gray[400]} />
+                  </TouchableOpacity>
+                </View>
+              ))}
+
+              <TouchableOpacity
+                style={[fStyles.pickerBtn, { borderColor: theme.colors.border, backgroundColor: theme.colors.background, marginBottom: showAttachPicker ? 0 : spacing.md }]}
+                onPress={() => setShowAttachPicker(v => !v)}
+              >
+                <Text style={[fStyles.pickerText, { color: theme.colors.textSecondary }]}>Attach a goal…</Text>
+                <Ionicons name={showAttachPicker ? 'chevron-up' : 'chevron-down'} size={16} color={theme.colors.textSecondary} />
+              </TouchableOpacity>
+              {showAttachPicker && (
+                <View style={[fStyles.pickerDropdown, { borderColor: theme.colors.border, backgroundColor: theme.colors.surface, marginBottom: spacing.md }]}>
+                  {attachable.length === 0 ? (
+                    <Text style={{ color: theme.colors.textSecondary, fontSize: 13, padding: spacing.md }}>
+                      All goals are already attached
+                    </Text>
+                  ) : (
+                    attachable.map(g => (
+                      <TouchableOpacity
+                        key={g.id}
+                        style={fStyles.pickerItem}
+                        onPress={() => { onAttachGoal(g, initialValues.id); setShowAttachPicker(false); }}
+                      >
+                        <View style={[fStyles.catDotOpt, { backgroundColor: getCategoryColor(g.category), marginRight: 6 }]} />
+                        <Text style={{ flex: 1, fontSize: 14, color: theme.colors.text }} numberOfLines={1}>{g.title}</Text>
+                        <Ionicons name="add" size={16} color={theme.colors.primary} />
+                      </TouchableOpacity>
+                    ))
+                  )}
+                </View>
+              )}
+            </>
+          )}
+
+          <View style={fStyles.buttonRow}>
             <TouchableOpacity
-              key={d.key}
-              style={[fStyles.optBtn, active && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
-              onPress={() => setDuration(d.key)}
+              style={[fStyles.iconButton, { backgroundColor: theme.colors.border }]}
+              onPress={onCancel}
             >
-              <Text style={[fStyles.optText, active && { color: colors.white }]}>{d.label}</Text>
+              <Ionicons name="arrow-back" size={20} color={theme.colors.text} />
             </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      <Text style={[fStyles.label, { color: colors.gray[700] }]}>Start Date (optional)</Text>
-      <TextInput
-        placeholder="YYYY-MM-DD"
-        value={startDate}
-        onChangeText={setStartDate}
-        style={[fStyles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
-        placeholderTextColor={colors.gray[400]}
-      />
-
-      <Text style={[fStyles.label, { color: colors.gray[700] }]}>End Date (optional)</Text>
-      <TextInput
-        placeholder="YYYY-MM-DD"
-        value={endDate}
-        onChangeText={setEndDate}
-        style={[fStyles.input, { borderColor: theme.colors.border, color: theme.colors.text }]}
-        placeholderTextColor={colors.gray[400]}
-      />
-
-      <View style={fStyles.buttonRow}>
-        <TouchableOpacity style={[fStyles.btn, { backgroundColor: theme.colors.primary }]} onPress={handleSubmit}>
-          <Text style={fStyles.btnText}>{initialValues.id ? 'Save Changes' : 'Create Plan'}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[fStyles.btn, { backgroundColor: colors.gray[300], marginLeft: spacing.sm }]}
-          onPress={onCancel}
-        >
-          <Text style={[fStyles.btnText, { color: colors.gray[700] }]}>Cancel</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+            <TouchableOpacity
+              style={[fStyles.iconButton, { backgroundColor: theme.colors.primary, marginLeft: spacing.sm }]}
+              onPress={handleSubmit}
+            >
+              <Ionicons name="checkmark" size={20} color={colors.white} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -324,6 +397,15 @@ const fStyles = StyleSheet.create({
     backgroundColor: colors.gray[50],
   },
   label: { fontSize: 13, fontWeight: '600', marginBottom: spacing.sm, marginTop: spacing.xs },
+  goalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    marginBottom: spacing.sm,
+  },
   optionsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.md },
   optBtn: {
     flexDirection: 'row',
@@ -389,7 +471,19 @@ const fStyles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   todoRowText: { fontSize: 13, flex: 1 },
-  buttonRow: { flexDirection: 'row', marginTop: spacing.sm, marginBottom: spacing.xl },
+  formContainer: {
+    borderRadius: 12,
+    padding: spacing.md,
+    margin: spacing.md,
+  },
+  buttonRow: { flexDirection: 'row', justifyContent: 'center', marginTop: spacing.sm },
+  iconButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   btn: { flex: 1, padding: spacing.md, borderRadius: 8, alignItems: 'center' },
   btnText: { color: colors.white, fontWeight: '600', fontSize: 14 },
 });
@@ -409,8 +503,7 @@ export default function GoalsScreen() {
   const [activeTab, setActiveTab] = useState('goals');
   const [periodFilter, setPeriodFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [showGoalModal, setShowGoalModal] = useState(false);
-  const [showPlanModal, setShowPlanModal] = useState(false);
+  const [mode, setMode] = useState('view'); // 'view' | 'goal' | 'plan'
   const [editingGoal, setEditingGoal] = useState(null);
   const [editingPlan, setEditingPlan] = useState(null);
   const [expandedPlans, setExpandedPlans] = useState(new Set());
@@ -432,7 +525,7 @@ export default function GoalsScreen() {
   const handleAddGoal = async (data) => {
     try {
       await addGoal(data);
-      setShowGoalModal(false);
+      setMode('view');
     } catch {
       Alert.alert('Error', 'Could not save goal');
     }
@@ -441,7 +534,7 @@ export default function GoalsScreen() {
   const handleUpdateGoal = async (data) => {
     try {
       await updateGoal(editingGoal.id, data);
-      setShowGoalModal(false);
+      setMode('view');
       setEditingGoal(null);
     } catch {
       Alert.alert('Error', 'Could not update goal');
@@ -459,7 +552,7 @@ export default function GoalsScreen() {
   const handleAddPlan = async (data) => {
     try {
       await addPlan(data);
-      setShowPlanModal(false);
+      setMode('view');
     } catch {
       Alert.alert('Error', 'Could not save plan');
     }
@@ -468,7 +561,7 @@ export default function GoalsScreen() {
   const handleUpdatePlan = async (data) => {
     try {
       await updatePlan(editingPlan.id, data);
-      setShowPlanModal(false);
+      setMode('view');
       setEditingPlan(null);
     } catch {
       Alert.alert('Error', 'Could not update plan');
@@ -482,6 +575,22 @@ export default function GoalsScreen() {
     ]);
   };
 
+  const handleAttachGoal = async (goal, planId) => {
+    try {
+      await updateGoal(goal.id, { ...goal, plan_id: planId });
+    } catch {
+      Alert.alert('Error', 'Could not attach goal');
+    }
+  };
+
+  const handleDetachGoal = async (goal) => {
+    try {
+      await updateGoal(goal.id, { ...goal, plan_id: null });
+    } catch {
+      Alert.alert('Error', 'Could not detach goal');
+    }
+  };
+
   const toggleExpand = (id) => {
     setExpandedPlans(prev => {
       const next = new Set(prev);
@@ -489,6 +598,33 @@ export default function GoalsScreen() {
       return next;
     });
   };
+
+  if (mode === 'goal') {
+    return (
+      <GoalForm
+        onSubmit={editingGoal ? handleUpdateGoal : handleAddGoal}
+        onCancel={() => { setMode('view'); setEditingGoal(null); }}
+        initialValues={editingGoal || {}}
+        plans={plans}
+        todos={todos}
+        theme={theme}
+      />
+    );
+  }
+
+  if (mode === 'plan') {
+    return (
+      <PlanForm
+        onSubmit={editingPlan ? handleUpdatePlan : handleAddPlan}
+        onCancel={() => { setMode('view'); setEditingPlan(null); }}
+        initialValues={editingPlan || {}}
+        theme={theme}
+        goals={goals}
+        onAttachGoal={handleAttachGoal}
+        onDetachGoal={handleDetachGoal}
+      />
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -616,7 +752,7 @@ export default function GoalsScreen() {
                   )}
 
                   <View style={styles.cardActions}>
-                    <TouchableOpacity onPress={() => { setEditingGoal(goal); setShowGoalModal(true); }}>
+                    <TouchableOpacity onPress={() => { setEditingGoal(goal); setMode('goal'); }}>
                       <Text style={[styles.actionEdit, { color: theme.colors.primary }]}>Edit</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => handleDeleteGoal(goal.id)}>
@@ -659,8 +795,8 @@ export default function GoalsScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={[styles.planTitle, { color: theme.colors.text }]}>{plan.title}</Text>
                       <View style={styles.planMeta}>
-                        <View style={styles.durationBadge}>
-                          <Text style={styles.durationBadgeText}>{getDurationLabel(plan.duration)}</Text>
+                        <View style={[styles.durationBadge, { backgroundColor: theme.colors.primary + '20' }]}>
+                          <Text style={[styles.durationBadgeText, { color: theme.colors.primary }]}>{getDurationLabel(plan.duration)}</Text>
                         </View>
                         <Text style={[styles.planGoalCount, { color: theme.colors.textSecondary }]}>
                           {planGoals.length} {planGoals.length === 1 ? 'goal' : 'goals'}
@@ -682,7 +818,7 @@ export default function GoalsScreen() {
                   {expanded && (
                     <View style={[styles.planGoalsList, { borderTopColor: theme.colors.border }]}>
                       {planGoals.length === 0 ? (
-                        <Text style={{ color: colors.gray[400], fontSize: 13, paddingVertical: spacing.sm }}>
+                        <Text style={{ color: theme.colors.textSecondary, fontSize: 13, paddingVertical: spacing.sm }}>
                           No goals attached yet
                         </Text>
                       ) : (
@@ -704,11 +840,12 @@ export default function GoalsScreen() {
                           </View>
                         ))
                       )}
+
                     </View>
                   )}
 
                   <View style={styles.cardActions}>
-                    <TouchableOpacity onPress={() => { setEditingPlan(plan); setShowPlanModal(true); }}>
+                    <TouchableOpacity onPress={() => { setEditingPlan(plan); setMode('plan'); }}>
                       <Text style={[styles.actionEdit, { color: theme.colors.primary }]}>Edit</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => handleDeletePlan(plan.id)}>
@@ -729,53 +866,15 @@ export default function GoalsScreen() {
         onPress={() => {
           if (activeTab === 'plans') {
             setEditingPlan(null);
-            setShowPlanModal(true);
+            setMode('plan');
           } else {
             setEditingGoal(null);
-            setShowGoalModal(true);
+            setMode('goal');
           }
         }}
       >
         <Ionicons name="add" size={28} color={colors.white} />
       </TouchableOpacity>
-
-      {/* Goal modal */}
-      <Modal
-        visible={showGoalModal}
-        animationType="slide"
-        onRequestClose={() => { setShowGoalModal(false); setEditingGoal(null); }}
-      >
-        <SafeAreaView style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
-          <View style={[styles.modalInner, { backgroundColor: theme.colors.surface }]}>
-            <GoalForm
-              onSubmit={editingGoal ? handleUpdateGoal : handleAddGoal}
-              onCancel={() => { setShowGoalModal(false); setEditingGoal(null); }}
-              initialValues={editingGoal || {}}
-              plans={plans}
-              todos={todos}
-              theme={theme}
-            />
-          </View>
-        </SafeAreaView>
-      </Modal>
-
-      {/* Plan modal */}
-      <Modal
-        visible={showPlanModal}
-        animationType="slide"
-        onRequestClose={() => { setShowPlanModal(false); setEditingPlan(null); }}
-      >
-        <SafeAreaView style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
-          <View style={[styles.modalInner, { backgroundColor: theme.colors.surface }]}>
-            <PlanForm
-              onSubmit={editingPlan ? handleUpdatePlan : handleAddPlan}
-              onCancel={() => { setShowPlanModal(false); setEditingPlan(null); }}
-              initialValues={editingPlan || {}}
-              theme={theme}
-            />
-          </View>
-        </SafeAreaView>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -786,7 +885,7 @@ const styles = StyleSheet.create({
   // Tabs
   tabRow: { flexDirection: 'row', borderBottomWidth: 1 },
   topTab: { flex: 1, alignItems: 'center', paddingVertical: 14, borderBottomWidth: 2, borderBottomColor: 'transparent' },
-  topTabActive: { borderBottomColor: theme.colors.primary },
+  topTabActive: { borderBottomWidth: 2 },
   topTabText: { fontSize: 14, fontWeight: '600' },
 
   scrollContent: { padding: spacing.md },
@@ -863,19 +962,17 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: theme.colors.primary + '20',
     alignItems: 'center',
     justifyContent: 'center',
   },
   planTitle: { fontSize: 18, fontWeight: '700', marginBottom: 4 },
   planMeta: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: 4 },
   durationBadge: {
-    backgroundColor: theme.colors.primary + '20',
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 4,
   },
-  durationBadgeText: { fontSize: 12, fontWeight: '600', color: theme.colors.primary },
+  durationBadgeText: { fontSize: 12, fontWeight: '600' },
   planGoalCount: { fontSize: 12, fontWeight: '600' },
   planDates: { fontSize: 13 },
   planDesc: { fontSize: 13, marginTop: spacing.sm },
@@ -890,7 +987,6 @@ const styles = StyleSheet.create({
     paddingVertical: 1,
   },
   periodBadgeSmText: { fontSize: 10, fontWeight: '600', color: colors.gray[600] },
-
   // FAB
   fab: {
     position: 'absolute',

@@ -97,17 +97,19 @@ function RecentActivityScreen() {
       }
       return activities;
     }),
-    ...budgets.map(budget => ({
-      id: `budget-${budget.id}`,
-      type: 'budget',
-      title: `Budgeted: ${budget.category}`,
-      subtitle: `Limit $${budget.limit} (${budget.period})`,
-      amount: null,
-      date: budget.createdAt ? new Date(budget.createdAt) : new Date(),
-      icon: 'pie-chart',
-      iconColor: '#4ECDC4',
-      iconBg: '#E0FCF9',
-    })),
+    ...budgets
+      .filter(budget => budget.created_at || budget.createdAt)
+      .map(budget => ({
+        id: `budget-${budget.id}`,
+        type: 'budget',
+        title: `Budgeted: ${budget.category}`,
+        subtitle: `Limit $${budget.limit} (${budget.period})`,
+        amount: null,
+        date: new Date(budget.created_at || budget.createdAt),
+        icon: 'pie-chart',
+        iconColor: '#4ECDC4',
+        iconBg: '#E0FCF9',
+      })),
     ...(Array.isArray(sessions) ? sessions.filter(s => s.completed).map(session => ({
       id: `pomodoro-${session.id}`,
       type: 'pomodoro',

@@ -18,7 +18,6 @@ const TOOLS = [
   { name: 'Income Tracker', route: '/(tabs)/income-tracker', icon: 'cash' },
   { name: 'To-Do List', route: '/(tabs)/todo-list', icon: 'checkbox' },
   { name: 'Quick Notes', route: '/(tabs)/quick-notes', icon: 'document-text' },
-  { name: 'Calculator', route: '/(tabs)/calculator', icon: 'calculator' },
   { name: 'Meetings Scheduler', route: '/(tabs)/meetings-scheduler', icon: 'calendar' },
   { name: 'Goals', route: '/(tabs)/goals', icon: 'flag-outline' },
 ];

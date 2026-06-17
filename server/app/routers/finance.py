@@ -126,3 +126,4 @@ async def get_top_crypto():
             return resp.json()
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Crypto data unavailable: {e}")
+

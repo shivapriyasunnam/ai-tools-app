@@ -1,4 +1,4 @@
-import { colors } from '@/src/constants';
+import { colors, TOOLS as BASE_TOOLS } from '@/src/constants';
 import { useTheme } from '@/src/context/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView } from '@gorhom/bottom-sheet';
@@ -21,80 +21,9 @@ const ToolsBottomSheet = forwardRef(({ onClosed }, ref) => {
     return () => clearTimeout(timer);
   }, []);
 
-  const tools = [
-    {
-      id: 'income-tracker',
-      name: 'Income Tracker',
-      icon: 'cash',
-      description: 'Track and analyze income',
-      color: '#10B981',
-      route: '/(tabs)/income-tracker',
-    },
-    {
-      id: 'expense-tracker',
-      name: 'Expense Tracker',
-      icon: 'wallet',
-      description: 'Track and analyze expenses',
-      color: '#FF6B6B',
-      route: '/(tabs)/expense-tracker',
-    },
-    {
-      id: 'budget-planner',
-      name: 'Budget Planner',
-      icon: 'pie-chart',
-      description: 'Plan and manage your budget',
-      color: '#4ECDC4',
-      route: '/(tabs)/budget-planner',
-    },
-    {
-      id: 'pomodoro',
-      name: 'Pomodoro Timer',
-      icon: 'timer',
-      description: 'Stay focused with time management',
-      color: '#E91E63',
-      route: '/(tabs)/pomodoro-timer',
-    },
-    {
-      id: 'notes',
-      name: 'Quick Notes',
-      icon: 'document-text',
-      description: 'Jot down your thoughts',
-      color: '#5B7FFF',
-      route: '/(tabs)/quick-notes',
-    },
-    {
-      id: 'todo',
-      name: 'To-Do List',
-      icon: 'checkbox',
-      description: 'Manage your tasks',
-      color: '#8B5CF6',
-      route: '/(tabs)/todo-list',
-    },
-    {
-      id: 'meetings',
-      name: 'Meetings Scheduler',
-      icon: 'calendar',
-      description: 'Schedule and organize meetings',
-      color: theme.colors.primary,
-      route: '/(tabs)/meetings-scheduler',
-    },
-    {
-      id: 'calculator',
-      name: 'Calculator',
-      icon: 'calculator',
-      description: 'Quick calculations',
-      color: '#10B981',
-      route: '/(tabs)/calculator',
-    },
-    {
-      id: 'goals',
-      name: 'Goals',
-      icon: 'flag-outline',
-      description: 'Plans & goals tracker',
-      color: '#7C3AED',
-      route: '/(tabs)/goals',
-    },
-  ];
+  const tools = BASE_TOOLS.map((t) =>
+    t.id === 'meetings' ? { ...t, color: theme.colors.primary } : t
+  );
 
   const handleToolPress = (tool) => {
     console.log('Tool pressed:', tool.id);

@@ -186,13 +186,6 @@ export default function TabsLayout() {
           }}
         />
         <Tabs.Screen
-          name="calculator"
-          options={{
-            title: 'Calculator',
-            href: null, // Hidden tab - doesn't appear in tab bar
-          }}
-        />
-        <Tabs.Screen
           name="settings"
           options={{
             title: 'Settings',
