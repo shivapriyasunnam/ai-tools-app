@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useContext } from 'react';
 import {
   ScrollView,
   StyleSheet,
@@ -10,189 +9,79 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { BudgetContext } from '@/src/context/BudgetContext';
-import { ExpenseContext } from '@/src/context/ExpenseContext';
-import { IncomeContext } from '@/src/context/IncomeContext';
-import { useQuickNotes } from '@/src/context/QuickNotesContext';
-import { TodoContext } from '@/src/context/TodoContext';
 import { useTheme } from '@/src/context/ThemeContext';
+import useAllActivities from '@/src/hooks/useAllActivities';
+
+function getOnPress(router, type) {
+  switch (type) {
+    case 'expense':      return () => router.push('/(tabs)/expense-tracker');
+    case 'income':       return () => router.push('/(tabs)/income-tracker');
+    case 'todo-added':
+    case 'todo-completed': return () => router.push('/(tabs)/todo-list');
+    case 'budget':       return () => router.push('/(tabs)/budget-planner');
+    case 'pomodoro':     return () => router.push('/(tabs)/pomodoro-timer');
+    case 'goal-added':
+    case 'goal-completed':
+    case 'plan-added':   return () => router.push('/(tabs)/goals');
+    default:             return undefined;
+  }
+}
+
+function formatDate(date) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const activityDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  if (activityDate.getTime() === today.getTime()) {
+    return `Today, ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+  } else if (activityDate.getTime() === yesterday.getTime()) {
+    return `Yesterday, ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+  } else {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  }
+}
+
+function groupByDate(activities) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const groups = {};
+  activities.forEach(activity => {
+    const d = activity.date;
+    const activityDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    let key;
+    if (activityDate.getTime() === today.getTime()) {
+      key = 'Today';
+    } else if (activityDate.getTime() === yesterday.getTime()) {
+      key = 'Yesterday';
+    } else if (now - d < 7 * 24 * 60 * 60 * 1000) {
+      key = 'This Week';
+    } else if (now - d < 30 * 24 * 60 * 60 * 1000) {
+      key = 'This Month';
+    } else {
+      key = 'Older';
+    }
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(activity);
+  });
+  return groups;
+}
+
+const GROUP_ORDER = ['Today', 'Yesterday', 'This Week', 'This Month', 'Older'];
 
 function RecentActivityScreen() {
   const router = useRouter();
   const { theme } = useTheme();
-  const { expenses } = useContext(ExpenseContext);
-  const { incomes } = useContext(IncomeContext);
-  const { todos } = useContext(TodoContext);
-  const { budgets } = useContext(BudgetContext);
-  const { notes } = useQuickNotes();
-  let sessions = [];
-  try {
-    const PomodoroContext = require('@/src/context/PomodoroContext').default || require('@/src/context/PomodoroContext');
-    const pomodoroValue = useContext(PomodoroContext);
-    sessions = pomodoroValue && pomodoroValue.sessions ? pomodoroValue.sessions : [];
-  } catch (e) {
-    sessions = [];
-  }
-
-  const safeDate = (dateStr) => {
-    if (!dateStr) return new Date();
-    const d = new Date(dateStr);
-    return isNaN(d.getTime()) ? new Date() : d;
-  };
-
-  // Combine and sort all activities by date
-  const allActivities = [
-    ...expenses
-      .filter(exp => exp && exp.id)
-      .map(exp => ({
-        id: `exp-${exp.id}`,
-        type: 'expense',
-        title: exp.description,
-        subtitle: exp.category,
-        amount: -exp.amount,
-        date: safeDate(exp.date),
-        icon: 'wallet',
-        iconColor: '#EF4444',
-        iconBg: '#FEE2E2',
-      })),
-    ...incomes.map(inc => ({
-      id: `inc-${inc.id}`,
-      type: 'income',
-      title: inc.description || inc.source || 'Income',
-      subtitle: inc.category || 'Income',
-      amount: inc.amount,
-      date: safeDate(inc.date),
-      icon: 'cash',
-      iconColor: '#10B981',
-      iconBg: '#D1FAE5',
-    })),
-    // Show both added and completed todos as separate activities, always display the task title
-    ...todos.flatMap(todo => {
-      const activities = [];
-      if (todo.createdAt) {
-        activities.push({
-          id: `todo-added-${todo.id}`,
-          type: 'todo-added',
-          title: todo.title || todo.text || '(No Title)',
-          subtitle: 'Task added',
-          amount: null,
-          date: safeDate(todo.createdAt),
-          icon: 'add-circle',
-          iconColor: '#3B82F6',
-          iconBg: '#DBEAFE',
-        });
-      }
-      if (todo.completed && todo.completedAt) {
-        activities.push({
-          id: `todo-completed-${todo.id}`,
-          type: 'todo-completed',
-          title: todo.title || todo.text || '(No Title)',
-          subtitle: 'Task completed',
-          amount: null,
-          date: safeDate(todo.completedAt),
-          icon: 'checkmark-circle',
-          iconColor: '#8B5CF6',
-          iconBg: '#EDE9FE',
-        });
-      }
-      return activities;
-    }),
-    ...budgets
-      .filter(budget => budget.created_at || budget.createdAt)
-      .map(budget => ({
-        id: `budget-${budget.id}`,
-        type: 'budget',
-        title: `Budgeted: ${budget.category}`,
-        subtitle: `Limit $${budget.limit} (${budget.period})`,
-        amount: null,
-        date: new Date(budget.created_at || budget.createdAt),
-        icon: 'pie-chart',
-        iconColor: '#4ECDC4',
-        iconBg: '#E0FCF9',
-      })),
-    ...(Array.isArray(sessions) ? sessions.filter(s => s.completed).map(session => ({
-      id: `pomodoro-${session.id}`,
-      type: 'pomodoro',
-      title: 'Pomodoro Session',
-      subtitle: session.type ? `${session.type.charAt(0).toUpperCase() + session.type.slice(1)} session` : 'Session',
-      amount: null,
-      date: session.end ? new Date(session.end) : new Date(),
-      icon: 'timer',
-      iconColor: '#E91E63',
-      iconBg: '#FCE7F3',
-    })) : []),
-    // Quick Notes as activities
-    ...notes.map(note => ({
-      id: `note-${note.id}`,
-      type: 'quick-note',
-      title: note.text,
-      subtitle: 'Quick Note added',
-      amount: null,
-      date: note.created_at ? new Date(note.created_at) : new Date(),
-      icon: 'document-text',
-      iconColor: '#6366F1',
-      iconBg: '#E0E7FF',
-    })),
-  ].sort((a, b) => b.date - a.date);
-
-  const formatDate = (date) => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    const activityDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    
-    if (activityDate.getTime() === today.getTime()) {
-      return `Today, ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
-    } else if (activityDate.getTime() === yesterday.getTime()) {
-      return `Yesterday, ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
-    } else {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-    }
-  };
-
-  const groupActivitiesByDate = () => {
-    const groups = {};
-    allActivities.forEach(activity => {
-      const date = activity.date;
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      const activityDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-      
-      let groupKey;
-      if (activityDate.getTime() === today.getTime()) {
-        groupKey = 'Today';
-      } else if (activityDate.getTime() === yesterday.getTime()) {
-        groupKey = 'Yesterday';
-      } else if (now - date < 7 * 24 * 60 * 60 * 1000) {
-        groupKey = 'This Week';
-      } else if (now - date < 30 * 24 * 60 * 60 * 1000) {
-        groupKey = 'This Month';
-      } else {
-        groupKey = 'Older';
-      }
-      
-      if (!groups[groupKey]) {
-        groups[groupKey] = [];
-      }
-      groups[groupKey].push(activity);
-    });
-    
-    return groups;
-  };
-
-  const groupedActivities = groupActivitiesByDate();
-  const groupOrder = ['Today', 'Yesterday', 'This Week', 'This Month', 'Older'];
+  const allActivities = useAllActivities();
+  const groupedActivities = groupByDate(allActivities);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]} edges={['bottom']}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {allActivities.length === 0 ? (
           <View style={styles.emptyState}>
             <View style={[styles.emptyIconContainer, { backgroundColor: theme.colors.gray[100] }]}>
@@ -204,36 +93,14 @@ function RecentActivityScreen() {
             </Text>
           </View>
         ) : (
-          groupOrder.map(groupKey => {
+          GROUP_ORDER.map(groupKey => {
             const activities = groupedActivities[groupKey];
             if (!activities || activities.length === 0) return null;
-
             return (
               <View key={groupKey} style={styles.section}>
                 <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>{groupKey}</Text>
                 {activities.map(activity => {
-                  // Navigation handler based on activity type
-                  let onPress = undefined;
-                  switch (activity.type) {
-                    case 'expense':
-                      onPress = () => router.push('/(tabs)/expense-tracker');
-                      break;
-                    case 'income':
-                      onPress = () => router.push('/(tabs)/income-tracker');
-                      break;
-                    case 'todo-added':
-                    case 'todo-completed':
-                      onPress = () => router.push('/(tabs)/todo-list');
-                      break;
-                    case 'budget':
-                      onPress = () => router.push('/(tabs)/budget-planner');
-                      break;
-                    case 'pomodoro':
-                      onPress = () => router.push('/(tabs)/pomodoro-timer');
-                      break;
-                    default:
-                      onPress = undefined;
-                  }
+                  const onPress = getOnPress(router, activity.type);
                   return (
                     <TouchableOpacity
                       key={activity.id}
@@ -252,10 +119,7 @@ function RecentActivityScreen() {
                         </Text>
                       </View>
                       {activity.amount !== null && (
-                        <Text style={[
-                          styles.activityAmount,
-                          { color: activity.amount < 0 ? '#EF4444' : '#10B981' }
-                        ]}>
+                        <Text style={[styles.activityAmount, { color: activity.amount < 0 ? '#EF4444' : '#10B981' }]}>
                           {activity.amount < 0 ? '-' : '+'}${Math.abs(activity.amount).toFixed(2)}
                         </Text>
                       )}

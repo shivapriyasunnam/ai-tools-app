@@ -17,11 +17,11 @@ import { ExpenseContext } from '@/src/context/ExpenseContext';
 import { GoalsContext } from '@/src/context/GoalsContext';
 import { IncomeContext } from '@/src/context/IncomeContext';
 import { useMeetings } from '@/src/context/MeetingsContext';
-import { useQuickNotes } from '@/src/context/QuickNotesContext';
 import { TodoContext } from '@/src/context/TodoContext';
 import { useAuth } from '@/src/context/AuthContext';
 import { useUser } from '@/src/context/UserContext';
 import { useTheme } from '@/src/context/ThemeContext';
+import useAllActivities from '@/src/hooks/useAllActivities';
 import usePomodoroStats from '@/src/hooks/usePomodoroStats';
 
 function formatDate(date) {
@@ -50,7 +50,6 @@ function HomeScreen() {
   const { todos, getTotalTodos, getCompletedCount, getPendingCount } = useContext(TodoContext);
   const { getActiveGoalsCount } = useContext(GoalsContext);
   const { getTotalBudget, getTotalSpent, getTotalRemaining, getBudgetStatus } = useContext(BudgetContext);
-  const { notes } = useQuickNotes();
   const { userName } = useUser();
   const { session } = useAuth();
   const { getTodayMeetings, getWeekMeetings } = useMeetings();
@@ -67,110 +66,7 @@ function HomeScreen() {
   const todayMeetingsCount = todayMeetings.length;
   const remainingWeekMeetings = weekMeetings.length - todayMeetingsCount;
 
-  // Combine all activities and get last 3
-  // Budgeting activities: creation, edit, delete (using createdAt for now)
-  const { budgets } = useContext(BudgetContext);
-  let sessions = [];
-  try {
-    // Import PomodoroContext directly
-    const PomodoroContext = require('@/src/context/PomodoroContext').default || require('@/src/context/PomodoroContext');
-    const pomodoroValue = useContext(PomodoroContext);
-    sessions = pomodoroValue && pomodoroValue.sessions ? pomodoroValue.sessions : [];
-  } catch (e) {
-    sessions = [];
-  }
-
-  const allActivities = [
-    ...expenses.map(exp => ({
-      id: `exp-${exp.id}`,
-      type: 'expense',
-      title: exp.description,
-      subtitle: exp.category,
-      amount: -exp.amount,
-      date: new Date(exp.date),
-      icon: 'wallet',
-      iconColor: '#EF4444',
-      iconBg: '#FEE2E2',
-    })),
-    ...incomes.map(inc => ({
-      id: `inc-${inc.id}`,
-      type: 'income',
-      title: inc.description || inc.source || 'Income',
-      subtitle: inc.category || 'Income',
-      amount: inc.amount,
-      date: new Date(inc.date),
-      icon: 'cash',
-      iconColor: '#10B981',
-      iconBg: '#D1FAE5',
-    })),
-    // Show both added and completed todos as activities, always display the task title
-    ...todos.flatMap(todo => {
-      const activities = [];
-      if (todo.createdAt) {
-        activities.push({
-          id: `todo-added-${todo.id}`,
-          type: 'todo-added',
-          title: todo.title || todo.text || '(No Title)',
-          subtitle: 'Task added',
-          amount: null,
-          date: new Date(todo.createdAt),
-          icon: 'add-circle',
-          iconColor: '#3B82F6',
-          iconBg: '#DBEAFE',
-        });
-      }
-      if (todo.completed && todo.completedAt) {
-        activities.push({
-          id: `todo-completed-${todo.id}`,
-          type: 'todo-completed',
-          title: todo.title || todo.text || '(No Title)',
-          subtitle: 'Task completed',
-          amount: null,
-          date: new Date(todo.completedAt),
-          icon: 'checkmark-circle',
-          iconColor: '#8B5CF6',
-          iconBg: '#EDE9FE',
-        });
-      }
-      return activities;
-    }),
-    ...budgets
-      .filter(budget => budget.created_at || budget.createdAt)
-      .map(budget => ({
-        id: `budget-${budget.id}`,
-        type: 'budget',
-        title: `Budgeted: ${budget.category}`,
-        subtitle: `Limit $${budget.limit} (${budget.period})`,
-        amount: null,
-        date: new Date(budget.created_at || budget.createdAt),
-        icon: 'pie-chart',
-        iconColor: '#4ECDC4',
-        iconBg: '#E0FCF9',
-      })),
-    ...(Array.isArray(sessions) ? sessions.filter(s => s.completed).map(session => ({
-      id: `pomodoro-${session.id}`,
-      type: 'pomodoro',
-      title: 'Pomodoro Session',
-      subtitle: session.type ? `${session.type.charAt(0).toUpperCase() + session.type.slice(1)} session` : 'Session',
-      amount: null,
-      date: session.end ? new Date(session.end) : new Date(),
-      icon: 'timer',
-      iconColor: '#E91E63',
-      iconBg: '#FCE7F3',
-    })) : []),
-    // Quick Notes as activities
-    ...notes.map(note => ({
-      id: `note-${note.id}`,
-      type: 'quick-note',
-      title: note.text,
-      subtitle: 'Quick Note added',
-      amount: null,
-      date: note.created_at ? new Date(note.created_at) : new Date(),
-      icon: 'document-text',
-      iconColor: '#6366F1',
-      iconBg: '#E0E7FF',
-    })),
-  ].sort((a, b) => b.date - a.date).slice(0, 3);
+  const allActivities = useAllActivities().slice(0, 3);
   
   // Budget data
   const totalBudget = getTotalBudget();
@@ -565,26 +461,18 @@ function HomeScreen() {
         ) : (
           allActivities.map(activity => {
             // Navigation handler based on activity type
-            let onPress = undefined;
+            let onPress;
             switch (activity.type) {
-              case 'expense':
-                onPress = () => router.push('/(tabs)/expense-tracker');
-                break;
-              case 'income':
-                onPress = () => router.push('/(tabs)/income-tracker');
-                break;
+              case 'expense':      onPress = () => router.push('/(tabs)/expense-tracker'); break;
+              case 'income':       onPress = () => router.push('/(tabs)/income-tracker'); break;
               case 'todo-added':
-              case 'todo-completed':
-                onPress = () => router.push('/(tabs)/todo-list');
-                break;
-              case 'budget':
-                onPress = () => router.push('/(tabs)/budget-planner');
-                break;
-              case 'pomodoro':
-                onPress = () => router.push('/(tabs)/pomodoro-timer');
-                break;
-              default:
-                onPress = undefined;
+              case 'todo-completed': onPress = () => router.push('/(tabs)/todo-list'); break;
+              case 'budget':       onPress = () => router.push('/(tabs)/budget-planner'); break;
+              case 'pomodoro':     onPress = () => router.push('/(tabs)/pomodoro-timer'); break;
+              case 'goal-added':
+              case 'goal-completed':
+              case 'plan-added':   onPress = () => router.push('/(tabs)/goals'); break;
+              default:             onPress = undefined;
             }
             return (
               <TouchableOpacity
